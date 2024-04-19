@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navigation from "./components/global/navigation";
+import Modal from "./components/global/modal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className}`}>
+        <Modal />
+        <div className="grid grid-cols-2 grid-cols-[200px_1fr] min-h-screen bg-gray-900">
+          {/* Side navigation */}
+          <Navigation links={[
+            { title: "Home", href: "/" },
+            { title: "Shopify", href: "/shopify" },
+          ]} />
+          {/* Main content */}
+          <div className="flex flex-col">
+            <div className="flex flex-row items-center justify-start w-full bg-gray-950">
+            </div>
+            {children}
+          </div>
+          
+        </div>
+      </body>
     </html>
   );
 }

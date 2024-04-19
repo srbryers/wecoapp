@@ -1,0 +1,107 @@
+import { modalAtom } from '@/app/_utils/atoms'
+import { FulfillmentService } from '@/app/_utils/shopify/api'
+import useShopifyFulfillmentServices from '@/app/_utils/shopify/fulfillmentServices'
+import { useSetAtom } from 'jotai'
+import { FC } from 'react'
+import Form from '../forms/form'
+import Input from '../forms/input'
+import Button from '../global/button'
+import { formatKeyToTitle } from '@/app/_utils/helpers'
+
+type FulfillmentServicesProps = {
+  className?: string
+}
+
+const FulfillmentServices: FC<FulfillmentServicesProps> = ({ className }) => {
+
+  const setModal = useSetAtom(modalAtom)
+  const {
+    fulfillmentServices,
+    loadingServices,
+    createFulfillmentService,
+    updateFulfillmentService,
+    deleteFulfillmentService
+  } = useShopifyFulfillmentServices()
+
+  const showFulfillmentServiceModal = (data?: FulfillmentService) => {
+    console.log('Create a fulfillment service', data)
+    setModal({
+      visible: true,
+      title: 'Create Fulfillment Service',
+      description: 'Create a custom fulfillment service for Shopify.',
+      children: (
+        <Form onSubmit={(form) => {
+          if (data?.id) {
+            form.id = data.id
+            updateFulfillmentService(form)
+          } else {
+            createFulfillmentService(form)
+          }
+        }} className="max-w-sm mt-4">
+          <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={data?.name} />
+          <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={data?.callback_url} />
+          <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly />
+          <div className="flex flex-row flex-wrap gap-3">
+            {Object.entries(data || {}).map(([key, value], index) => {
+              if (typeof value === 'boolean') {
+                return (
+                  <Input key={`input-${index}`} label={formatKeyToTitle(key)} type="checkbox" name={key} checked={value} />
+                )
+              }
+            })}
+          </div>
+          <Button label={`${data ? "Update" : "Create"} Fulfillment Service`} type="submit" />
+        </Form>
+      )
+    })
+  }
+
+  return (
+    <div id="fulfillment-services" className={`flex flex-col gap-4 ${className}`}>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-base font-bold">Fulfillment Services</h2>
+        <p className="text-sm">Manage custom fulfillment services for Shopify.</p>
+      </div>
+      <div className="flex flex-row gap-4 w-full">
+        {/* List Fulfillment Services */}
+        {fulfillmentServices.length > 0
+          ?
+          fulfillmentServices.map((service, index) => {
+            return service && (
+              <div key={`service-${index}`} className="flex flex-col gap-2 p-4 bg-blue-950 rounded-md min-w-[300px]">
+                <div className="service-details flex flex-col gap-2">
+                  <p className="text-sm font-bold">{service.name}</p>
+                  <p className="text-xs"><b>ID:</b> {service.id}</p>
+                </div>
+                <div className="service-actions flex flex-row gap-2">
+                  <Button label="Edit" className="text-xs" onClick={() => {
+                    showFulfillmentServiceModal(service)
+                  }} />
+                  <Button label="Delete" className="text-xs" onClick={() => {
+                    if (confirm("Are you sure you want to delete this fulfillment service?")) {
+                      deleteFulfillmentService(service)
+                    }
+                  }} />
+                </div>
+              </div>
+            )
+          })
+          :
+          loadingServices
+            ?
+            <p className="text-sm">Loading fulfillment services...</p>
+            :
+            <p className="text-sm">No fulfillment services found.</p>
+        }
+      </div>
+      <div className="actions">
+        {/* Create a fulfillment service */}
+        <Button label="Create Fulfillment Service" onClick={() => {
+          showFulfillmentServiceModal()
+        }} />
+      </div>
+    </div>
+  )
+}
+
+export default FulfillmentServices
