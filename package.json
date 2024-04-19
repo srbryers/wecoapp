@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:build": "docker build -t wecoapp .",
+    "docker:run": "docker run -p 3000:3000 wecoapp"
   },
   "dependencies": {
     "jotai": "^2.8.0",

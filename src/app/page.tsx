@@ -1,7 +1,7 @@
 
 'use client'
 import { useRouter } from "next/navigation";
-import PageLayout from "./components/layout/page";
+import PageLayout from "./_components/layout/page";
 
 export default function Home() {
 

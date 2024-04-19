@@ -30,7 +30,7 @@ const Input: FC<InputProps> = ({ label, name, type, checked, required, placehold
         setError(`${label} is required.`)
       }
     })
-  },[])
+  },[ label, name, required ])
 
   switch (type) {
     case 'checkbox':

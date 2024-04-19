@@ -1,3 +1,5 @@
+import React from "react"
+
 export type ModalProps = {
   title?: string
   description?: string
@@ -14,4 +16,10 @@ export type CarrierServiceResponse = {
   phone_required?: boolean
   min_delivery_date?: string
   max_delivery_date?: string
+}
+
+export type PageLayoutProps = {
+  children: React.ReactNode
+  title?: string
+  description?: string
 }

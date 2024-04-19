@@ -1,9 +1,9 @@
 'use client'
 import { FC } from 'react'
-import PageLayout from '../components/layout/page'
-import Divider from '../components/global/divider'
-import FulfillmentServices from '../components/shopify/fulfillmentServices'
-import CarrierServices from '../components/shopify/carrierServices'
+import PageLayout from '../_components/layout/page'
+import Divider from '../_components/global/divider'
+import FulfillmentServices from '../_components/shopify/fulfillmentServices'
+import CarrierServices from '../_components/shopify/carrierServices'
 
 const ShopifyPage: FC = () => {
 
