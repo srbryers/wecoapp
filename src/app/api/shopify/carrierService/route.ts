@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   // const carrierServiceRequest = await testGetCarrierRequest(request);
   const carrierServiceRequest = await request.json() // carrierRequest
   console.log("carrierServiceRequest", carrierServiceRequest)
-  const carrierServiceResponse: any = []
+  const carrierServiceResponse: { rates: any[]} = { rates: [] }
   const shipment_dates: { shipment_date: string, quantity: number }[] = [];
 
   // Get the shipment dates from the line_items
@@ -130,10 +130,7 @@ export async function POST(request: Request) {
   })
 
   // Return the rates
-  carrierServiceResponse.push({
-    id: carrierServiceRequest.id,
-    rates: rates
-  })
+  carrierServiceResponse.rates.push(rates)
 
   return Response.json(carrierServiceResponse)
 }
