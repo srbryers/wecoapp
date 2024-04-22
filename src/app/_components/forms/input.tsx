@@ -59,10 +59,10 @@ const Input: FC<InputProps> = ({ label, name, type, checked, required, placehold
       <input
         type={type}
         name={name}
-        checked={checked}
         placeholder={placeholder}
         value={value}
         defaultValue={defaultValue}
+        defaultChecked={checked}
         onChange={onChange}
         className={inputClasses}
         required={required}

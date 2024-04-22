@@ -5,6 +5,7 @@ export type ModalProps = {
   description?: string
   children: React.ReactNode
   visible?: boolean
+  onClose?: () => void
 }
 
 export type CarrierServiceResponse = {
@@ -16,6 +17,22 @@ export type CarrierServiceResponse = {
   phone_required?: boolean
   min_delivery_date?: string
   max_delivery_date?: string
+}
+
+export type CarrierServiceRequest = {
+  rate: {
+    origin: {
+      [key: string]: string | number
+    }
+    destination: {
+      [key: string]: string | number
+    }
+    items: {
+      [key: string]: string | number
+    }[]
+    currency: string
+    locale: string
+  }
 }
 
 export type PageLayoutProps = {

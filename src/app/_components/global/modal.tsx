@@ -9,12 +9,14 @@ const Modal: FC = () => {
 
   // Close modal on backdrop click
   const closeModal = () => {
+    modal?.onClose && modal.onClose()
     setModal(null)
   }
 
   useEffect(() => {
     window.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modalBackdrop')) {
+      const target = e.target as HTMLElement
+      if (target.getAttribute('id') === 'modalBackdrop') {
         closeModal()
       }
     })

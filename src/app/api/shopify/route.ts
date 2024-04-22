@@ -24,11 +24,10 @@ export async function POST(request: Request) {
     options.body = JSON.stringify(req.data)
   }
   try {
-    console.log("[shopifyRestApi] url:", url)
-    console.log("[shopifyRestApi] options:", options)
+    // console.log("[shopifyRestApi] url:", url)
+    // console.log("[shopifyRestApi] options:", options)
     const response = await fetch(url, options)
     const data = await response.json()
-    console.log("[shopifyRestApi response]:", data)
     if (data.errors) {
       console.error('[shopifyRestApi] errors:', data.errors)
     }
