@@ -25,6 +25,8 @@ export default function RootLayout({
           <Navigation links={[
             { title: "Home", href: "/" },
             { title: "Shopify", href: "/shopify" },
+            { title: "Klaviyo", href: "/integrations/klaviyo" },
+            { title: "Database", href: "/data/database" },
           ]} />
           {/* Main content */}
           <div className="flex flex-col">

@@ -31,3 +31,8 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Special Classes */
+/* .profile-table td:nth-last-of-type(1) {
+  display: none;
+} */
