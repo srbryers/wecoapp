@@ -10,6 +10,7 @@ const Modal: FC = () => {
   // Close modal on backdrop click
   const closeModal = () => {
     modal?.onClose && modal.onClose()
+    window.removeEventListener('click', () => {})
     setModal(null)
   }
 
@@ -22,8 +23,17 @@ const Modal: FC = () => {
     })
   })
 
+  // Lock body scrolling when modal open
+  useEffect(() => {
+    if (modal?.visible) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'auto'
+    }
+  }, [modal])
+
   return modal && (
-    <div id="modalBackdrop" className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50
+    <div id="modalBackdrop" className={`fixed overflow-hidden inset-0 flex items-center justify-center bg-black bg-opacity-50
     ${modal.visible ? '' : 'hidden'}`}>
       <div className="bg-blue-950 p-8 rounded-lg">
         {modal.title && <h2 className="text-2xl font-bold">{modal.title}</h2>}

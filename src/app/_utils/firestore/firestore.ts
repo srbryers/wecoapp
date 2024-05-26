@@ -13,7 +13,7 @@ type FirestoreUtility = {
   [key in FirestoreActions]?: any
 };
 
-const db = new Firestore({
+export const db = new Firestore({
   projectId: process.env["GCP_PROJECT_ID"],
   databaseId: "weco",
   keyFilename: process.env["GOOGLE_APPLICATION_CREDENTIALS"]
@@ -48,6 +48,8 @@ const addDocument = async (data: any) => {
   }
 
 }
+
+
 
 export const firestore = {
   add: addDocument

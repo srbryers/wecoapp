@@ -1,8 +1,7 @@
-import { firestore, FirestoreActions } from "@/app/_utils/firestore/firestore"
+import { db, firestore, FirestoreActions } from "@/app/_utils/firestore/firestore"
 
 export async function POST(request: Request) {
 
-  
   const req = await request.json()
   console.log("req:", req)
   const action = req.action as FirestoreActions

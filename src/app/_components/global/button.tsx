@@ -12,10 +12,10 @@ const Button: FC<ButtonProps> = ({ label, type, buttonType, onClick, className }
   let buttonClasses = 'p-2 px-4 bg-blue-900 text-white rounded-[4px] font-bold'
   switch (buttonType) {
     case 'primary':
-      buttonClasses = 'p-2 px-4 bg-blue-900 text-white rounded-[4px]'
+      buttonClasses = 'p-2 px-4 bg-blue-900 text-white rounded-[4px] text-sm font-bold'
       break
     case 'secondary':
-      buttonClasses = 'p-2 px-4 bg-white text-blue-950 rounded-[4px]'
+      buttonClasses = 'p-2 px-4 bg-white text-blue-950 rounded-[4px] text-sm font-bold'
       break
     default:
       break

@@ -3,6 +3,10 @@ import Input from '@/app/_components/forms/input'
 import Button from '@/app/_components/global/button'
 import Divider from '@/app/_components/global/divider'
 import PageLayout from '@/app/_components/layout/page'
+import DataTable from '@/app/_components/tables/dataTable'
+import DataTableCell from '@/app/_components/tables/dataTableCell'
+import DataTableHeaders from '@/app/_components/tables/dataTableHeaders'
+import DataTableRow from '@/app/_components/tables/dataTableRow'
 import { klaviyo, ProfileFilters } from '@/app/_utils/klaviyo/api'
 import { FC, useState } from 'react'
 
@@ -85,32 +89,34 @@ const Klaviyo: FC = () => {
       <Divider />
       {/* Grid Content */}
       <div className="table-wrapper w-full">
-        <table className="profile-table overflow-scroll mt-4">
+        <DataTable>
           <thead>
-            {profileDataKeys.map((key, index) => {
-              return (
-                <th key={`header-${index}`} className="p-2 border border-gray-700" colSpan={index === 0 ? 2 : 1}>
-                  {key}
-                </th>
-              )
-            })}
+            <tr>
+              {profileDataKeys.map((key, index) => {
+                return (
+                  <DataTableHeaders key={`header-${index}`} className="p-2 border border-gray-700" colSpan={index === 0 ? 2 : 1}>
+                    {key}
+                  </DataTableHeaders>
+                )
+              })}
+            </tr>
           </thead>
           <tbody>
             {profileData && profileData.map((profile: any, index: number) => {
               return (
-                <tr key={`row-${index}`} className="">
+                <DataTableRow key={`row-${index}`}>
                   {Object.values(profile).map((value, valueIndex) => {
                     return (
-                      <td key={`value-${index}${valueIndex}`} className="p-2 overflow-scroll border border-gray-700" colSpan={valueIndex === 0 ? 2 : 1}>
+                      <DataTableCell key={`value-${index}${valueIndex}`} colSpan={valueIndex === 0 ? 2 : 1}>
                         {value as string}
-                      </td>
+                      </DataTableCell>
                     )
                   })}
-                </tr>
+                </DataTableRow>
               )
             })}
           </tbody>
-        </table>
+        </DataTable>
       </div>
     </PageLayout>
   )

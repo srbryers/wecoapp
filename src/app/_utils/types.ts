@@ -8,7 +8,8 @@ export type ModalProps = {
   onClose?: () => void
 }
 
-export type CarrierServiceResponse = {
+export type ShippingProfile =  {
+  id?: string
   service_name: string
   description: string
   service_code: string
@@ -18,6 +19,8 @@ export type CarrierServiceResponse = {
   min_delivery_date?: string
   max_delivery_date?: string
 }
+
+export type CarrierServiceResponse = ShippingProfile
 
 export type CarrierServiceRequest = {
   rate: {

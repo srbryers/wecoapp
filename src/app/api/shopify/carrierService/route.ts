@@ -1,3 +1,5 @@
+import { CarrierServiceResponse } from "@/app/_utils/types";
+
 export async function GET(request: Request) {
   return Response.json({ message: 'Hello' })
 }
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
       phone_required: false,
       min_delivery_date: shipment_date,
       max_delivery_date: shipment_date
-    }
+    } as CarrierServiceResponse
   }).reduce((acc: any, rate: any) => {
     acc.total_price += rate.total_price
     // Check the min and max delivery dates

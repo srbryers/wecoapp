@@ -1,6 +1,6 @@
 export type FulfillmentService = {
   id?: number,
-  name: string,
+  name?: string,
   callback_url?: string,
   inventory_management?: boolean,
   tracking_support?: boolean,
