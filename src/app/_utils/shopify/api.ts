@@ -16,6 +16,7 @@ export type CarrierService = {
   callback_url?: string
   name?: string
   service_discovery?: boolean
+  carrier_service_type?: "api" | "legacy"
 }
 
 export type LineItem = {
@@ -149,7 +150,7 @@ export const shopify = {
         })
       })
       const data = await carrierServices.json()
-      console.log('Carrier Services:', data)
+      // console.log('Carrier Services:', data)
       return data as { carrier_services: FulfillmentService[] }
     },
     post: async (service: CarrierService) => {
@@ -166,7 +167,7 @@ export const shopify = {
           })
         })
         const data = await carrierService.json()
-        console.log('Carrier Service:', data)
+        // console.log('Carrier Service:', data)
         return data as { carrier_service: CarrierService }
       } catch (error) {
         console.error('Error creating carrier service:', error)
@@ -187,7 +188,7 @@ export const shopify = {
           })
         })
         const data = await carrierService.json()
-        console.log('Carrier Service:', data)
+        // console.log('Carrier Service:', data)
         return data as { carrier_service: CarrierService }
       } catch (error) {
         console.error('Error updating carrier service:', error)
@@ -204,7 +205,7 @@ export const shopify = {
         })
       })
       const data = await carrierService.json()
-      console.log('Carrier Service:', data)
+      // console.log('Carrier Service:', data)
       return data as { carrier_service: CarrierService }
     }
   },
@@ -284,6 +285,84 @@ export const shopify = {
       const data = await order.json()
       console.log('Order:', data)
       return data as { order: Order }
+    }
+  },
+  /**
+   * Draft Orders
+   */
+  draftOrders: {
+    get: async (draft_order_id?: string) => {
+      console.log("getDraftOrders")
+      const path = draft_order_id ? `/draft_orders/${draft_order_id}.json` : '/draft_orders.json'
+      const draftOrders = await fetch('/api/shopify', {
+        method: 'POST',
+        body: JSON.stringify({
+          method: 'GET',
+          path: path
+        })
+      })
+      const data = await draftOrders.json()
+      console.log('Draft Orders:', data)
+      if (draft_order_id) {
+        return data as { draft_order: Order }
+      } else {
+        return data as { draft_orders: Order[] }
+      }
+    },
+    post: async (draft_order: Order) => {
+      console.log("createDraftOrder")
+      try {
+        const newDraftOrder = await fetch('/api/shopify', {
+          method: 'POST',
+          body: JSON.stringify({
+            method: 'POST',
+            path: '/draft_orders.json',
+            data: {
+              draft_order: draft_order
+            }
+          })
+        })
+        const data = await newDraftOrder.json()
+        console.log('Draft Order:', data)
+        return data as { draft_order: Order }
+      } catch (error) {
+        console.error('Error creating draft order:', error)
+        throw error
+      }
+    },
+    put: async (draft_order: Order) => {
+      console.log("updateDraftOrder")
+      try {
+        const updatedDraftOrder = await fetch('/api/shopify', {
+          method: 'POST',
+          body: JSON.stringify({
+            method: 'PUT',
+            path: `/draft_orders/${draft_order.id}.json`,
+            data: {
+              draft_order: draft_order
+            }
+          })
+        })
+        const data = await updatedDraftOrder.json()
+        console.log('Draft Order:', data)
+        return data as { draft_order: Order }
+      } catch (error) {
+        console.error('Error updating draft order:', error)
+        throw error
+      }
+    },
+    delete: async (draft_order_id: string) => {
+      console.log("deleteDraftOrder")
+      const draftOrder = await fetch('/api/shopify', {
+        method: 'POST',
+        body: JSON.stringify({
+          method: 'DELETE',
+          path: `/draft_orders/${draft_order_id}.json`
+        })
+      })
+      const data = await draftOrder.json()
+      console.log('Draft Order')
+      return data as { draft_order: Order }
     }
   }
 }

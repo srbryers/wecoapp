@@ -10,6 +10,7 @@ import { formatKeyToTitle } from '@/app/_utils/helpers'
 import { CarrierServiceRequest } from '@/app/_utils/types'
 
 import '@/app/_assets/example-carrierRequest.json'
+import TestCarrierService from './TestCarrierService'
 
 type CarrierServicesProps = {
   className?: string
@@ -187,9 +188,7 @@ const CarrierServices: FC<CarrierServicesProps> = ({ className }) => {
           setActiveModal('createCarrierService')
         }} />
         {/* Test a service */}
-        <Button label="Test Carrier Service" onClick={() => {
-          setActiveModal('testCarrierService')
-        }} />
+        <TestCarrierService />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import Button from '../global/button'
-import { CarrierServiceRequest, CarrierServiceResponse, ShippingProfile, ShippingRate } from '@/app/_utils/types'
+import { ShippingProfile, ShippingRate } from '@/app/_utils/types'
 import { useSetAtom } from 'jotai'
 import { modalAtom } from '@/app/_utils/atoms'
 import Form from '../forms/form'
@@ -19,16 +19,12 @@ const ShippingProfiles: FC<ShippingProfilesProps> = ({ className }) => {
   const setModal = useSetAtom(modalAtom)
   const [activeShippingProfile, setActiveShippingProfile] = useState<ShippingProfile>()
   const [shippingRates, setShippingRates] = useState<ShippingRate[]>()
-  const [testRates, setTestRates] = useState<CarrierServiceResponse[]>()
-  const [testRateType, setTestRateType] = useState<"manual" | "shopify">("manual")
-  const [testOrderID, setTestOrderID] = useState<string>()
   const [activeModal, setActiveModal] = useState<ShippingProfilesModals>()
 
   const {
     createShippingProfile,
     updateShippingProfile,
     deleteShippingProfile,
-    testShippingProfile,
     shippingProfiles,
     loadingProfiles
   } = useShippingProfiles()
@@ -43,12 +39,6 @@ const ShippingProfiles: FC<ShippingProfilesProps> = ({ className }) => {
     setShippingRates(data?.rates || [])
     setActiveShippingProfile(data)
     setActiveModal("shippingRate")
-  }
-
-  const showTestShippingRateModal = () => {
-    console.log('Test Shipping Rate')
-    setActiveShippingProfile(defaultShippingProfile)
-    setActiveModal("testShippingRate")
   }
 
   /**
@@ -207,115 +197,6 @@ const ShippingProfiles: FC<ShippingProfilesProps> = ({ className }) => {
     }
   }, [activeModal, setModal, shippingRates, activeShippingProfile, updateShippingProfile])
 
-  /**
-   * Test Shipping Rate Modal
-   */
-  useEffect(() => {
-    const TestManualRateForm = () => {
-      return (
-        <Form onSubmit={async (form) => {
-          const request: CarrierServiceRequest = {
-            rate: {
-              origin: {
-                country: "US",
-                postal_code: "02110",
-                province: "MA"
-              },
-              destination: {
-                country: form.shipment_country,
-                postal_code: form.shipment_postal_code,
-                province: form.shipment_province
-              },
-              items: [
-                {
-                  quantity: form.shipment_quantity,
-                  weight: 0,
-                  price: form.shipment_price
-                }
-              ],
-              currency: "USD",
-              locale: "en"
-            }
-          }
-          setTestRates(await testShippingProfile(request))
-        }} className="md:w-[300px] mt-4">
-          <Input label="Shipment Country" type="text" name="shipment_country" required />
-          <Input label="Shipment Postal Code" type="text" name="shipment_postal_code" required />
-          <Input label="Shipment Province" type="text" name="shipment_province" required />
-          <Input label="Shipment Date" type="date" name="shipment_date" required />
-          <Input label="Shipment Price" type="number" name="shipment_price" step=".01" required />
-          <Input label="Shipment Quantity" type="number" name="shipment_quantity" required />
-          <Button label="Test Shipping Rate" type="submit" />
-        </Form>
-      )
-    }
-    const TestShopifyOrderForm = () => {
-      return (
-        <Form onSubmit={async (form) => {
-          setTestRates(await testShippingProfile({ shopify_order_id: form.shopify_order_id }))
-        }} className="md:w-[300px] mt-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold">Shopify Store</label>
-            <select name="shopify_store" required className="text-black py-3 px-2 rounded-[4px]">
-              <option value="e97e57-2" selected>e97e57-2</option>
-            </select>
-          </div>
-          <Input label="Shopify Order ID" type="text" name="shopify_order_id" required />
-          <Button label="Test Shipping Rate" type="submit" />
-        </Form>
-      )
-    }
-    const TestShippingRateModal = () => {
-      return (
-        <div className="flex flex-col gap-2">
-          {/* Select Form Type */}
-          <div className="flex flex-row gap-4 mt-4">
-            <Button label="Manual Rate" className="text-xs" onClick={() => {
-              setTestRateType("manual")
-            }} />
-            <Button label="Shopify Order" className="text-xs" onClick={() => {
-              setTestRateType("shopify")
-            }} />
-          </div>
-          {/* Form & Output */}
-          <div className="flex flex-row gap-4">
-            {/* Test Rate Form */}
-            {testRateType === "manual" ? <TestManualRateForm /> : <TestShopifyOrderForm />}
-            {/* Test Rate Output */}
-            <div className="md:w-[300px] flex flex-col gap-2 p-4 border rounded-md mt-4">
-              <p className="text-sm font-bold">Test Rate Output</p>
-              <p className="text-sm">
-                {testRates ?
-                  (testRates.length > 0 ? (
-                    <div className="flex flex-col gap-2">
-                      {testRates.map((rate, index) => (
-                        <div key={`rate-${index}`} className="flex flex-col gap-1 border-b pb-2">
-                          <p className="text-xs font-bold">{rate.service_name}</p>
-                          <p className="text-xs">{rate.description}</p>
-                          <p className="text-xs">Total Price: {rate.total_price}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : "No rates found.")
-                  : "Output will appear here."
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-    if (activeModal === "testShippingRate") {
-      setModal({
-        visible: true,
-        title: 'Test Shipping Rate',
-        description: 'Test a shipping rate for a shipment date or Shopify order.',
-        children: <TestShippingRateModal />,
-        onClose: () => { setActiveShippingProfile(undefined); setActiveModal(undefined) }
-      })
-    }
-  }, [activeModal, activeShippingProfile, setModal, testShippingProfile, testRates, testRateType])
-
   return (
     <div id="shipping-profiles" className={`flex flex-col gap-4 ${className}`}>
       <div className="flex flex-col gap-2">
@@ -342,10 +223,6 @@ const ShippingProfiles: FC<ShippingProfilesProps> = ({ className }) => {
                   {/* Shipping Profile: Edit Rates */}
                   <Button label="Edit Rates" buttonType="primary" className="text-xs" onClick={() => {
                     showShippingRateModal(profile)
-                  }} />
-                  {/* Shipping Profile: Test Rates */}
-                  <Button label="Test Rates" className="text-xs" onClick={() => {
-                    showTestShippingRateModal()
                   }} />
                   {/* Shipping Profile: Delete */}
                   <Button label="Delete" className="text-xs" onClick={() => {
