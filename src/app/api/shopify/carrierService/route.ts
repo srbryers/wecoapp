@@ -104,5 +104,7 @@ export async function POST(request: Request) {
   }, [])
 
   // Return the rates
-  return Response.json(uniqueRates as CarrierServiceResponse[], { status: 200 })
+  return Response.json({
+    rates: uniqueRates as CarrierServiceResponse[]
+  }, { status: 200 })
 }
