@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import { CarrierService, shopify } from "./api"
+import { CarrierService, LineItem, Order, shopify } from "./api"
 import { useSetAtom } from "jotai"
 import { modalAtom } from "../atoms"
+import { CarrierServiceRequest, CarrierServiceResponse } from "../types"
 
 /**
  * Shopify: Carrier Services
@@ -18,7 +19,7 @@ const useShopifyCarrierServices = () => {
   useEffect(() => {
     const fetchCarrierServices = async () => {
       const services = await shopify.carrierServices.get()
-      setCarrierServices(services.carrier_services)
+      setCarrierServices(services.carrier_services.filter((service: CarrierService) => service.carrier_service_type === "api"))
       setLoadingCarrierServices(false)
       console.log("Finished fetching carrier services.")
     }
@@ -71,12 +72,99 @@ const useShopifyCarrierServices = () => {
     setCarrierServices(updatedServices)
   }
 
+  /**
+   * Test a Carrier Service
+   * @param rateRequest CarrierServiceRequest | { shopify_order_id: string } | { shopify_draft_order_id: string }
+   * @returns CarrierServiceResponse
+   */
+  const testCarrierService = async (rateRequest: CarrierServiceRequest | { shopify_order_id: string } | { shopify_draft_order_id: string }) => {
+
+    let result: CarrierServiceResponse[] = []
+
+    // Handle the case where we are testing a shipping profile with an order ID
+    if ('shopify_order_id' in rateRequest || 'shopify_draft_order_id' in rateRequest) {
+      let order: Order | undefined = undefined
+      // Get the shopify order or draft_order from the API
+      if ('shopify_order_id' in rateRequest) {
+        const res = (await shopify.orders.get(rateRequest.shopify_order_id)) as { order: Order }
+        order = res.order
+      } else if ('shopify_draft_order_id' in rateRequest) {
+        const res = (await shopify.draftOrders.get(rateRequest.shopify_draft_order_id)) as { draft_order: Order }
+        order = res.draft_order
+      }
+      // If we have an order, test the shipping profile
+      if (!order) {
+        throw new Error('Order not found')
+      } else {
+        console.log("[testShippingProfile] got Order:", order)
+        const carrierServiceRequest = {
+          id: order.id,
+          rate: {
+            origin: {
+              country: "US",
+              postal_code: "01720",
+              province: "MA",
+              city: "Acton"
+            },
+            destination: {
+              country: order.shipping_address?.country_code,
+              postal_code: order.shipping_address?.zip,
+              province: order.shipping_address?.province,
+              city: order.shipping_address?.city
+            },
+            items: order.line_items?.map((item: LineItem) => {
+              const shipment_date = item?.sku?.split("-")
+              if (!shipment_date) {
+                return
+              }
+              shipment_date.shift()
+              if (shipment_date.length > 0) {
+                return {
+                  name: item.name,
+                  quantity: item.quantity,
+                  price: Number(item.price) * 100,
+                  grams: item.grams,
+                  product_id: item.product_id,
+                  variant_id: item.variant_id,
+                  requires_shipping: item.requires_shipping,
+                  sku: item.sku,
+                  // shipment_date: shipment_date.join("-")
+                }
+              }
+            }).filter((value: any) => value !== undefined),
+            currency: order.currency,
+            locale: order.locale
+          }
+        }
+        console.log('CarrierServiceRequests:', carrierServiceRequest)
+        const res = await fetch('/api/shopify/carrierService', {
+          method: 'POST',
+          body: JSON.stringify(carrierServiceRequest)
+        })
+        const json = await res.json()
+        console.log('Tested shipping profile:', json)
+        result = json.rates as CarrierServiceResponse[]
+      }
+    } else {
+      const res = await fetch('/api/shopify/carrierService', {
+        method: 'POST',
+        body: JSON.stringify(rateRequest)
+      })
+      const json = await res.json()
+      console.log('Tested shipping profile:', json)
+      result = json.rates as CarrierServiceResponse[]
+    }
+
+    return result as CarrierServiceResponse[]
+  }
+
   return {
     carrierServices,
     loadingCarrierServices,
     createCarrierService,
     updateCarrierService,
-    deleteCarrierService
+    deleteCarrierService,
+    testCarrierService
   }
 
 }
