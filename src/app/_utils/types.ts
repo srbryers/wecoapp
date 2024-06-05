@@ -18,6 +18,16 @@ export type ShippingProfile =  {
   phone_required?: boolean
   min_delivery_date?: string
   max_delivery_date?: string
+  rates?: ShippingRate[]
+}
+
+export type ShippingRate = {
+  title: string
+  type: 'price' | 'weight' | 'quantity'
+  min: number
+  max: number
+  price: number
+  currency?: string
 }
 
 export type CarrierServiceResponse = ShippingProfile

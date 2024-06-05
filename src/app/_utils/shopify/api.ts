@@ -23,6 +23,24 @@ export type LineItem = {
   product_id?: number
   variant_id?: number
   quantity?: number
+  price?: number
+  title?: string
+  sku?: string
+  [key: string]: any
+}
+
+export type Address = {
+  first_name?: string
+  last_name?: string
+  company?: string
+  address1?: string
+  address2?: string
+  country?: string
+  country_code?: string
+  province?: string
+  province_code?: string
+  zip?: string
+  city?: string
 }
 
 export type Order = {
@@ -30,11 +48,14 @@ export type Order = {
   email?: string
   phone?: string
   name?: string
-  address?: string
+  shipping_address?: Address
+  billing_address?: Address
   city?: string
   province?: string
   country?: string
   zip?: string
+  currency?: string
+  locale?: string
   line_items?: LineItem[]
 }
 
@@ -185,6 +206,84 @@ export const shopify = {
       const data = await carrierService.json()
       console.log('Carrier Service:', data)
       return data as { carrier_service: CarrierService }
+    }
+  },
+  /**
+   * Orders
+   */
+  orders: {
+    get: async (order_id?: string) => {
+      console.log("getOrders")
+      const path = order_id ? `/orders/${order_id}.json` : '/orders.json'
+      const orders = await fetch('/api/shopify', {
+        method: 'POST',
+        body: JSON.stringify({
+          method: 'GET',
+          path: path
+        })
+      })
+      const data = await orders.json()
+      console.log('Orders:', data)
+      if (order_id) {
+        return data as { order: Order }
+      } else {
+        return data as { orders: Order[] }
+      }
+    },
+    post: async (order: Order) => {
+      console.log("createOrder")
+      try {
+        const newOrder = await fetch('/api/shopify', {
+          method: 'POST',
+          body: JSON.stringify({
+            method: 'POST',
+            path: '/orders.json',
+            data: {
+              order: order
+            }
+          })
+        })
+        const data = await newOrder.json()
+        console.log('Order:', data)
+        return data as { order: Order }
+      } catch (error) {
+        console.error('Error creating order:', error)
+        throw error
+      }
+    },
+    put: async (order: Order) => {
+      console.log("updateOrder")
+      try {
+        const updatedOrder = await fetch('/api/shopify', {
+          method: 'POST',
+          body: JSON.stringify({
+            method: 'PUT',
+            path: `/orders/${order.id}.json`,
+            data: {
+              order: order
+            }
+          })
+        })
+        const data = await updatedOrder.json()
+        console.log('Order:', data)
+        return data as { order: Order }
+      } catch (error) {
+        console.error('Error updating order:', error)
+        throw error
+      }
+    },
+    delete: async (order_id: string) => {
+      console.log("deleteOrder")
+      const order = await fetch('/api/shopify', {
+        method: 'POST',
+        body: JSON.stringify({
+          method: 'DELETE',
+          path: `/orders/${order_id}.json`
+        })
+      })
+      const data = await order.json()
+      console.log('Order:', data)
+      return data as { order: Order }
     }
   }
 }

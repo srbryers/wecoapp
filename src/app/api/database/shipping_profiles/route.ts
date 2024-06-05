@@ -66,11 +66,15 @@ export async function PUT(request: Request) {
 
   let result;
   const data = await request.json()
-  const docId = data.docId
+  const docId = data.id
   const collectionRef = db.collection('shipping')
 
+  if (!docId) {
+    return Response.json("No docId provided", { status: 400 })
+  }
+
   // Clear out the docId from the data object
-  delete data.docId
+  delete data.id
 
   console.log("Update Shipping Profile", data)
 

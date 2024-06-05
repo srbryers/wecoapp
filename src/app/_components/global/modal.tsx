@@ -33,13 +33,15 @@ const Modal: FC = () => {
   }, [modal])
 
   return modal && (
-    <div id="modalBackdrop" className={`fixed overflow-hidden inset-0 flex items-center justify-center bg-black bg-opacity-50
-    ${modal.visible ? '' : 'hidden'}`}>
+    <div id="modalBackdrop" className={`fixed overflow-auto inset-0 flex flex-col items-center justify-start bg-black bg-opacity-50
+    ${modal.visible ? '' : 'hidden'} p-8`}>
+      <div className="flex-1"></div>
       <div className="bg-blue-950 p-8 rounded-lg">
         {modal.title && <h2 className="text-2xl font-bold">{modal.title}</h2>}
         {modal.description && <p>{modal.description}</p>}
         {modal.children}
       </div>
+      <div className="flex-1"></div>
     </div>
   )
 }
