@@ -4,6 +4,7 @@ import PageLayout from '../_components/layout/page'
 import Divider from '../_components/global/divider'
 import FulfillmentServices from '../_components/shopify/fulfillmentServices'
 import CarrierServices from '../_components/shopify/carrierServices'
+import ShippingProfiles from '../_components/shopify/shippingProfiles'
 
 const ShopifyPage: FC = () => {
 
@@ -15,6 +16,9 @@ const ShopifyPage: FC = () => {
         <Divider />
         {/* Carrier Services */}
         <CarrierServices />
+        <Divider />
+        {/* Shipping Profiles */}
+        <ShippingProfiles />
         <Divider />
       </div>
     </PageLayout>

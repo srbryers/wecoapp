@@ -23,36 +23,40 @@ const FulfillmentServices: FC<FulfillmentServicesProps> = ({ className }) => {
     deleteFulfillmentService
   } = useShopifyFulfillmentServices()
 
+  const FulfillmentServiceModal = ({ data }: { data?: FulfillmentService} ) => {
+    return (
+      <Form onSubmit={(form) => {
+        if (data?.id) {
+          form.id = data.id
+          updateFulfillmentService(form)
+        } else {
+          createFulfillmentService(form)
+        }
+      }} className="max-w-sm mt-4">
+        <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={data?.name} />
+        <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={data?.callback_url} />
+        <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly />
+        <div className="flex flex-row flex-wrap gap-3">
+          {Object.entries(data || {}).map(([key, value], index) => {
+            if (typeof value === 'boolean') {
+              return (
+                <Input key={`input-${index}`} label={formatKeyToTitle(key)} type="checkbox" name={key} checked={value} />
+              )
+            }
+          })}
+        </div>
+        <Button label={`${data ? "Update" : "Create"} Fulfillment Service`} type="submit" />
+      </Form>
+    )
+  }
+
   const showFulfillmentServiceModal = (data?: FulfillmentService) => {
     console.log('Create a fulfillment service', data)
     setModal({
       visible: true,
       title: 'Create Fulfillment Service',
       description: 'Create a custom fulfillment service for Shopify.',
-      children: (
-        <Form onSubmit={(form) => {
-          if (data?.id) {
-            form.id = data.id
-            updateFulfillmentService(form)
-          } else {
-            createFulfillmentService(form)
-          }
-        }} className="max-w-sm mt-4">
-          <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={data?.name} />
-          <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={data?.callback_url} />
-          <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly />
-          <div className="flex flex-row flex-wrap gap-3">
-            {Object.entries(data || {}).map(([key, value], index) => {
-              if (typeof value === 'boolean') {
-                return (
-                  <Input key={`input-${index}`} label={formatKeyToTitle(key)} type="checkbox" name={key} checked={value} />
-                )
-              }
-            })}
-          </div>
-          <Button label={`${data ? "Update" : "Create"} Fulfillment Service`} type="submit" />
-        </Form>
-      )
+      children: <FulfillmentServiceModal data={data} />,
     })
   }
 
@@ -62,6 +66,7 @@ const FulfillmentServices: FC<FulfillmentServicesProps> = ({ className }) => {
         <h2 className="text-base font-bold">Fulfillment Services</h2>
         <p className="text-sm">Manage custom fulfillment services for Shopify.</p>
       </div>
+      {/* Fulfillment Services */}
       <div className="flex flex-row gap-4 w-full">
         {/* List Fulfillment Services */}
         {fulfillmentServices.length > 0

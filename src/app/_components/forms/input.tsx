@@ -10,7 +10,10 @@ type InputProps = {
   placeholder?: string
   value?: string
   defaultValue?: string
+  step?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  containerClassName?: string
+  className?: string
   readOnly?: boolean
 }
 
@@ -18,7 +21,7 @@ const Input: FC<InputProps> = ({ label, name, type, checked, required, placehold
 
   const [error, setError] = useState<string | undefined>()
 
-  let inputContainerClasses = 'flex flex-col gap-1'
+  let inputContainerClasses = `flex flex-col gap-1 flex-1 ${props.containerClassName || ''}`
   let inputClasses = 'p-2 border border-black text-black rounded-[4px]'
   let labelClasses = 'text-xs font-bold'
 
