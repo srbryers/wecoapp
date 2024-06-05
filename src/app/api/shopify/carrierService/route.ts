@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             description: profile.description,
             service_code: profile.service_code,
             currency: "USD",
-            total_price: rate.price,
+            total_price: Number(rate.price)*100,
             phone_required: profile.phone_required,
             min_delivery_date: shipment_date,
             max_delivery_date: shipment_date
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     if (!existingRate) {
       acc.push(rate)
     } else {
-      existingRate.total_price = Number(existingRate.total_price) + Number(rate.total_price)
+      existingRate.total_price = (Number(existingRate.total_price)+ Number(rate.total_price))
     }
     // Handle the min and max delivery dates
     if (existingRate?.min_delivery_date && existingRate?.max_delivery_date
