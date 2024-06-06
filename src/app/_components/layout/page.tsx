@@ -2,9 +2,9 @@ import { FC } from 'react'
 import PageHeader from '../global/pageHeader'
 import { PageLayoutProps } from '@/app/_utils/types'
 
-const PageLayout: FC<PageLayoutProps> = ({ children, title, description }) => {
+const PageLayout: FC<PageLayoutProps> = ({ children, title, description, className }) => {
   return (
-    <div className="flex flex-col h-full p-8">
+    <div className={`${className || ""} flex flex-col h-full p-8`}>
       <PageHeader
         title={title || ""}
         description={description || ""}

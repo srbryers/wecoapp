@@ -33,7 +33,7 @@ const Modal: FC = () => {
   }, [modal])
 
   return modal && (
-    <div id="modalBackdrop" className={`fixed overflow-auto inset-0 flex flex-col items-center justify-start bg-black bg-opacity-50
+    <div id="modalBackdrop" className={`z-10 fixed overflow-auto inset-0 flex flex-col items-center justify-start bg-black bg-opacity-50
     ${modal.visible ? '' : 'hidden'} p-8`}>
       <div className="flex-1"></div>
       <div className="bg-blue-950 p-8 rounded-lg">

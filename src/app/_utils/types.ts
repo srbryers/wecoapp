@@ -52,4 +52,13 @@ export type PageLayoutProps = {
   children: React.ReactNode
   title?: string
   description?: string
+  className?: string
+}
+
+export type Query = {
+  id?: string
+  query: string
+  name: string
+  sheet_id?: string
+  sheet_tab_name?: string
 }
