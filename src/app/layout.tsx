@@ -27,6 +27,7 @@ export default function RootLayout({
             { title: "Shopify", href: "/shopify" },
             { title: "Klaviyo", href: "/integrations/klaviyo" },
             { title: "Database", href: "/data/database" },
+            { title: "Snowflake", href: "/data/snowflake" },
           ]} />
           {/* Main content */}
           <div className="flex flex-col">
