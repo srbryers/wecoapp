@@ -1,12 +1,8 @@
 import snowflake from 'snowflake-sdk'
 import crypto from 'crypto'
 import fs from 'fs'
-import exp from 'constants';
-var jwt = require('jsonwebtoken');
 
 const key = fs.readFileSync(process.env['SNOWFLAKE_PRIVATE_KEY'] as string);
-
-
 const privateKeyObject = crypto.createPrivateKey({
   key: key,
   format: 'pem',

@@ -1,5 +1,4 @@
 import { db } from "@/app/_utils/firestore/firestore";
-import path from 'path';
 import { google } from 'googleapis';
 import { sf } from "@/app/_utils/snowflake/snowflake";
 
@@ -43,16 +42,12 @@ export async function POST(request: Request) {
     // Execute the Snowflake query
     const queryResult = await sf.executeQuery(query) as any[]
 
-    console.log("queryResult", queryResult)
-
     // Format the query result
     const values = [Object.keys(queryResult[0])] // Header row
     const lastColumn = String.fromCharCode(65 + values[0].length - 1) // Get the last column letter
     for (const row of queryResult) {
       values.push(Object.values(row))
     }
-
-    console.log("values", values)
 
     const res2 = await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
@@ -64,7 +59,6 @@ export async function POST(request: Request) {
     })
 
     if (!res2) { return Response.json({ error: "Sheet not found" }, { status: 404 })}
-    console.log("res2", res2)
 
     return Response.json(res2.data, { status: 200 })
   } catch (error) {

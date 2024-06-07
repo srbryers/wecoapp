@@ -30,11 +30,9 @@ export async function GET() {
 export async function POST(request: Request) {
 
   const req = await request.json()
-  console.log("req:", req)
   const query = req.query as string
   const name = req.name as string
   const handleizedName = name.toLowerCase().replace(/ /g, "-")
-  console.log("query:", query)
 
   if (!query) { return Response.json({ error: "Must provide a valid query" }, { status: 500 })}
   if (!name) { return Response.json({ error: "Must provide a valid query name" }, { status: 500 })}
@@ -44,7 +42,6 @@ export async function POST(request: Request) {
       const response = await db.collection("snowflake").doc(handleizedName).get()
       return response.data()
     })
-    console.log("res", res)
     return Response.json(res, { status: 200 })
   } catch (error) {
     console.error("error", error)
