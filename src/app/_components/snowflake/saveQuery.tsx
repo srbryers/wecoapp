@@ -8,10 +8,11 @@ import Button from '../global/button'
 
 type SaveQueryProps = {
   query: Query | undefined
+  setQuery: React.Dispatch<React.SetStateAction<Query | undefined>>
   setLoadingQueries: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const SaveQuery: FC<SaveQueryProps> = ({ query, setLoadingQueries }) => {
+const SaveQuery: FC<SaveQueryProps> = ({ query, setQuery, setLoadingQueries }) => {
 
   const setModal = useSetAtom(modalAtom)
   const [showModal, setShowModal] = useState<boolean>(false)
@@ -43,6 +44,7 @@ const SaveQuery: FC<SaveQueryProps> = ({ query, setLoadingQueries }) => {
               })
               const data = await result.json()
               console.log("Saved Query", data)
+              setQuery(data)
               setLoadingQueries(true)
               setShowModal(false)
               setModal(null)
@@ -79,7 +81,7 @@ const SaveQuery: FC<SaveQueryProps> = ({ query, setLoadingQueries }) => {
         }
       })
     }
-  }, [query, setLoadingQueries, setModal, showModal])
+  }, [query, setQuery, setLoadingQueries, setModal, showModal])
 
   return (
     <Button
@@ -87,6 +89,7 @@ const SaveQuery: FC<SaveQueryProps> = ({ query, setLoadingQueries }) => {
       className="h-full"
       buttonType="secondary"
       label="Save Query"
+      disabled={!query?.query}
       onClick={() => {
         // Save the query to the database
         setShowModal(true)

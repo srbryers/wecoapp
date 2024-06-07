@@ -54,6 +54,8 @@ const SyncToSheets: FC<SyncToSheetsProps> = ({ query, setQuery, setLoadingQuerie
             className="w-full mt-4"
             onSubmit={async (form) => {
               setRunningSync(true)
+              // Save the config to the database
+              await saveConfig()
               // Sync the query to Google Sheets
               console.log("Sync to Sheets", form)
               const res = await fetch('/api/database/snowflake/sheets', {
@@ -147,6 +149,7 @@ const SyncToSheets: FC<SyncToSheetsProps> = ({ query, setQuery, setLoadingQuerie
       className="h-full"
       label="Sync to Google Sheets"
       buttonType="secondary"
+      disabled={!query?.id}
       onClick={() => {
         // Sync the query to Google Sheets
         setShowModal(true)

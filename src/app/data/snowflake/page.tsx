@@ -126,12 +126,14 @@ const Snowflake: FC = () => {
             {/* Modal: Sync to Sheets */}
             <SyncToSheets query={query} setQuery={setQuery} setLoadingQueries={setLoadingQueries} />
             {/* Modal: Save Query */}
-            <SaveQuery query={query} setLoadingQueries={setLoadingQueries}/>
+            <SaveQuery query={query} setQuery={setQuery} setLoadingQueries={setLoadingQueries}/>
             {/* Execute Query */}
             <Button
               type="submit"
               className=""
               label="Execute Query"
+              disabled={loadingResults || !query?.query}
+              buttonType='primary'
             />
           </div>
         </Form>
@@ -152,7 +154,7 @@ const Snowflake: FC = () => {
                 {queryResult.map((row, index) => (
                   <tr key={index}>
                     {Object.values(row).map((value, index) => (
-                      <td key={index} className="p-2">{value}</td>
+                      <td key={index} className="p-2">{value as string}</td>
                     ))}
                   </tr>
                 ))}

@@ -4,11 +4,12 @@ type ButtonProps = {
   label: string | React.ReactNode
   type?: 'button' | 'submit' | 'reset'
   buttonType?: 'primary' | 'secondary'
+  disabled?: boolean
   onClick?: () => void
   className?: string
 }
 
-const Button: FC<ButtonProps> = ({ label, type, buttonType, onClick, className }) => {
+const Button: FC<ButtonProps> = ({ label, type, buttonType, disabled, onClick, className }) => {
   let buttonClasses = 'p-2 px-4 bg-blue-900 text-white rounded-[4px] font-bold'
   switch (buttonType) {
     case 'primary':
@@ -20,9 +21,15 @@ const Button: FC<ButtonProps> = ({ label, type, buttonType, onClick, className }
     default:
       break
   }
+  let disabledClasses = 'opacity-50 pointer-events-none'
 
   return (
-    <button className={`${className || ""} ${buttonClasses}`} onClick={onClick} type={type}>
+    <button 
+      className={`${className || ""} ${buttonClasses} ${disabled ? disabledClasses : ""}`} 
+      onClick={onClick} 
+      type={type}
+      disabled={disabled}
+      >
       {label}
     </button>
   )
