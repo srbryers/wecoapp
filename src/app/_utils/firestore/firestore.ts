@@ -19,10 +19,12 @@ let config = {
 } as Settings
 
 if (process.env["NODE_ENV"] === "production") {
-  config.credentials = JSON.parse(process.env["GOOGLE_APPLICATION_CREDENTIALS"] as string)
+  config.credentials = JSON.parse(process.env["GOOGLE_APPLICATION_CREDENTIALS"] || '{}' as string)
 } else {
   config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
 }
+
+// console.log("Firestore Config", config)
 
 export const db = new Firestore(config)
 

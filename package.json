@@ -20,6 +20,7 @@
     "next": "14.2.1",
     "react": "^18",
     "react-dom": "^18",
+    "request": "^2.88.2",
     "snowflake-sdk": "^1.11.0"
   },
   "devDependencies": {
@@ -35,7 +36,8 @@
   "browser": {
     "fs": false,
     "path": false,
-    "os": false
+    "os": false,
+    "request": false
   },
   "packageManager": "pnpm@8.14.0+sha256.9cebf61abd83f68177b29484da72da9751390eaad46dfc3072d266bfbb1ba7bf"
 }
