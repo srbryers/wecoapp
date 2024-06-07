@@ -9,10 +9,6 @@ export enum FirestoreActions {
   batchDelete = "batchDelete"
 }
 
-type FirestoreUtility = {
-  [key in FirestoreActions]?: any
-};
-
 export const firestore = () => {
   let config = {
     projectId: process.env["GCP_PROJECT_ID"],
@@ -20,7 +16,18 @@ export const firestore = () => {
   } as Settings
 
   if (process.env["NODE_ENV"] === "production") {
-    config.credentials = JSON.parse(process.env["GOOGLE_APPLICATION_CREDENTIALS"] || '{}' as string)
+    const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
+    if (GOOGLE_APPLICATION_CREDENTIALS) {
+      try {
+        // Parse the secret that has been added as a JSON string
+        // to retrieve database credentials
+        config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS.toString());
+      } catch (err) {
+        throw Error(
+          `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
+        );
+      }
+    }
   } else {
     config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
   }
