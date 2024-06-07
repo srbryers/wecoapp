@@ -4,7 +4,7 @@ import fs from 'fs'
 
 const executeQuery = async (sql: string) => {
 
-  const key = fs.readFileSync(process.env['SNOWFLAKE_PRIVATE_KEY'] as string);
+  const key = process.env['NODE_ENV'] === 'production' ? process.env['SNOWFLAKE_PRIVATE_KEY'] as string : fs.readFileSync(process.env['SNOWFLAKE_PRIVATE_KEY'] as string)
   const privateKeyObject = crypto.createPrivateKey({
     key: key,
     format: 'pem',

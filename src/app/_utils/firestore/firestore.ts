@@ -1,4 +1,4 @@
-import { Firestore } from '@google-cloud/firestore';
+import { Firestore, Settings } from '@google-cloud/firestore';
 
 export enum FirestoreActions {
   add = "add",
@@ -13,11 +13,18 @@ type FirestoreUtility = {
   [key in FirestoreActions]?: any
 };
 
-export const db = new Firestore({
+let config = {
   projectId: process.env["GCP_PROJECT_ID"],
   databaseId: "weco",
-  keyFilename: process.env["GOOGLE_APPLICATION_CREDENTIALS"]
-})
+} as Settings
+
+if (process.env["NODE_ENV"] === "production") {
+  config.credentials = JSON.parse(process.env["GOOGLE_APPLICATION_CREDENTIALS"] as string)
+} else {
+  config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
+}
+
+export const db = new Firestore(config)
 
 /**
  * Add a document
