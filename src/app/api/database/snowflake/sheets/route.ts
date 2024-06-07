@@ -1,4 +1,4 @@
-import { db } from "@/app/_utils/firestore/firestore";
+import { firestore } from '@/app/_utils/firestore/firestore';
 import { google } from 'googleapis';
 import { sf } from "@/app/_utils/snowflake/snowflake";
 
@@ -18,6 +18,7 @@ const initGoogleSheets = async () => {
 
 export async function POST(request: Request) {
 
+  const db = firestore().db
   const req = await request.json()
   const sheetId = req.sheetId as string
   const queryId = req.queryId as string

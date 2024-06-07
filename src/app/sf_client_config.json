@@ -1,0 +1,6 @@
+{
+  "common": {
+    "log_level": "INFO",
+    "log_path": "/snowflake.log"
+  }
+}

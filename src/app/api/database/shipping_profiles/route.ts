@@ -1,8 +1,9 @@
-import { db } from "@/app/_utils/firestore/firestore"
+import { firestore } from "@/app/_utils/firestore/firestore";
 import { ShippingProfile } from "@/app/_utils/types";
 
 export async function GET() {
   
+  const db = firestore().db
   let result;
 
   console.log("Get Shipping Profiles")
@@ -27,6 +28,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
 
+  const db = firestore().db
   let result;
   const data = await request.json()
   const docId = data.docId
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
  */
 export async function PUT(request: Request) {
 
+  const db = firestore().db
   let result;
   const data = await request.json()
   const docId = data.id
@@ -97,6 +100,7 @@ export async function PUT(request: Request) {
  */
 export async function DELETE(request: Request) {
 
+  const db = firestore().db
   let result;
   const data = await request.json()
   const docId = data.docId

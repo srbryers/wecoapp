@@ -2,9 +2,9 @@ import snowflake from 'snowflake-sdk'
 import crypto from 'crypto'
 import fs from 'fs'
 
-const executeQuery = async (sql: string) => {
+const getPrivateKey = () => {
+  const key = process.env['SNOWFLAKE_PRIVATE_KEY'] as string
 
-  const key = process.env['NODE_ENV'] === 'production' ? process.env['SNOWFLAKE_PRIVATE_KEY'] as string : fs.readFileSync(process.env['SNOWFLAKE_PRIVATE_KEY'] as string)
   const privateKeyObject = crypto.createPrivateKey({
     key: key,
     format: 'pem',
@@ -15,6 +15,13 @@ const executeQuery = async (sql: string) => {
     format: 'pem',
     type: 'pkcs8'
   });
+
+  return privateKey
+}
+
+const executeQuery = async (sql: string) => {
+
+  const privateKey = getPrivateKey()
 
   const connection = snowflake.createConnection({
     account: process.env['SNOWFLAKE_ACCOUNT'] || '',
@@ -29,6 +36,7 @@ const executeQuery = async (sql: string) => {
   return new Promise((resolve, reject) => {
     connection.connect((err, conn) => {
       if (err) {
+        console.error("Unable to connect: " + err.message)
         reject(err)
       } else {
         conn.execute({
@@ -44,7 +52,7 @@ const executeQuery = async (sql: string) => {
       }
     })
   })
-  
+
 }
 
 export const sf = {

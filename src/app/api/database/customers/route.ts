@@ -1,10 +1,11 @@
-import { db } from "@/app/_utils/firestore/firestore"
+import { firestore } from "@/app/_utils/firestore/firestore";
 
 export async function GET() {
   
   let result;
 
   console.log("Get Customers")
+  const db = firestore().db
 
   try {
     result = await db.collection('customers').get().then((response) => {
@@ -22,6 +23,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+
+  const db = firestore().db
 
   let result;
   const data = await request.json()

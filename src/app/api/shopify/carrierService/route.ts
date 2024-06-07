@@ -1,4 +1,4 @@
-import { db } from "@/app/_utils/firestore/firestore";
+import { firestore } from "@/app/_utils/firestore/firestore";
 import { LineItem } from "@/app/_utils/shopify/api";
 import { CarrierServiceResponse, ShippingProfile } from "@/app/_utils/types";
 
@@ -7,6 +7,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+
+  const db = firestore().db
 
   // const carrierServiceRequest = await testGetCarrierRequest(request);
   const carrierServiceRequest = await request.json() // carrierRequest

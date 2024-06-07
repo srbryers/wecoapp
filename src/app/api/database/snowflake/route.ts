@@ -1,13 +1,13 @@
 /**
  * Snowflake API
  */
-import { db } from "@/app/_utils/firestore/firestore"
+import { firestore } from "@/app/_utils/firestore/firestore"
 
 /**
  * Get all snowflake queries from the database
  */
 export async function GET() {
-
+  const db = firestore().db
   try {
     const res = await db.collection("snowflake").get().then((response) => {
       return response.docs.map((doc) => {
@@ -29,6 +29,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
 
+  const db = firestore().db
   const req = await request.json()
   const query = req.query as string
   const name = req.name as string
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
  */
 export async function DELETE(request: Request) {
 
+  const db = firestore().db
   const req = await request.json()
   const id = req.id as string
   console.log("id:", id)
