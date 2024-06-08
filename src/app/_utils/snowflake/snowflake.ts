@@ -23,6 +23,8 @@ const executeQuery = async (sql: string) => {
 
   const privateKey = getPrivateKey()
 
+  console.log(privateKey ? "Got private key" : "No private key")
+
   const connection = snowflake.createConnection({
     account: process.env['SNOWFLAKE_ACCOUNT'] || '',
     username: process.env['SNOWFLAKE_USERNAME'],

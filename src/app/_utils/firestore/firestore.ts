@@ -32,8 +32,6 @@ export const firestore = () => {
     config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
   }
 
-  // console.log("Firestore Config", config)
-
   const db = new Firestore(config)
 
   /**
