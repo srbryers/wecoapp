@@ -1,5 +1,5 @@
 export const shopify = {
-  graphQl: async (request: any, variables: any) => {
+  graphQl: async (request: any, variables?: any) => {
 
     const accessToken = process.env.SHOPIFY_ACCESS_TOKEN || ''
     const shop = process.env.SHOPIFY_SHOP_NAME || ''
@@ -11,7 +11,7 @@ export const shopify = {
     
     const requestBody = JSON.stringify({
       query: request, 
-      variables: variables
+      variables: variables || '{}'
     })
 
     const requestOptions = {
@@ -19,7 +19,7 @@ export const shopify = {
       headers: headers,
       body: requestBody,
       redirect: "follow"
-    }
+    } as any
 
     const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
       .then((response) => {
@@ -50,6 +50,6 @@ export const shopify = {
         }
       }
     `
-    return (await shopify.graphQl(request)).metaobjects.edges.map(x => x.node)
+    return (await shopify.graphQl(request)).metaobjects.edges.map((x: any) => x.node)
   }
 }

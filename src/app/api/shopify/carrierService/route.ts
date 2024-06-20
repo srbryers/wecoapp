@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   // const carrierServiceRequest = await testGetCarrierRequest(request);
   let isValidShipment = false;
-  let menuZone = {}
+  let menuZone: any = {}
   const carrierServiceRequest = await request.json() // carrierRequest
   const destinationZip = carrierServiceRequest.rate.destination.postal_code;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
@@ -28,7 +28,9 @@ export async function POST(request: Request) {
 
   if (!destinationZip) { 
     console.error("No destination zip found on the request.")
-    return [] 
+    return Response.json({
+      rates: [] as CarrierServiceResponse[]
+    }, { status: 200 })
   }
 
   // console.log("carrierServiceRequest", carrierServiceRequest)
@@ -56,7 +58,9 @@ export async function POST(request: Request) {
 
   if (!isValidShipment) { 
     console.error("Shipping not available for this menu zone.")
-    return [] 
+    return Response.json({
+      rates: [] as CarrierServiceResponse[]
+    }, { status: 200 })
   }
 
   // Get the rate price
