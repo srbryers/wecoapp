@@ -24,6 +24,8 @@ export async function POST(request: Request) {
   const destinationZip = carrierServiceRequest.rate.destination.postal_code;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
 
+  console.log(JSON.stringify(carrierServiceRequest))
+
   if (!destinationZip) { 
     console.error("No destination zip found on the request.")
     return [] 
@@ -56,6 +58,12 @@ export async function POST(request: Request) {
     console.error("Shipping not available for this menu zone.")
     return [] 
   }
+
+  // Get the rate price
+  const rateField = menuZone.fields.find((x: any) => x.key === 'shipping_rate')?.value
+  const zoneRate = rateField && Number(JSON.parse(rateField).amount)
+
+  console.log("zoneRate", zoneRate)
 
   // Filter out the delivery skus if applicable
   const lineItems = carrierServiceRequest.rate.items.filter((item: LineItem) => {
@@ -94,6 +102,8 @@ export async function POST(request: Request) {
 
   // Calculate the rates for each shipment date and add them together
   const rates = shipment_dates.map(({ shipment_date, price, quantity }) => {
+
+    console.log("shipment_date", shipment_date)
     /**
      * SET SHIPPING RATES HERE
      */
@@ -101,6 +111,8 @@ export async function POST(request: Request) {
 
     shippingProfiles.forEach((profile: ShippingProfile) => {
       profile?.rates?.forEach((rate) => {
+        const ratePrice = Number(rate.price) > 0 ? zoneRate : 0
+
         if (rate.type === 'price'
           && Number(price) >= Number(rate.min) // If the price is greater than the min
           && (
@@ -112,7 +124,7 @@ export async function POST(request: Request) {
             description: profile.description,
             service_code: profile.service_code,
             currency: "USD",
-            total_price: Number(rate.price)*100,
+            total_price: ratePrice*100,
             phone_required: profile.phone_required,
             min_delivery_date: shipment_date,
             max_delivery_date: shipment_date

@@ -19,6 +19,7 @@ const useShopifyCarrierServices = () => {
   useEffect(() => {
     const fetchCarrierServices = async () => {
       const services = await shopify.carrierServices.get()
+      console.log("fetchcarrierservices", services)
       setCarrierServices(services.carrier_services.filter((service: CarrierService) => service.carrier_service_type === "api"))
       setLoadingCarrierServices(false)
       console.log("Finished fetching carrier services.")
@@ -49,7 +50,7 @@ const useShopifyCarrierServices = () => {
    */
   const updateCarrierService = async (data: CarrierService) => {
     console.log('Updating carrier service:', data)
-    const service = await shopify.carrierServices.put(data)
+    const service = (await shopify.carrierServices.put(data)).carrier_service
     console.log('Updated carrier service:', service)
     const updatedServices = carrierServices.map((service) => {
       return service.id === data.id ? data : service

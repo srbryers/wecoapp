@@ -61,14 +61,16 @@ const CarrierServices: FC<CarrierServicesProps> = ({ className }) => {
    * @param data CarrierService
    */
     const showCarrierServiceModal = (data?: CarrierService) => {
-      console.log('Create a fulfillment service', data)
+      console.log('Create a carrier service', data)
       setModal({
         visible: true,
-        title: 'Create Fulfillment Service',
-        description: 'Create a custom fulfillment service for Shopify.',
+        title: 'Create Carrier Service',
+        description: 'Create a custom carrier service for Shopify.',
         onClose: () => { setActiveCarrierService(undefined); setActiveModal(''); },
         children: (
           <Form onSubmit={(form) => {
+
+            console.log("submit carrier service", form)
             if (data?.id) {
               form.id = data.id
               updateCarrierService(form)

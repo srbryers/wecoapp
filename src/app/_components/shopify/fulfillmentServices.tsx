@@ -36,6 +36,7 @@ const FulfillmentServices: FC<FulfillmentServicesProps> = ({ className }) => {
         <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={data?.name} />
         <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={data?.callback_url} />
         <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly />
+        <Input label="Fulfillment Orders Opt-in" type="checkbox" name="fulfillment_orders_opt_in" readOnly checked={true} />
         <div className="flex flex-row flex-wrap gap-3">
           {Object.entries(data || {}).map(([key, value], index) => {
             if (typeof value === 'boolean') {
