@@ -11,7 +11,7 @@ export const shopify = {
     
     const requestBody = JSON.stringify({
       query: request, 
-      variables: variables || '{}'
+      variables: variables
     })
 
     const requestOptions = {
