@@ -130,8 +130,8 @@ export async function POST(request: Request) {
             currency: "USD",
             total_price: ratePrice*100,
             phone_required: profile.phone_required,
-            min_delivery_date: shipment_date,
-            max_delivery_date: shipment_date
+            // min_delivery_date: shipment_date,
+            // max_delivery_date: shipment_date
           } as CarrierServiceResponse
           rateResponse.push(serviceResponse)
         }
