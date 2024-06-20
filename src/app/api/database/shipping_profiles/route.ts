@@ -103,7 +103,7 @@ export async function DELETE(request: Request) {
   const db = firestore().db
   let result;
   const data = await request.json()
-  const docId = data.docId
+  const docId = data.id
   const collectionRef = db.collection('shipping')
 
   console.log("Delete Shipping Profile", data)

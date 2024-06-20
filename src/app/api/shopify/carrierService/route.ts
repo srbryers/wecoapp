@@ -1,6 +1,7 @@
 import { firestore } from "@/app/_utils/firestore/firestore";
 import { LineItem } from "@/app/_utils/shopify/api";
 import { CarrierServiceResponse, ShippingProfile } from "@/app/_utils/types";
+import { shopify } from "@/app/utils/shopify";
 
 export async function GET(request: Request) {
   return Response.json({ message: 'Hello' })
@@ -10,9 +11,51 @@ export async function POST(request: Request) {
 
   const db = firestore().db
 
+  // Get shipment zones from shopify metaobjects
+  const shipmentZones = await shopify.metaobjects("menu_zone")
+  const zipCodeFieldKey = 'zip_code_json'
+  
+  // console.log("shipmentZones", shipmentZones)
+
   // const carrierServiceRequest = await testGetCarrierRequest(request);
+  let isValidShipment = false;
+  let menuZone = {}
   const carrierServiceRequest = await request.json() // carrierRequest
+  const destinationZip = carrierServiceRequest.rate.destination.postal_code;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
+
+  if (!destinationZip) { 
+    console.error("No destination zip found on the request.")
+    return [] 
+  }
+
+  // console.log("carrierServiceRequest", carrierServiceRequest)
+
+  // Check if shipment is in one of our shipping zones, otherwise return []
+  shipmentZones.forEach((shipmentZone: any) => {
+    if (shipmentZone.handle.includes('test') || shipmentZone.handle.includes('Deactivated')) {
+      return;
+    } else {
+      const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
+      if (zipField) {
+        const zipValues = JSON.parse(zipField.value).zips
+        if (zipValues.includes(destinationZip)) {
+          isValidShipment = true;
+          menuZone = shipmentZone;
+          return
+        }
+      }
+    }
+  })
+
+  console.log("destinationZip", destinationZip)
+  console.log("menuZone", menuZone)
+  console.log("isValidShipment", isValidShipment)
+
+  if (!isValidShipment) { 
+    console.error("Shipping not available for this menu zone.")
+    return [] 
+  }
 
   // Filter out the delivery skus if applicable
   const lineItems = carrierServiceRequest.rate.items.filter((item: LineItem) => {
