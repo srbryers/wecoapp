@@ -21,8 +21,10 @@ export async function POST(request: Request) {
   let isValidShipment = false;
   let menuZone: any = {}
   const carrierServiceRequest = await request.json() // carrierRequest
-  const destinationZip = carrierServiceRequest.rate.destination.postal_code;
+  const destinationZip = carrierServiceRequest.rate.destination.postal_code?.split("-")[0] || null;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
+
+  console.log("destinationZip", destinationZip)
 
   console.log(JSON.stringify(carrierServiceRequest))
 
