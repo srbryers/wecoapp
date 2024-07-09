@@ -83,7 +83,7 @@ export async function POST(request: Request) {
 
   // Filter out the delivery skus if applicable
   const lineItems = carrierServiceRequest.rate.items.filter((item: LineItem) => {
-    return item.sku && !item?.name?.includes("Delivery")
+    return !item?.name?.includes("Delivery")
   })
   // Get the shipment dates from the line_items
   lineItems.forEach((item: any) => {
