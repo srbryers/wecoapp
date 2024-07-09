@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
-  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties.length > 0 && item.properties.find((x: any) => x.name === "_bundleId"))
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties._bundleId)
   console.log("subscriptionItems", JSON.stringify(subscriptionItems, null, 2))
 
   // Check if shipment is in one of our shipping zones, otherwise return []
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   })
 
   console.log("destinationZip", destinationZip)
-  console.log("menuZone", JSON.stringify(menuZone, null, 2))
+  console.log("menuZone", menuZone.handle)
   console.log("isValidShipment", isValidShipment)
 
   if (!isValidShipment) { 
