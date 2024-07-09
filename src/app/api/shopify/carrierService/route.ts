@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   let isValidShipment = false;
   let menuZone: any = {}
   const carrierServiceRequest = await request.json() // carrierRequest
-  const destinationZip = carrierServiceRequest.rate.destination.postal_code?.split("-")[0] || null;
+  const destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
 
   console.log("destinationZip", destinationZip)
@@ -39,13 +39,14 @@ export async function POST(request: Request) {
 
   // Check if shipment is in one of our shipping zones, otherwise return []
   shipmentZones.forEach((shipmentZone: any) => {
+    const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
     if (shipmentZone.handle.includes('test') || shipmentZone.handle.includes('Deactivated')) {
       return;
     } else {
       const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
       if (zipField) {
         const zipValues = JSON.parse(zipField.value).zips
-        if (zipValues.includes(destinationZip)) {
+        if (zipValues.includes(destinationZip) && shipment_menu_weeks) {
           isValidShipment = true;
           menuZone = shipmentZone;
           return
