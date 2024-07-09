@@ -116,7 +116,7 @@ const useShopifyCarrierServices = () => {
             items: order.line_items?.map((item: LineItem) => {
               const shipment_date = item?.sku?.split("-")
               if (!shipment_date) {
-                return
+                return item
               }
               shipment_date.shift()
               if (shipment_date.length > 0) {

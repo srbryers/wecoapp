@@ -35,18 +35,27 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  // console.log("carrierServiceRequest", carrierServiceRequest)
+  console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties.length > 0 && item.properties.find((x: any) => x.name === "_bundleId"))
+  console.log("subscriptionItems", JSON.stringify(subscriptionItems, null, 2))
 
   // Check if shipment is in one of our shipping zones, otherwise return []
   shipmentZones.forEach((shipmentZone: any) => {
     const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
+    const shipment_menu_type = shipmentZone.fields.find((x: any) => x.key === 'menu_type')?.value
     if (shipmentZone.handle.includes('test') || shipmentZone.handle.includes('Deactivated')) {
       return;
     } else {
       const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
       if (zipField) {
         const zipValues = JSON.parse(zipField.value).zips
-        if (zipValues.includes(destinationZip) && shipment_menu_weeks) {
+        // Handle subscription items
+        if (zipValues.includes(destinationZip) && subscriptionItems.length > 0 && shipment_menu_type === "Subscription") {
+          isValidShipment = true;
+          menuZone = shipmentZone;
+          return
+        // Handle normal items
+        } else if (zipValues.includes(destinationZip) && shipment_menu_weeks && shipment_menu_type !== "Subscription") {
           isValidShipment = true;
           menuZone = shipmentZone;
           return
@@ -56,7 +65,7 @@ export async function POST(request: Request) {
   })
 
   console.log("destinationZip", destinationZip)
-  console.log("menuZone", menuZone)
+  console.log("menuZone", JSON.stringify(menuZone, null, 2))
   console.log("isValidShipment", isValidShipment)
 
   if (!isValidShipment) { 
