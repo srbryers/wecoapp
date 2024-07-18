@@ -154,7 +154,7 @@ export const shopify = {
       return data as { carrier_services: FulfillmentService[] }
     },
     post: async (service: CarrierService) => {
-      console.log("createCarrierService")
+      console.log("createCarrierService", service)
       try {
         const carrierService = await fetch('/api/shopify', {
           method: 'POST',

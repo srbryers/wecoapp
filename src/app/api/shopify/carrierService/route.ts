@@ -35,9 +35,10 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
-  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties._bundleId)
-  console.log("subscriptionItems", JSON.stringify(subscriptionItems, null, 2))
+  // console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
+  // console.log("item properties", carrierServiceRequest.rate.items.map((item: any) => item.properties))
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties.find((x: any) => x.name === "_bundleId"))
+  // console.log("subscriptionItems", JSON.stringify(subscriptionItems, null, 2))
 
   // Check if shipment is in one of our shipping zones, otherwise return []
   shipmentZones.forEach((shipmentZone: any) => {
@@ -126,6 +127,7 @@ export async function POST(request: Request) {
     const rateResponse = [] as CarrierServiceResponse[]
 
     shippingProfiles.forEach((profile: ShippingProfile) => {
+
       profile?.rates?.forEach((rate) => {
         const ratePrice = Number(rate.price) > 0 ? zoneRate : 0
 
@@ -157,6 +159,7 @@ export async function POST(request: Request) {
   // Reduce the rates to unique service names
   const uniqueRates = rates.reduce((acc: CarrierServiceResponse[], rate: CarrierServiceResponse) => {
     const existingRate = acc.find((r) => r.service_name === rate.service_name)
+
     if (!existingRate) {
       acc.push(rate)
     } else {
@@ -175,6 +178,16 @@ export async function POST(request: Request) {
     }
     return acc
   }, [])
+
+  // Set the rate service name based on the zone + if it is subscription
+  rates.forEach((rate) => {
+    const shipping_service_name = menuZone.fields.find((x: any) => x.key === 'shipping_service_name')?.value
+    if (subscriptionItems.length > 0 && shipping_service_name) {
+      rate.service_name = shipping_service_name
+      rate.description = shipping_service_name
+    }
+  })
+  
 
   // Return the rates
   return Response.json({
