@@ -213,6 +213,7 @@ export async function POST(request: Request) {
     }
   })
   
+  console.log("uniqueRates", JSON.stringify(uniqueRates))
 
   // Return the rates
   return Response.json({
