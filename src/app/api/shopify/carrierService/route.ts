@@ -117,6 +117,8 @@ export async function POST(request: Request) {
     })
   }) as ShippingProfile[]
 
+  console.log("shippingProfiles", shippingProfiles)
+
   // Calculate the rates for each shipment date and add them together
   const rates = shipment_dates.map(({ shipment_date, price, quantity }) => {
 
@@ -182,9 +184,32 @@ export async function POST(request: Request) {
   // Set the rate service name based on the zone + if it is subscription
   rates.forEach((rate) => {
     const shipping_service_name = menuZone.fields.find((x: any) => x.key === 'shipping_service_name')?.value
+    const free_shipping_minimum = menuZone.fields.find((x: any) => x.key === 'free_shipping_minimum')?.value
+    const shipping_cost = menuZone.fields.find((x: any) => x.key === 'shipping_cost')?.value
+
+    console.log("shipping_service_name", shipping_service_name, free_shipping_minimum, shipping_cost)
+
     if (subscriptionItems.length > 0 && shipping_service_name) {
       rate.service_name = shipping_service_name
       rate.description = shipping_service_name
+
+      // handle free shipping
+      if (free_shipping_minimum && shipping_cost) {
+        const freeShippingMinimum = JSON.parse(free_shipping_minimum).amount
+        const shippingCost = JSON.parse(shipping_cost).amount
+
+        const lineItemsTotal = carrierServiceRequest.rate.items.reduce((acc: number, item: any) => { 
+          if (item.properties.Type === 'Freebie') return acc
+          return acc + (Number(item.price) * item.quantity) 
+        }, 0)
+        console.log("lineItemsTotal", lineItemsTotal)
+        console.log("free_shipping_minimum", freeShippingMinimum)
+        if (lineItemsTotal >= Number(freeShippingMinimum)) {
+          rate.total_price = 0
+        } else {
+          rate.total_price = Number(shippingCost)*100
+        }
+      }
     }
   })
   

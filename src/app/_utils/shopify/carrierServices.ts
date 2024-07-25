@@ -114,12 +114,20 @@ const useShopifyCarrierServices = () => {
               city: order.shipping_address?.city
             },
             items: order.line_items?.map((item: LineItem) => {
+              let res = item
+              // Map the properties from an array to an object
+              if (item.properties) {
+                res.properties = item.properties.reduce((acc: any, property: any) => {
+                  acc[property.name] = property.value
+                  return acc
+                }, {})
+              }
               const shipment_date = item?.sku?.split("-")
               if (!shipment_date) {
                 return item
               }
               shipment_date.shift()
-              if (shipment_date.length > 0) {
+              if (shipment_date.length > 0) { 
                 return {
                   name: item.name,
                   quantity: item.quantity,
@@ -131,6 +139,8 @@ const useShopifyCarrierServices = () => {
                   sku: item.sku,
                   // shipment_date: shipment_date.join("-")
                 }
+              } else {
+                return item
               }
             }).filter((value: any) => value !== undefined),
             currency: order.currency,
