@@ -122,9 +122,13 @@ const useShopifyCarrierServices = () => {
                   return acc
                 }, {})
               }
+              // Update the variant price
+              if (item.price) {
+                res.price = Number(item.price) * 100
+              }
               const shipment_date = item?.sku?.split("-")
               if (!shipment_date) {
-                return item
+                return res
               }
               shipment_date.shift()
               if (shipment_date.length > 0) { 

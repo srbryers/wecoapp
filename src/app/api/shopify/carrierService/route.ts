@@ -200,7 +200,7 @@ export async function POST(request: Request) {
 
         const lineItemsTotal = carrierServiceRequest.rate.items.reduce((acc: number, item: any) => { 
           if (item.properties.Type === 'Freebie') return acc
-          return acc + (Number(item.price) * item.quantity) 
+          return acc + (Number(item.price/100) * item.quantity) 
         }, 0)
         console.log("lineItemsTotal", lineItemsTotal)
         console.log("free_shipping_minimum", freeShippingMinimum)
