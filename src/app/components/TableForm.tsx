@@ -13,6 +13,7 @@ interface TableFormProps {
   action?: 'create' | 'update' | 'test'
   resource?: string
   path?: string
+  handleSubmit?: (event: FormEvent<HTMLFormElement>) => void
 }
 
 export default function TableForm(props: TableFormProps) {
@@ -98,7 +99,7 @@ export default function TableForm(props: TableFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-xl">
+    <form onSubmit={props.handleSubmit || handleSubmit} className="w-full max-w-xl">
       <div className="grid grid-rows-auto gap-2 w-full">
         {Object.entries(props.data).map(([key, value], index) => {
 

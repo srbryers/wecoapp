@@ -41,6 +41,8 @@ export const shopify = {
         }
       `
       const res = await shopifyAdminApiGql(request)
+
+      console.log('CarrierServices:', res)
       return res.carrierServices.edges.map((x: any) => {
         const legacy_id = Number(x.node.id.split('/').pop())
         return {

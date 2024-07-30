@@ -1,18 +1,16 @@
+import { CarrierService } from "@/app/_utils/shopify/api";
 import { shopify } from "@/app/actions/shopify";
-import TableForm from "@/app/components/TableForm";
+import TestCarrierService from "@/app/components/carrierService/TestCarrierService";
 
-export default async function TestCarrierService({ params}: {
+export default async function Page({ params}: {
   params: {
     id: string
   }
 }) {
 
   const carrierService = (await shopify.carrierServices.get(params.id))?.[0]
-  const formData = {
-    id: carrierService.id,
-    name: carrierService.name,
-    shopify_order_id: ''
-  }
+
+  console.log('carrierService', carrierService)
 
   return (
     <>
@@ -21,14 +19,7 @@ export default async function TestCarrierService({ params}: {
           <h1 className="text-xl font-bold">Test Carrier Service</h1>
           <h3>{carrierService.name}</h3>
         </div>
-        <TableForm
-          id={params.id}
-          columns={2}
-          data={formData}
-          action="test"
-          resource="shopify"
-          path="carrierServices"
-        />
+        <TestCarrierService carrierService={carrierService} />
       </div>
     </> 
   )
