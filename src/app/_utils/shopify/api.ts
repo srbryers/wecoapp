@@ -13,10 +13,11 @@ export type FulfillmentService = {
 export type CarrierService = {
   id?: number
   active?: boolean
-  callback_url?: string
+  callbackUrl?: string
   name?: string
-  service_discovery?: boolean
-  carrier_service_type?: "api" | "legacy"
+  serviceDiscovery?: boolean
+  carrierServiceType?: "api" | "legacy"
+  legacy_id?: number
 }
 
 export type LineItem = {

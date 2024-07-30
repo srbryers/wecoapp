@@ -1,3 +1,4 @@
+'use client'
 import { CarrierServiceRequest, CarrierServiceResponse } from "@/app/_utils/types"
 import Form from "../forms/form"
 import Input from "../forms/input"
