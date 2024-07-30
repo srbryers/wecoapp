@@ -14,6 +14,7 @@ export default async function CarrierService({ params }: {
       <div className="actions flex flex-row gap-4">
         <CustomLink href={`/carrierService/${params.id}/edit`}>Edit</CustomLink>
         <CustomLink href={`/carrierService/${params.id}/delete`}>Delete</CustomLink>
+        <CustomLink href={`/carrierService/test`}>Test</CustomLink>
       </div>
     </div>
   ) : (

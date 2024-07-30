@@ -1,7 +1,7 @@
 import { firestore } from "@/app/_utils/firestore/firestore";
 import { LineItem } from "@/app/_utils/shopify/api";
 import { CarrierServiceResponse, ShippingProfile } from "@/app/_utils/types";
-import { shopify } from "@/app/utils/shopify";
+import { shopify } from "@/app/actions/shopify";
 
 export async function GET(request: Request) {
   return Response.json({ message: 'Hello' })
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const db = firestore().db
 
   // Get shipment zones from shopify metaobjects
-  const shipmentZones = await shopify.metaobjects("menu_zone")
+  const shipmentZones = await shopify.metaobjects.get('menu_zone')
   const zipCodeFieldKey = 'zip_code_json'
   
   // console.log("shipmentZones", shipmentZones)

@@ -13,8 +13,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  carrierService
 }: Readonly<{
   children: React.ReactNode;
+  carrierService: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -35,7 +37,8 @@ export default function RootLayout({
             </div>
             {children}
           </div>
-          
+          {/* Slots */}
+          <div>{carrierService}</div>
         </div>
       </body>
     </html>

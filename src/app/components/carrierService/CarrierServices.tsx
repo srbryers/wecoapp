@@ -1,18 +1,9 @@
 'use client'
-import { modalAtom } from '@/app/_utils/atoms'
-import { useSetAtom } from 'jotai'
-import { FC, useState } from 'react'
-import Form from '../forms/form'
-import Input from '../forms/input'
-import Button from '../global/button'
-import useShopifyCarrierServices from '@/app/_utils/shopify/carrierServices'
+import { FC } from 'react'
+import Button from '@/app/components/Button'
 import { CarrierService } from '@/app/_utils/shopify/api'
-import { formatKeyToTitle } from '@/app/_utils/helpers'
-import { CarrierServiceRequest } from '@/app/_utils/types'
 
 import '@/app/_assets/example-carrierRequest.json'
-import TestCarrierService from './TestCarrierService'
-import Link from 'next/link'
 import CustomLink from '@/app/components/CustomLink'
 
 type CarrierServicesProps = {
@@ -48,7 +39,6 @@ const CarrierServices: FC<CarrierServicesProps> = (props) => {
                 <div className="service-actions flex flex-row gap-2">
                   <CustomLink href={`/carrierService/${service.legacy_id}`}>View</CustomLink>
                   <CustomLink href={`/carrierService/${service.legacy_id}/edit`}>Edit</CustomLink>
-                  <CustomLink href={`/carrierService/${service.legacy_id}/test`}>Test</CustomLink>
                 </div>
               </div>
             )
@@ -60,8 +50,6 @@ const CarrierServices: FC<CarrierServicesProps> = (props) => {
       <div className="actions flex flex-row flex-wrap gap-4">
         {/* Create a service */}
         <Button label="Create Carrier Service"/>
-        {/* Test a service */}
-        <TestCarrierService />
       </div>
     </div>
   )

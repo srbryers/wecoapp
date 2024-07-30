@@ -8,17 +8,34 @@ interface TableFormProps {
   id: string
   columns: number
   data: {
-    [key: string]: string
+    [key: string]: any
   }
-  action?: 'create' | 'update'
+  action?: 'create' | 'update' | 'test'
   resource?: string
   path?: string
 }
 
 export default function TableForm(props: TableFormProps) {
 
+  const [buttonText, setButtonText] = useState<string>('Save')
   const [formData, setFormData] = useState<TableFormProps["data"]>({})
   const [errors, setErrors] = useState<string[]>([])
+
+  useEffect(() => {
+    switch (props.action) {
+      case 'create':
+        setButtonText('Confirm & Save')
+        break
+      case 'update':
+        setButtonText('Save Changes')
+        break
+      case 'test':
+        setButtonText('Execute Test')
+        break
+      default:
+        console.error('Action not found.')
+    }
+  }, [props.action])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -83,24 +100,29 @@ export default function TableForm(props: TableFormProps) {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-xl">
       <div className="grid grid-rows-auto gap-2 w-full">
-        {Object.entries(props.data).map(([key, value], index) => (
-          <div key={index} className="flex gap-4 items-center w-full">
-            <div className="font-bold min-w-[120px]">{key}</div>
-            <div className="flex-1">
-              <input
-                type="text"
-                className="p-2 px-3 text-black w-full rounded-md"
-                name={key}
-                defaultValue={value as string}
-                onChange={handleInputChange}
-              />
+        {Object.entries(props.data).map(([key, value], index) => {
+
+          console.log("value: ", value)
+          
+          return (
+            <div key={index} className="flex gap-4 items-center w-full">
+              <div className="font-bold min-w-[120px]">{key}</div>
+              <div className="flex-1">
+                <input
+                  type="text"
+                  className="p-2 px-3 text-black w-full rounded-md"
+                  name={key}
+                  defaultValue={value as string || ''}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       {/* Actions */}
       <div className="form--actions flex flex-row flex-wrap mt-4 justify-end">
-        <Button label="Save" type="submit" />
+        <Button label={buttonText} type="submit" />
       </div>
       {/* Errors */}
       <div className="form--errors">

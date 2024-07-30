@@ -2,7 +2,7 @@ import { FC, Suspense } from 'react'
 import PageLayout from '../_components/layout/page'
 import Divider from '../_components/global/divider'
 import FulfillmentServices from '../_components/shopify/fulfillmentServices'
-import CarrierServices from '../_components/shopify/carrierServices'
+import CarrierServices from '@/app/components/carrierService/CarrierServices'
 import ShippingProfiles from '../_components/shopify/shippingProfiles'
 import { shopify } from '../actions/shopify'
 
