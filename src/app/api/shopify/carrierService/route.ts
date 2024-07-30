@@ -20,8 +20,8 @@ export async function POST(request: Request) {
   // const carrierServiceRequest = await testGetCarrierRequest(request);
   let isValidShipment = false;
   let menuZone: any = {}
-  const carrierServiceRequest = await request.json() // carrierRequest
-  const destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
+  let carrierServiceRequest = await request.json() // carrierRequest
+  let destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
 
   console.log("destinationZip", destinationZip)
@@ -33,6 +33,11 @@ export async function POST(request: Request) {
     return Response.json({
       rates: [] as CarrierServiceResponse[]
     }, { status: 200 })
+  }
+
+  // Add "0" to zip if it is less than 5 characters
+  if (destinationZip.length < 5) {
+    destinationZip = destinationZip.padStart(5, "0")
   }
 
   // console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
