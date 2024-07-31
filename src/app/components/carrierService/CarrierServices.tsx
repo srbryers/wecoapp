@@ -1,7 +1,7 @@
 'use client'
 import { FC } from 'react'
 import Button from '@/app/components/Button'
-import { CarrierService } from '@/app/_utils/shopify/api'
+import { CarrierService } from '@/app/utils/types'
 
 import '@/app/_assets/example-carrierRequest.json'
 import CustomLink from '@/app/components/CustomLink'

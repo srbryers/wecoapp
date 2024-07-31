@@ -1,4 +1,4 @@
-import { firestore } from "@/app/_utils/firestore/firestore";
+import { firestore } from "@/app/utils/firestore/firestore";
 
 export async function GET() {
   

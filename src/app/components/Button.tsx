@@ -7,9 +7,10 @@ type ButtonProps = {
   disabled?: boolean
   onClick?: () => void
   className?: string
+  loading?: boolean
 }
 
-const Button: FC<ButtonProps> = ({ label, type, buttonType, disabled, onClick, className }) => {
+const Button: FC<ButtonProps> = ({ label, type, buttonType, disabled, onClick, className, loading }) => {
   let buttonClasses = 'p-2 px-4 bg-blue-900 text-white rounded-[4px] font-bold'
   switch (buttonType) {
     case 'primary':
@@ -28,9 +29,9 @@ const Button: FC<ButtonProps> = ({ label, type, buttonType, disabled, onClick, c
       className={`${className || ""} ${buttonClasses} ${disabled ? disabledClasses : ""}`} 
       onClick={onClick} 
       type={type}
-      disabled={disabled}
+      disabled={disabled || loading}
       >
-      {label}
+      {loading ? 'Loading...' : label}
     </button>
   )
 }

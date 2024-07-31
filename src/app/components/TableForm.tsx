@@ -102,9 +102,6 @@ export default function TableForm(props: TableFormProps) {
     <form onSubmit={props.handleSubmit || handleSubmit} className="w-full max-w-xl">
       <div className="grid grid-rows-auto gap-2 w-full">
         {Object.entries(props.data).map(([key, value], index) => {
-
-          console.log("value: ", value)
-          
           return (
             <div key={index} className="flex gap-4 items-center w-full">
               <div className="font-bold min-w-[120px]">{key}</div>

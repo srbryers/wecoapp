@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./_components/global/navigation";
-import Modal from "./_components/global/modal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,12 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className}`}>
-        <Modal />
         <div className="grid grid-cols-2 grid-cols-[200px_1fr] min-h-screen bg-gray-900">
           {/* Side navigation */}
           <Navigation links={[
             { title: "Home", href: "/" },
-            { title: "Shopify", href: "/shopify" },
+            { title: "Shopify", href: "/integrations/shopify" },
+            { title: "Loop", href: "/integrations/loop" },
             { title: "Klaviyo", href: "/integrations/klaviyo" },
             { title: "Database", href: "/data/database" },
             { title: "Snowflake", href: "/data/snowflake" },

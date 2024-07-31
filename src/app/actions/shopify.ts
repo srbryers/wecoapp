@@ -1,6 +1,5 @@
-import { CarrierService, LineItem, Order } from "../_utils/shopify/api"
-import { CarrierServiceRequest, CarrierServiceResponse } from "../_utils/types"
-import { shopifyAdminApiRest, shopifyAdminApiGql } from "../utils/shopify"
+import { CarrierService, LineItem, Order, CarrierServiceRequest, CarrierServiceResponse } from "@/app/utils/types"
+import { shopifyAdminApiRest, shopifyAdminApiGql } from "@/app/utils/shopify"
 
 export const shopify = {
   fulfillmentServices: {
@@ -42,7 +41,7 @@ export const shopify = {
       `
       const res = await shopifyAdminApiGql(request)
 
-      console.log('CarrierServices:', res)
+      console
       return res.carrierServices.edges.map((x: any) => {
         const legacy_id = Number(x.node.id.split('/').pop())
         return {

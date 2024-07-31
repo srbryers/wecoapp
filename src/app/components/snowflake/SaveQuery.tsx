@@ -1,10 +1,10 @@
-import { modalAtom } from '@/app/_utils/atoms'
+import { modalAtom } from '@/app/utils/atoms'
 import { useSetAtom } from 'jotai'
 import { FC, useEffect, useState } from 'react'
-import Form from '../forms/form'
-import { Query } from '@/app/_utils/types'
-import Input from '../forms/input'
-import Button from '../global/button'
+import Form from '../../_components/forms/form'
+import { Query } from '@/app/utils/types'
+import Input from '../../_components/forms/input'
+import Button from '../../_components/global/button'
 
 type SaveQueryProps = {
   query: Query | undefined

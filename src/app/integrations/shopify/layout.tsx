@@ -1,4 +1,4 @@
-import PageHeader from '../_components/global/pageHeader'
+import PageHeader from "@/app/components/PageHeader"
 
 export default function Layout({ 
   children,

@@ -1,5 +1,5 @@
-import { firestore } from "@/app/_utils/firestore/firestore";
-import { ShippingProfile } from "@/app/_utils/types";
+import { firestore } from "@/app/utils/firestore/firestore";
+import { ShippingProfile } from "@/app/utils/types";
 
 export async function GET() {
   

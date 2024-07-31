@@ -2,16 +2,14 @@
  * @fileoverview Page component for Snowflake query
  */
 'use client'
-import Form from '@/app/_components/forms/form'
-import Input from '@/app/_components/forms/input'
-import Button from '@/app/_components/global/button'
-import PageLayout from '@/app/_components/layout/page'
-import SaveQuery from '@/app/_components/snowflake/saveQuery'
-import SyncToSheets from '@/app/_components/snowflake/syncToSheets'
-import { modalAtom } from '@/app/_utils/atoms'
-import { Query } from '@/app/_utils/types'
+import SaveQuery from '@/app/components/snowflake/SaveQuery'
+import SyncToSheets from '@/app/components/snowflake/SyncToSheets'
+import { modalAtom } from '@/app/utils/atoms'
+import { Query } from '@/app/utils/types'
 import { useSetAtom } from 'jotai'
 import { FC, useEffect, useState } from 'react'
+import Button from '@/app/components/Button'
+import Form from '@/app/components/forms/Form'
 
 const Snowflake: FC = () => {
 
@@ -51,7 +49,7 @@ const Snowflake: FC = () => {
   }, [loadingQueries])
 
   return (
-    <PageLayout title="Snowflake" className="h-screen overflow-hidden">
+    <div className="h-screen overflow-hidden">
       <div className="flex flex-col gap-4 w-full h-full">
         {/* List of saved queries */}
         <ul className="w-full flex flex-row gap-4">
@@ -165,7 +163,7 @@ const Snowflake: FC = () => {
           )}
         </div>
       </div>
-    </PageLayout>
+    </div>
   )
 }
 

@@ -1,4 +1,4 @@
-import { firestore } from '@/app/_utils/firestore/firestore';
+import { firestore } from '@/app/utils/firestore/firestore';
 import { google } from 'googleapis';
 import { sf } from "@/app/_utils/snowflake/snowflake";
 

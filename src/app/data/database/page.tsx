@@ -1,13 +1,12 @@
 'use client'
-import Form from '@/app/_components/forms/form'
-import Input from '@/app/_components/forms/input'
-import Button from '@/app/_components/global/button'
-import Divider from '@/app/_components/global/divider'
-import PageLayout from '@/app/_components/layout/page'
-import DataTable from '@/app/_components/tables/dataTable'
-import DataTableCell from '@/app/_components/tables/dataTableCell'
-import DataTableHeaders from '@/app/_components/tables/dataTableHeaders'
-import DataTableRow from '@/app/_components/tables/dataTableRow'
+import Button from '@/app/components/Button'
+import Divider from '@/app/components/Divider'
+import Form from '@/app/components/forms/Form'
+import Input from '@/app/components/forms/Input'
+import DataTable from '@/app/components/tables/DataTable'
+import DataTableCell from '@/app/components/tables/DataTableCell'
+import DataTableHeaders from '@/app/components/tables/DataTableHeaders'
+import DataTableRow from '@/app/components/tables/DataTableRow'
 import { FC, useEffect, useState } from 'react'
 
 const Database: FC = () => {
@@ -45,7 +44,7 @@ const Database: FC = () => {
   }, [])
 
   return (
-    <PageLayout title="Database">
+    <div>
       {/* Add a customer */}
       <div className="">
         <Form onSubmit={addCustomer}>
@@ -85,7 +84,7 @@ const Database: FC = () => {
           </DataTable>
         </div>
       )}
-    </PageLayout>
+    </div>
   )
 
 }

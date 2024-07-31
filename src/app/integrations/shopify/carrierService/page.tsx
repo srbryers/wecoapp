@@ -1,6 +1,6 @@
 // List of carrierServices
-import CarrierServices from "../_components/shopify/carrierServices"
-import { shopify } from "../actions/shopify"
+import CarrierServices from "@/app/components/carrierService/CarrierServices"
+import { shopify } from "../../../actions/shopify"
 
 export default async function Page () {
   const carrierServices = await shopify.carrierServices.get()

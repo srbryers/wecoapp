@@ -1,7 +1,7 @@
 /**
  * Snowflake API
  */
-import { firestore } from "@/app/_utils/firestore/firestore"
+import { firestore } from "@/app/utils/firestore/firestore"
 
 /**
  * Get all snowflake queries from the database

@@ -1,10 +1,7 @@
 import { FC, Suspense } from 'react'
-import PageLayout from '../_components/layout/page'
-import Divider from '../_components/global/divider'
-import FulfillmentServices from '../_components/shopify/fulfillmentServices'
+import Divider from '@/app/components/Divider'
 import CarrierServices from '@/app/components/carrierService/CarrierServices'
-import ShippingProfiles from '../_components/shopify/shippingProfiles'
-import { shopify } from '../actions/shopify'
+import { shopify } from '@/app/actions/shopify'
 
 const ShopifyPage: FC = async () => {
 

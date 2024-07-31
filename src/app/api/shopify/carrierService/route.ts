@@ -1,6 +1,5 @@
-import { firestore } from "@/app/_utils/firestore/firestore";
-import { LineItem } from "@/app/_utils/shopify/api";
-import { CarrierServiceResponse, ShippingProfile } from "@/app/_utils/types";
+import { firestore } from "@/app/utils/firestore/firestore";
+import { LineItem, CarrierServiceResponse, ShippingProfile } from "@/app/utils/types";
 import { shopify } from "@/app/actions/shopify";
 
 export async function GET(request: Request) {
