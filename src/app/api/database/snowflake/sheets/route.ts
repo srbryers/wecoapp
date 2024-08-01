@@ -1,6 +1,6 @@
 import { firestore } from '@/app/utils/firestore/firestore';
 import { google } from 'googleapis';
-import { sf } from "@/app/_utils/snowflake/snowflake";
+import { sf } from "@/app/utils/snowflake/snowflake"
 
 const initGoogleSheets = async () => {
   let config = {

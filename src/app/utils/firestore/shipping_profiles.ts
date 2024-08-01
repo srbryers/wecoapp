@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { CarrierServiceRequest, CarrierServiceResponse, ShippingProfile } from "../types";
+import { ShippingProfile } from "../types";
 import { useSetAtom } from "jotai";
 import { modalAtom } from "../atoms";
-import { LineItem, Order, shopify } from "../shopify/api";
 
 export const defaultShippingProfile: ShippingProfile = {
   service_name: '',

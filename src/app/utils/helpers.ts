@@ -10,8 +10,9 @@ export const formatKeyToTitle = (key: string) => {
 
 export const parseFormData = (event: FormEvent<HTMLFormElement>) => {
   const data = new FormData(event.currentTarget)
+  const entries = data.entries() as unknown as any[]
   let values: any[] = []
-  data.entries().forEach(([key, value]) => {
+  entries.forEach(([key, value]) => {
     values.push({ [key]: value })
   })
   values = values.reduce((acc, val) => {
@@ -76,7 +77,7 @@ export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?:
       availableDeliveryDays.forEach((availableDeliveryDay: string) => {
         const deliveryDayIndex = daysOfWeek.findIndex(d => d === availableDeliveryDay)
         if (deliveryDayIndex === nextDay) {
-          const dateDiff = nextDate - now
+          const dateDiff = nextDate.valueOf() - now.valueOf()
           // Convert date Diff to hours
           if (dateDiff >= cutoffHoursMs) {
             availableDeliveryDates.push(nextDayDateString)

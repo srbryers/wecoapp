@@ -1,10 +1,10 @@
 import { FC, useEffect, useState } from 'react'
-import Button from '../../_components/global/button'
 import { Query } from '@/app/utils/types'
 import { useSetAtom } from 'jotai'
 import { modalAtom } from '@/app/utils/atoms'
-import Form from '../../_components/forms/form'
-import Input from '../../_components/forms/input'
+import Form from '@/app/components/forms/Form'
+import Input from '@/app/components/forms/Input'
+import Button from '@/app/components/Button'
 
 type SyncToSheetsProps = {
   query: Query | undefined
