@@ -132,3 +132,15 @@ export type Order = {
   locale?: string
   line_items?: LineItem[]
 }
+
+export type MenuZone = {
+  title: string
+  zip_code_json?: string
+  week_day_availability?: string[]
+  shipping_service_name?: string
+  cutoff_hours?: number
+  cutoff_time?: string
+  menu_type?: string
+  free_shipping_minimum?: string
+  shipping_cost?: string
+}

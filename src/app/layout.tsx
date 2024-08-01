@@ -26,6 +26,7 @@ export default function RootLayout({
             { title: "Home", href: "/" },
             { title: "Shopify", href: "/integrations/shopify" },
             { title: "Loop", href: "/integrations/loop" },
+            { title: "ShipStation", href: "/integrations/shipStation" },
             { title: "Klaviyo", href: "/integrations/klaviyo" },
             { title: "Database", href: "/data/database" },
             { title: "Snowflake", href: "/data/snowflake" },

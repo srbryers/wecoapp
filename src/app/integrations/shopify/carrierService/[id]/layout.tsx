@@ -1,4 +1,4 @@
-import PageHeader from "@/app/_components/global/pageHeader"
+import PageHeader from "@/app/components/PageHeader"
 import { Suspense } from "react"
 
 export default function Layout({ 
@@ -7,11 +7,7 @@ export default function Layout({
   children: React.ReactNode,
 }) {
   return (
-    <div className={`flex flex-col h-full p-8`}>
-      <PageHeader
-        title={"Shopify"}
-        description={""}
-      />
+    <div className={`flex flex-col h-full`}>
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col h-full items-start w-full">{children}</div>

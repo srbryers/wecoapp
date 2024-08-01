@@ -1,6 +1,7 @@
 import { firestore } from "@/app/utils/firestore/firestore";
 import { LineItem, CarrierServiceResponse, ShippingProfile } from "@/app/utils/types";
 import { shopify } from "@/app/actions/shopify";
+import { getShipmentZone } from "@/app/utils/carrierServices";
 
 export async function GET(request: Request) {
   return Response.json({ message: 'Hello' })
@@ -10,22 +11,18 @@ export async function POST(request: Request) {
 
   const db = firestore().db
 
-  // Get shipment zones from shopify metaobjects
-  const shipmentZones = await shopify.metaobjects.get('menu_zone')
-  const zipCodeFieldKey = 'zip_code_json'
-  
-  // console.log("shipmentZones", shipmentZones)
-
-  // const carrierServiceRequest = await testGetCarrierRequest(request);
-  let isValidShipment = false;
-  let menuZone: any = {}
+  // Setup the carrier service request
   const carrierServiceRequest = await request.json() // carrierRequest
   const destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties._bundleId)
+  
+  // Get the menuZone
+  const menuZoneRequest = await getShipmentZone({
+    destinationZip: destinationZip,
+    lineItems: carrierServiceRequest.rate.items
+  })
+
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
-
-  console.log("destinationZip", destinationZip)
-
-  console.log(JSON.stringify(carrierServiceRequest))
 
   if (!destinationZip) { 
     console.error("No destination zip found on the request.")
@@ -34,41 +31,7 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  // console.log("carrierServiceRequest items", JSON.stringify(carrierServiceRequest.rate.items, null, 2))
-  // console.log("item properties", carrierServiceRequest.rate.items.map((item: any) => item.properties))
-  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties._bundleId)
-  // console.log("subscriptionItems", JSON.stringify(subscriptionItems, null, 2))
-
-  // Check if shipment is in one of our shipping zones, otherwise return []
-  shipmentZones.forEach((shipmentZone: any) => {
-    const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
-    const shipment_menu_type = shipmentZone.fields.find((x: any) => x.key === 'menu_type')?.value
-    if (shipmentZone.handle.includes('test') || shipmentZone.handle.includes('Deactivated')) {
-      return;
-    } else {
-      const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
-      if (zipField) {
-        const zipValues = JSON.parse(zipField.value).zips
-        // Handle subscription items
-        if (zipValues.includes(destinationZip) && subscriptionItems.length > 0 && shipment_menu_type === "Subscription") {
-          isValidShipment = true;
-          menuZone = shipmentZone;
-          return
-        // Handle normal items
-        } else if (zipValues.includes(destinationZip) && shipment_menu_weeks && shipment_menu_type !== "Subscription") {
-          isValidShipment = true;
-          menuZone = shipmentZone;
-          return
-        }
-      }
-    }
-  })
-
-  console.log("destinationZip", destinationZip)
-  console.log("menuZone", menuZone.handle)
-  console.log("isValidShipment", isValidShipment)
-
-  if (!isValidShipment) { 
+  if (!menuZoneRequest.isValidShipment) { 
     console.error("Shipping not available for this menu zone.")
     return Response.json({
       rates: [] as CarrierServiceResponse[]
@@ -76,7 +39,7 @@ export async function POST(request: Request) {
   }
 
   // Get the rate price
-  const rateField = menuZone.fields.find((x: any) => x.key === 'shipping_rate')?.value
+  const rateField = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_rate')?.value
   const zoneRate = rateField && Number(JSON.parse(rateField).amount)
 
   console.log("zoneRate", zoneRate)
@@ -182,9 +145,9 @@ export async function POST(request: Request) {
 
   // Set the rate service name based on the zone + if it is subscription
   rates.forEach((rate) => {
-    const shipping_service_name = menuZone.fields.find((x: any) => x.key === 'shipping_service_name')?.value
-    const free_shipping_minimum = menuZone.fields.find((x: any) => x.key === 'free_shipping_minimum')?.value
-    const shipping_cost = menuZone.fields.find((x: any) => x.key === 'shipping_cost')?.value
+    const shipping_service_name = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_service_name')?.value
+    const free_shipping_minimum = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'free_shipping_minimum')?.value
+    const shipping_cost = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_cost')?.value
 
     console.log("shipping_service_name", shipping_service_name, free_shipping_minimum, shipping_cost)
 

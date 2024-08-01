@@ -21,7 +21,7 @@ export async function shopifyAdminApiRest (method: string, path: string, body?: 
       return response.json();
     })
     .then((data) => {
-      console.log("[shopifyApi.rest] data", data)
+      // console.log("[shopifyApi.rest] data", data)
       return data
     })
     .catch((error) => console.error(error));

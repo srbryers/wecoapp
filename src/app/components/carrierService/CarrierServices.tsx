@@ -35,8 +35,8 @@ const CarrierServices: FC<CarrierServicesProps> = (props) => {
                   <p className="text-xs"><b>Active:</b> {service.active ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="service-actions flex flex-row gap-2">
-                  <CustomLink href={`/carrierService/${service.legacy_id}`}>View</CustomLink>
-                  <CustomLink href={`/carrierService/${service.legacy_id}/edit`}>Edit</CustomLink>
+                  <CustomLink href={`shopify/carrierService/${service.legacy_id}`}>View</CustomLink>
+                  <CustomLink href={`shopify/carrierService/${service.legacy_id}/edit`}>Edit</CustomLink>
                 </div>
               </div>
             )

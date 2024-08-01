@@ -27,7 +27,7 @@ export default function TestCarrierService(props: TestCarrierServiceProps) {
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="w-full">
       <Form onSubmit={handleSubmit}>
         <div className="form--inputs flex flex-col gap-4">
           <Input 

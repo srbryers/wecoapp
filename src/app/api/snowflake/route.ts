@@ -1,4 +1,4 @@
-import { sf } from "@/app/_utils/snowflake/snowflake"
+import { sf } from "@/app/utils/snowflake/snowflake"
 
 export async function POST(request: Request) {
 

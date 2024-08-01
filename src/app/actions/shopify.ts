@@ -67,8 +67,8 @@ export const shopify = {
         let order: Order | undefined = undefined
         // Get the shopify order or draft_order from the API
         if ('shopify_order_id' in data) {
-          const res = (await shopify.orders.get(data.shopify_order_id)) as { order: Order }
-          order = res.order
+          const res = (await shopify.orders.get(data.shopify_order_id))
+          order = res
         } else if ('shopify_draft_order_id' in data) {
           const res = (await shopify.draftOrders.get(data.shopify_draft_order_id)) as { draft_order: Order }
           order = res.draft_order
@@ -162,7 +162,7 @@ export const shopify = {
           return data
         })
         if (order_id) {
-          return res as { order: Order }
+          return res.order as any
         } else {
           return res as { orders: Order[] }
         }

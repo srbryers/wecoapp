@@ -3,6 +3,7 @@ import DataTable from "@/app/components/tables/DataTable"
 import DataTableCell from "@/app/components/tables/DataTableCell"
 import DataTableHeaders from "@/app/components/tables/DataTableHeaders"
 import DataTableRow from "@/app/components/tables/DataTableRow"
+import Link from "next/link"
 
 export default async function Page() {
 
@@ -29,12 +30,18 @@ export default async function Page() {
           </thead>
           <tbody className="overflow-scroll max-h-[600px]">
             {loopCustomers.map((customer) => {
-              const customerValues = Object.values(customer)
+              const customerValues = Object.entries(customer)
               return (
                 <DataTableRow key={customer.id}>
-                  {customerValues.map((value, index) => {
+                  {customerValues.map(([key, value], index) => {
                     return (
-                      <DataTableCell key={`${customer.id}-${index}`}>{value}</DataTableCell>
+                      <DataTableCell key={`${customer.id}-${index}`}>
+                        {key === 'id' ? (
+                          <Link href={`customers/${value}`}>{value}</Link>
+                        ) : (
+                          <>{value}</>
+                        )}
+                      </DataTableCell>
                     )
                   })}
                 </DataTableRow>

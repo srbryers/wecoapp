@@ -12,9 +12,9 @@ export default async function CarrierService({ params }: {
     <div className="flex flex-col gap-4">
       <Table columns={2} data={[carrierService]} />
       <div className="actions flex flex-row gap-4">
-        <CustomLink href={`/carrierService/${params.id}/edit`}>Edit</CustomLink>
-        <CustomLink href={`/carrierService/${params.id}/delete`}>Delete</CustomLink>
-        <CustomLink href={`/carrierService/test`}>Test</CustomLink>
+        <CustomLink href={`${params.id}/edit`}>Edit</CustomLink>
+        <CustomLink href={`${params.id}/delete`}>Delete</CustomLink>
+        <CustomLink href={`${params.id}/test`}>Test</CustomLink>
       </div>
     </div>
   ) : (
