@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "./_components/global/navigation";
+import Navigation from "@/app/components/Navigation"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className}`}>
-        <div className="grid grid-cols-2 grid-cols-[200px_1fr] min-h-screen bg-gray-900">
+        <div className="grid grid-rows-1 grid-cols-2 grid-cols-[200px_1fr] min-h-screen bg-gray-900">
           {/* Side navigation */}
           <Navigation links={[
             { title: "Home", href: "/" },
@@ -31,7 +31,7 @@ export default function RootLayout({
             { title: "Snowflake", href: "/data/snowflake" },
           ]} />
           {/* Main content */}
-          <div className="flex flex-col">
+          <div className="flex flex-col overflow-hidden">
             <div className="flex flex-row items-center justify-start w-full bg-gray-950">
             </div>
             {children}

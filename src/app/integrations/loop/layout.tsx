@@ -1,20 +1,22 @@
 import PageHeader from "@/app/components/PageHeader"
+import { Suspense } from "react"
 
 export default function Layout({ 
   children,
-  carrierService 
 }: {
   children: React.ReactNode,
-  carrierService: React.ReactNode
 }) {
   return (
     <>
       <PageHeader
-        title={"Shopify"}
+        title={"Loop"}
         description={""}
       />
-      <div className="flex flex-col h-full items-start">{children}</div>
-      <div>{carrierService}</div>
+      <div className="flex flex-col h-full items-start">
+        <Suspense>
+          {children}
+        </Suspense>
+      </div>
     </>
   )
 }

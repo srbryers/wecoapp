@@ -1,4 +1,3 @@
-import { CarrierService } from "@/app/_utils/shopify/api";
 import { shopify } from "@/app/actions/shopify";
 import TestCarrierService from "@/app/components/carrierService/TestCarrierService";
 
