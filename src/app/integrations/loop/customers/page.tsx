@@ -12,7 +12,7 @@ export default async function Page() {
 
   console.log("loopCustomers", loopCustomers)
 
-  return (
+  return loopCustomers && (
     <div className="overflow-scroll max-w-full">
       {/* Table: Customers*/}
       <div className="table-wrapper w-full overflow-scroll">

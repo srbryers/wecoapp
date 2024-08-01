@@ -11,9 +11,9 @@ type CarrierServicesProps = {
 
 const CarrierServices: FC<CarrierServicesProps> = (props) => {
 
-  const sortedCarrierServices = props.carrierServices.sort((a, b) => a.active === b.active ? 0 : a.active ? -1 : 1)
+  const sortedCarrierServices = props.carrierServices?.sort((a, b) => a.active === b.active ? 0 : a.active ? -1 : 1)
 
-  return (
+  return props.carrierServices && (
     <div id="fulfillment-services" className={`flex flex-col gap-4 ${props.className}`}>
       <div className="flex flex-col gap-2">
         <h2 className="text-base font-bold">Carrier Services</h2>
