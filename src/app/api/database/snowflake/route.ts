@@ -13,7 +13,7 @@ export async function GET() {
       return response.docs.map((doc) => {
         return {
           id: doc.id,
-          ...doc.data()
+          ...doc?.data()
         }
       })
     })
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   try {
     const res = await db.collection("snowflake").doc(handleizedName).set(req).then(async () => {
       const response = await db.collection("snowflake").doc(handleizedName).get()
-      return response.data()
+      return response?.data()
     })
     return Response.json(res, { status: 200 })
   } catch (error) {

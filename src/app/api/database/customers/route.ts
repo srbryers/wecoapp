@@ -10,7 +10,7 @@ export async function GET() {
   try {
     result = await db.collection('customers').get().then((response) => {
       return response.docs.map((doc) => {
-        return doc.data()
+        return doc?.data()
       })
     })
   } catch (error) {

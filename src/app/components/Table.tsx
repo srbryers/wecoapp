@@ -8,7 +8,7 @@ interface TableProps {
 export default function Table(props: TableProps) {
   return (
     <>
-      {props.data.map((row, index) => (
+      {props?.data?.map((row, index) => (
         <div key={index} className="grid auto-rows-auto gap-2 w-full">
           {Object.entries(row).map(([key, value], index) => (
             <div key={index} className="flex flex-row gap-4"> 
@@ -17,7 +17,7 @@ export default function Table(props: TableProps) {
             </div>
           ))}
         </div>
-      ))}
+      )) || <></>}
     </>
   )
 }

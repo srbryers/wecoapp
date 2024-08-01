@@ -59,6 +59,6 @@ export async function shopifyAdminApiGql (request: any, variables?: any) {
       })
       .catch((error) => console.error(error));
 
-    return result.data
+    return result?.data
 
 }

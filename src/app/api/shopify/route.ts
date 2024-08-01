@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       'Accept': 'application/json'
     }
   } as RequestInit
-  if (req.data) {
+  if (req?.data) {
     options.body = JSON.stringify(req.data)
   }
   try {

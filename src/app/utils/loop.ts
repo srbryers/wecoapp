@@ -25,7 +25,7 @@ export async function loopApi(request: LoopRequest) {
       return response.json();
     })
     .then((data) => {
-      return data.data
+      return data?.data
     })
     .catch((error) => console.error(error));
 

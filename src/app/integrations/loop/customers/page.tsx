@@ -8,7 +8,7 @@ import Link from "next/link"
 export default async function Page() {
 
   const loopCustomers = await loop.customers.get()
-  const tableHeaders = loopCustomers.length > 0 ? Object.keys(loopCustomers[0]) : []
+  const tableHeaders = loopCustomers?.length > 0 ? Object.keys(loopCustomers[0]) : []
 
   console.log("loopCustomers", loopCustomers)
 

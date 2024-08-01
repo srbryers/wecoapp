@@ -1,6 +1,6 @@
+'use server'
 import { firestore } from "@/app/utils/firestore/firestore";
 import { LineItem, CarrierServiceResponse, ShippingProfile } from "@/app/utils/types";
-import { shopify } from "@/app/actions/shopify";
 import { getShipmentZone } from "@/app/utils/carrierServices";
 
 export async function GET(request: Request) {
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return response.docs.map((doc) => {
       return {
         id: doc.id,
-        ...doc.data()
+        ...doc?.data()
       }
     })
   }) as ShippingProfile[]

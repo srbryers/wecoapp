@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   try {
     const res = await db.collection("snowflake").doc(queryId).get().then((response) => {
-      return response.data()
+      return response?.data()
     })
 
     if (!res) { return Response.json({ error: "Query not found" }, { status: 404 })}
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
     if (!res2) { return Response.json({ error: "Sheet not found" }, { status: 404 })}
 
-    return Response.json(res2.data, { status: 200 })
+    return Response.json(res2?.data, { status: 200 })
   } catch (error) {
     console.error("error", error)
     return Response.json({ error: error }, { status: 500 })

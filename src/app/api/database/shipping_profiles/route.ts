@@ -13,7 +13,7 @@ export async function GET() {
       return response.docs.map((doc) => {
         return {
           id: doc.id,
-          ...doc.data()
+          ...doc?.data()
         }
       })
     })
