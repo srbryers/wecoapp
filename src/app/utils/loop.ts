@@ -22,10 +22,18 @@ export async function loopApi(request: LoopRequest) {
 
   const result = await fetch(`https://api.loopsubscriptions.com/admin/${apiVersion}/${request.path}`, requestOptions)
     .then((response) => {
-      return response.json();
+      if (response.status === 200) {
+        return response.json()
+      } else {
+        console.error(`Error fetching Loop data`,{ error: response.statusText, status: response.status })
+      }
     })
     .then((data) => {
-      return data?.data
+      if (data?.data) {
+        return data.data
+      } else { 
+        return data
+      }
     })
     .catch((error) => console.error(error));
 
