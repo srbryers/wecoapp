@@ -4,7 +4,12 @@ import { shopify } from "../../../actions/shopify"
 
 export default async function Page () {
   const carrierServices = await shopify.carrierServices.get()
-  return (
+
+  return carrierServices ? (
     <CarrierServices carrierServices={carrierServices} />
+  ) : (
+    <>
+      <p>Error fetching Carrier Services from Shopify API.</p>
+    </>
   )
 }

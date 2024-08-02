@@ -19,7 +19,7 @@ export const shopify = {
           }
         }
       `
-      return (await shopifyAdminApiGql(request)).fulfillmentServices.edges.map((x: any) => x.node)
+      return (await shopifyAdminApiGql(request))?.fulfillmentServices.edges.map((x: any) => x.node)
     }
   },
   carrierServices: {
@@ -41,14 +41,14 @@ export const shopify = {
       `
       const res = await shopifyAdminApiGql(request)
 
-      console
-      return res.carrierServices.edges.map((x: any) => {
+      return res ? res.carrierServices.edges.map((x: any) => {
         const legacy_id = Number(x.node.id.split('/').pop())
         return {
           ...x.node,
           legacy_id
         }
-      })
+      }) : null
+
     },
     update: async (data: CarrierService): Promise<any> => {
       // Parse the id into a number if it is a number

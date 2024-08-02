@@ -18,7 +18,11 @@ export async function shopifyAdminApiRest (method: string, path: string, body?: 
 
   const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/${path}`, requestOptions)
     .then((response) => {
-      return response.json();
+      if (response.status === 200) {
+        return response.json()
+      } else {
+        console.error(`Error fetching Shopify data`,{ error: response.statusText, status: response.status })
+      }
     })
     .then((data) => {
       // console.log("[shopifyApi.rest] data", data)
@@ -39,8 +43,6 @@ export async function shopifyAdminApiGql (request: any, variables?: any) {
       query: request, 
       variables: variables
     })
-
-    console.log("shopify shop", shop)
 
     const requestOptions = {
       method: "POST",
