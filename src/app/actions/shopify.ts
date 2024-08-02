@@ -298,5 +298,10 @@ export const shopify = {
       `
       return (await shopifyAdminApiGql(request)).metaobjects.edges.map((x: any) => x.node)
     }
+  },
+  customers: {
+    getOrders: async (customer_id: string) => {
+      return await shopifyAdminApiRest('GET', `customers/${customer_id}/orders.json`)
+    }
   }
 }

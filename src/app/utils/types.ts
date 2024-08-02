@@ -144,3 +144,23 @@ export type MenuZone = {
   free_shipping_minimum?: string
   shipping_cost?: string
 }
+
+export interface LoopSubscription {
+  id: string
+  customer: {
+    id: number
+    shopifyId: number
+  }
+  nextBillingDateEpoch: number
+  deliveryPolicy: {
+    interval: string
+    intervalCount: number
+  }
+  shippingAddress: {
+    firstName: string
+    lastName: string
+    provinceCode: string
+    zip: string
+  },
+  action: React.ReactNode
+}

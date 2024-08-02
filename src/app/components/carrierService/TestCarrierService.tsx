@@ -19,15 +19,13 @@ export default function TestCarrierService(props: TestCarrierServiceProps) {
 
   const handleSubmit = async (data: CarrierServiceRequest) => {
     setLoading(true)
-    console.log("data", data)
     const res = await shopify.carrierServices.test(data)
-    console.log("res", res)
     setResult(res)
     setLoading(false)
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full md:min-w-[400px]">
       <Form onSubmit={handleSubmit}>
         <div className="form--inputs flex flex-col gap-4">
           <Input 

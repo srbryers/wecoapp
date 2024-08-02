@@ -12,7 +12,7 @@ export default async function Page() {
   if (loopCustomers) {
     const tableHeaders = loopCustomers?.length > 0 ? Object.keys(loopCustomers[0]) : []
 
-    console.log("loopCustomers", loopCustomers)
+    console.log("loopCustomers", loopCustomers.length)
 
     return (
       <div className="overflow-scroll max-w-full">

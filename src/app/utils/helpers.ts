@@ -1,6 +1,9 @@
 import { FormEvent } from "react"
 import { FormValues, MenuZone } from "./types";
 
+// Delay function
+export const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
+
 export const formatKeyToTitle = (key: string) => {
   return key
     .replace(/([A-Z])/g, " $1")
@@ -39,6 +42,9 @@ export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?:
   const now = date || new Date()
   const lookaheadDays = 14
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+  console.log("date", date)
+  console.log("availableDeliveryDays",availableDeliveryDays)
 
   if (activeMenuZone.cutoff_time 
     && activeMenuZone.cutoff_hours

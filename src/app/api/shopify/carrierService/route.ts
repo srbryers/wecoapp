@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     lineItems: carrierServiceRequest.rate.items
   })
 
+  const menuZone = menuZoneRequest.menuZone
   const shipment_dates: { shipment_date: string, price: number, quantity: number }[] = [];
 
   if (!destinationZip) { 
@@ -38,9 +39,11 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
+  console.log("menuZone", menuZone)
+
   // Get the rate price
-  const rateField = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_rate')?.value
-  const zoneRate = rateField && Number(JSON.parse(rateField).amount)
+  const rateField = menuZone.shipping_rate
+  const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
 
   console.log("zoneRate", zoneRate)
 
@@ -145,9 +148,9 @@ export async function POST(request: Request) {
 
   // Set the rate service name based on the zone + if it is subscription
   rates.forEach((rate) => {
-    const shipping_service_name = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_service_name')?.value
-    const free_shipping_minimum = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'free_shipping_minimum')?.value
-    const shipping_cost = menuZoneRequest.menuZone.fields.find((x: any) => x.key === 'shipping_cost')?.value
+    const shipping_service_name = menuZone.shipping_service_name
+    const free_shipping_minimum = menuZone.free_shipping_minimum
+    const shipping_cost = menuZone.shipping_cost
 
     console.log("shipping_service_name", shipping_service_name, free_shipping_minimum, shipping_cost)
 
@@ -157,8 +160,8 @@ export async function POST(request: Request) {
 
       // handle free shipping
       if (free_shipping_minimum && shipping_cost) {
-        const freeShippingMinimum = JSON.parse(free_shipping_minimum).amount
-        const shippingCost = JSON.parse(shipping_cost).amount
+        const freeShippingMinimum = free_shipping_minimum.amount
+        const shippingCost = shipping_cost.amount
 
         const lineItemsTotal = carrierServiceRequest.rate.items.reduce((acc: number, item: any) => { 
           if (item.properties.Type === 'Freebie') return acc

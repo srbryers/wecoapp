@@ -56,6 +56,18 @@ export async function getShipmentZone({ destinationZip, lineItems }: ShipmentZon
   console.log("menuZone", menuZone.handle)
   console.log("isValidShipment", isValidShipment)
 
+  menuZone = menuZone.fields.reduce((acc: any, value: { key: string, value: string }) => {
+    if (value.value) {
+      // Parse the value values
+      if (value.value.includes('[') || value.value.includes('{')) {
+        acc[value.key] = JSON.parse(value.value)
+      } else {
+        acc[value.key] = value.value
+      }
+    }
+    return acc
+  }, {}) 
+
   return {
     destinationZip: formattedZip,
     menuZone: menuZone,

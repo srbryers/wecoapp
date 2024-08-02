@@ -42,17 +42,7 @@ export async function POST(request: Request) {
   }
 
   console.log("deliveryDate", deliveryDate)
-  const menuZone = menuZoneRequest.menuZone.fields.reduce((acc: any, value: { key: string, value: string }) => {
-    if (value.value) {
-      // Parse the value values
-      if (value.value.includes('[') || value.value.includes('{')) {
-        acc[value.key] = JSON.parse(value.value)
-      } else {
-        acc[value.key] = value.value
-      }
-    }
-    return acc
-  }, {}) 
+  const menuZone = menuZoneRequest.menuZone
   
   if (menuZone.menu_type && menuZone.menu_type !== 'Subscription') {
     return Response.json({ message: 'Success: Shipment is not a subscription, so ShipStation was not updated.' }, { status: 200 })
