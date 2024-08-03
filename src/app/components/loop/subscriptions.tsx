@@ -8,7 +8,7 @@ import DataTableRow from "../tables/DataTableRow"
 import { LoopResponse, LoopSubscription } from "@/app/utils/types"
 import { klaviyo } from "@/app/actions/klaviyo"
 import { loop } from "@/app/actions/loop"
-import { calculateAvailableDeliveryDates } from "@/app/utils/helpers"
+import { calculateAvailableDeliveryDates, delay } from "@/app/utils/helpers"
 import { getShipmentZone } from "@/app/utils/carrierServices"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
@@ -191,7 +191,9 @@ async function bulkActions(items: LoopSubscription[], action: LoopSubscriptionAc
   for (let i = 0; i < items.length; i++) {
     const data = subscriptionActions.getItemData(items[i], true)
     console.log("[bulkActions] running: ",action)
-    subscriptionActions[action](data, updateSessionToken)
+    await subscriptionActions[action](data, updateSessionToken)
+    // Wait 500ms between each call
+    await delay(500)
   }
 }
 

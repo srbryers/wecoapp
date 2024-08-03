@@ -25,6 +25,11 @@ export default async function Page({ searchParams }: { searchParams: { page: str
     }))
   }
 
+  // @TODO: Get the Klaviyo segment for upcoming subscription customers (people who have the event) and add 
+  // that data to the table so we know the last time we sent an email
+  // https://developers.klaviyo.com/en/reference/get_segments
+  // https://www.klaviyo.com/flow/message/U8daeb/reports/recipients
+
   const subscriptions = await getSubscriptionOrders()
 
   return (
