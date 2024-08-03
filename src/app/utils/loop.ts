@@ -29,11 +29,7 @@ export async function loopApi(request: LoopRequest) {
       }
     })
     .then((data) => {
-      if (data?.data) {
-        return data.data
-      } else { 
-        return data
-      }
+      return data
     })
     .catch((error) => console.error(error));
 

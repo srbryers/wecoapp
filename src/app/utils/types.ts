@@ -145,6 +145,15 @@ export type MenuZone = {
   shipping_cost?: string
 }
 
+export interface LoopResponse {
+  data: any
+  code: string
+  pageInfo?: {
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+  }
+}
+
 export interface LoopSubscription {
   id: string
   customer: {
@@ -162,5 +171,7 @@ export interface LoopSubscription {
     provinceCode: string
     zip: string
   },
-  action: React.ReactNode
+  action: React.ReactNode,
+  orders?: any[]
+  sortedOrders?: any[]
 }

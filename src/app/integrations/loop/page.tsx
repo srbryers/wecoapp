@@ -19,8 +19,10 @@ export default function Page() {
       <section className="flex flex-col gap-4">
         <h2 className="font-bold text-xl">Data</h2>
         <div className="flex flex-row gap-4">
-        {/* Customers */}
+          {/* Customers */}
           <Button label="View Customers" onClick={() => router.push('loop/customers') }></Button>
+          {/* Subscriptions */}
+          <Button label="View Subscriptions" onClick={() => router.push('loop/subscriptions?page=1') }></Button>
         </div>
       </section>
     </div>

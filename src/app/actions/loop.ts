@@ -1,4 +1,5 @@
 import { loopApi } from "../utils/loop"
+import { LoopResponse, LoopSubscription } from "../utils/types"
 
 export interface LoopCustomer {
   id: number
@@ -12,6 +13,10 @@ export interface LoopCustomer {
   cancelledSubscriptionsCount: number
   expiredSubscriptionsCount: number
   allSubscriptionsCount: number
+}
+
+export interface LoopSubscriptionResponse extends LoopResponse {
+  data: LoopSubscription[]
 }
 
 export const loop = {
@@ -37,7 +42,7 @@ export const loop = {
     }
   },
   subscriptions: {
-    getAll: async (params?: string) => {
+    getAll: async (params?: string): Promise<LoopSubscriptionResponse> => {
       return await loopApi({
         method: 'GET',
         path: `subscription${params || ''}`

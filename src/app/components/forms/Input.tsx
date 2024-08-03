@@ -2,9 +2,9 @@
 import { FC, useEffect, useState } from 'react'
 
 type InputProps = {
-  label: string
+  label?: string
   type: string
-  name: string
+  name?: string
   checked?: boolean
   required?: boolean
   placeholder?: string
@@ -65,7 +65,7 @@ const Input: FC<InputProps> = ({ label, name, type, checked, required, placehold
         placeholder={placeholder}
         value={value}
         defaultValue={defaultValue}
-        defaultChecked={checked}
+        checked={checked}
         onChange={onChange}
         className={inputClasses}
         required={required}

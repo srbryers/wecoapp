@@ -8,7 +8,7 @@ type DataTableHeadersProps = {
 
 const DataTableHeaders: FC<DataTableHeadersProps> = ({ children, colSpan, className }) => {
   return (
-    <th className={`${className || ""} p-2 border border-gray-700 font-bold`}  colSpan={colSpan}>
+    <th className={`${className || ""} p-2 shadow-[inset_0_0px_0_0.5px] shadow-gray-700 font-bold`}  colSpan={colSpan}>
       {children}
     </th>
   )
