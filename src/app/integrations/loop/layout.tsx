@@ -13,9 +13,7 @@ export default function Layout({
         description={""}
       />
       <div className="flex flex-col h-full items-start">
-        <Suspense>
-          {children}
-        </Suspense>
+        {children}
       </div>
     </>
   )

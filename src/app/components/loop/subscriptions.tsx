@@ -89,7 +89,7 @@ export default function LoopSubscriptions({ subscriptions, pageInfo }: LoopSubsc
   useEffect(() => {
     const newSubscriptions = subscriptions.filter(subscription => selectedItems.includes(`${subscription.id}`))
     setSelectedSubscriptions(newSubscriptions)
-  }, [selectedItems])
+  }, [selectedItems, subscriptions])
 
   const tableData = subscriptions?.sort(
     (a, b) => a.nextBillingDateEpoch - b.nextBillingDateEpoch

@@ -10,7 +10,7 @@ export default function Home() {
       {/* Homepage Content */}
       <div className="flex flex-col items-start">
         <button
-          onClick={() => router.push("/shopify")}
+          onClick={() => router.push("/integrations/shopify")}
           className="bg-gray-700 hover:bg-gray-600 text-white font-bold p-8 rounded transition-all duration-200 ease-in-out"
         >Shopify</button>
       </div>

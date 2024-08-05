@@ -13,7 +13,6 @@
   "dependencies": {
     "@google-cloud/firestore": "^7.7.0",
     "@google-cloud/local-auth": "^2.1.0",
-    "@shopify/shopify-api": "^11.2.0",
     "googleapis": "^105.0.0",
     "jotai": "^2.8.0",
     "jsonwebtoken": "^9.0.2",
@@ -29,6 +28,7 @@
     "@types/node": "^20.14.2",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "critters": "^0.0.24",
     "eslint": "^8",
     "eslint-config-next": "14.2.1",
     "postcss": "^8",
@@ -41,5 +41,7 @@
     "os": false,
     "request": false
   },
-  "packageManager": "pnpm@8.14.0+sha256.9cebf61abd83f68177b29484da72da9751390eaad46dfc3072d266bfbb1ba7bf"
+  "resolutions": {
+    "react": "17.0.2"
+  }
 }

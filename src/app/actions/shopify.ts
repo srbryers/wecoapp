@@ -103,7 +103,7 @@ export const shopify = {
                 let res = item
                 // Map the properties from an array to an object
                 if (item.properties) {
-                  res.properties = item.properties.reduce((acc: any, property: any) => {
+                  res.properties = item.properties?.reduce((acc: any, property: any) => {
                     acc[property.name] = property.value
                     return acc
                   }, {})
@@ -240,7 +240,10 @@ export const shopify = {
     get: async (draft_order_id?: string) => {
       console.log("getDraftOrders")
       try {
-        const res = await shopifyAdminApiRest('GET', draft_order_id ? `draft_orders/${draft_order_id}.json` : 'draft_orders.json')
+        const res = await shopifyAdminApiRest({
+          method: 'GET', 
+          path: draft_order_id ? `draft_orders/${draft_order_id}.json` : 'draft_orders.json'
+        })
           .then((data) => {
             console.log('Draft Orders:', data)
             return data
@@ -258,7 +261,11 @@ export const shopify = {
     post: async (draft_order: Order) => {
       console.log("createDraftOrder")
       try {
-        const res = await shopifyAdminApiRest('POST', 'draft_orders.json', { draft_order: draft_order })
+        const res = await shopifyAdminApiRest({
+          method: 'POST', 
+          path: 'draft_orders.json', 
+          body: { draft_order: draft_order }
+        })
           .then((data) => {
             console.log('Draft Order:', data)
             return data
@@ -272,7 +279,11 @@ export const shopify = {
     put: async (draft_order: Order) => {
       console.log("updateDraftOrder")
       try {
-        const res = await shopifyAdminApiRest('PUT', `draft_orders/${draft_order.id}.json`, { draft_order: draft_order })
+        const res = await shopifyAdminApiRest({
+          method: 'PUT', 
+          path: `draft_orders/${draft_order.id}.json`, 
+          body: { draft_order: draft_order }
+        })
           .then((data) => {
             return data
           })
@@ -285,7 +296,10 @@ export const shopify = {
     delete: async (draft_order_id: string) => {
       console.log("deleteDraftOrder")
       try {
-        const res = await shopifyAdminApiRest('DELETE', `draft_orders/${draft_order_id}.json`)
+        const res = await shopifyAdminApiRest({
+          method: 'DELETE', 
+          path: `draft_orders/${draft_order_id}.json`
+        })
           .then((data) => {
             return data
           })
@@ -396,22 +410,22 @@ export const shopify = {
           ...node,
           customer: {
             ...node.customer,
-            metafields: node.customer.metafields.nodes.map((metafield: any) => {
+            metafields: node.customer.metafields.nodes?.map((metafield: any) => {
               return {
                 [metafield.key]: metafield.value
               }
-            }).reduce((acc: any, obj: any) => {
+            })?.reduce((acc: any, obj: any) => {
               return { ...acc, ...obj }
-            })
+            }, {})
           },
-          customAttributes: node.customAttributes.map((attr: any) => {
+          customAttributes: node.customAttributes?.map((attr: any) => {
             return {
               [attr.key]: attr.value
             }
-          }).reduce((acc: any, obj: any) => {
+          })?.reduce((acc: any, obj: any) => {
             return { ...acc, ...obj }
           }, {}),
-          lineItems: node.lineItems.nodes.map((item: any) => {
+          lineItems: node.lineItems.nodes?.map((item: any) => {
             return {
               ...item,
               price: Number(item.originalUnitPriceSet.presentmentMoney.amount)*100,
@@ -419,7 +433,7 @@ export const shopify = {
                 return {
                   [attr.key]: attr.value
                 }
-              }).reduce((acc: any, obj: any) => {
+              })?.reduce((acc: any, obj: any) => {
                 return { ...acc, ...obj }
               }, {})
             }

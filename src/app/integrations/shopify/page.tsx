@@ -7,17 +7,15 @@ const ShopifyPage: FC = async () => {
 
   const carrierServices = await shopify.carrierServices.get()
 
-  console.log('carrierServices', carrierServices)
-
   return (
     <div className="flex flex-col flex-wrap gap-4 w-full">
       {/* Carrier Services */}
       <CarrierServices carrierServices={carrierServices} />
       <Divider />
       {/* Shipping Profiles */}
-      <Suspense fallback={<div>Loading...</div>}>
+      {/* <Suspense fallback={<div>Loading...</div>}> */}
         {/* <ShippingProfiles /> */}
-      </Suspense>
+      {/* </Suspense> */}
       <Divider />
     </div>
   )
