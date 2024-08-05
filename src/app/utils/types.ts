@@ -131,6 +131,9 @@ export type Order = {
   currency?: string
   locale?: string
   line_items?: LineItem[]
+  created_at?: string
+  processed_at?: string
+  tags?: string
 }
 
 export type MenuZone = {
@@ -171,7 +174,17 @@ export interface LoopSubscription {
     provinceCode: string
     zip: string
   },
-  action: React.ReactNode,
+  action: React.ReactNode
+  email?: string
   orders?: any[]
-  sortedOrders?: any[]
+  sortedOrders?: Order[]
+  lastOrder?: Order
+  nextBillingDate?: Date
+  nextBillingDateString?: string
+  nextDeliveryDate?: Date
+  nextDeliveryDateString?: string
+  lastOrderDeliveryDate?: string
+  nextOrderDeliveryDate?: string
+  klaviyoProfile?: any
+  klaviyoEvents?: any
 }

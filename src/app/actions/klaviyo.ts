@@ -8,9 +8,21 @@ export const klaviyo = {
         path: '/events',
         body: event
       })
+    },
+    getAll: async (params?: string) => {
+      return await klaviyoApi({
+        method: 'GET',
+        path: `/events${params || ''}`
+      })
     }
   },
   profiles: {
+    get: async (params?: string) => {
+      return await klaviyoApi({
+        method: 'GET',
+        path: `/profiles${params || ''}`
+      })
+    },
     createOrUpdate: async (profile: any) => {
       return await klaviyoApi({
         method: 'POST',

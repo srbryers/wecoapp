@@ -4,7 +4,13 @@ const accessToken = process.env.SHOPIFY_ACCESS_TOKEN || ''
 const shop = process.env.SHOPIFY_SHOP_NAME || ''
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-07'
 
-export async function shopifyAdminApiRest (method: string, path: string, body?: any) {
+interface ShopifyApiRestRequest {
+  method: string
+  path: string
+  body?: any
+}
+
+export async function shopifyAdminApiRest ({ method, path, body }: ShopifyApiRestRequest) {
 
   const headers = new Headers();
         headers.append("Content-Type", "application/json");
@@ -18,7 +24,7 @@ export async function shopifyAdminApiRest (method: string, path: string, body?: 
 
   const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/${path}`, requestOptions)
     .then((response) => {
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         return response.json()
       } else {
         console.error(`Error fetching Shopify data`,{ error: response.statusText, status: response.status })

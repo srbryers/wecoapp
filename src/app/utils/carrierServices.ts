@@ -3,17 +3,18 @@ import { shopify } from "../actions/shopify";
 interface ShipmentZoneRequest {
   destinationZip: string
   lineItems: any[]
+  menuZones?: any
 }
 
-export async function getShipmentZone({ destinationZip, lineItems }: ShipmentZoneRequest) {
+export async function getShipmentZone({ destinationZip, lineItems, menuZones }: ShipmentZoneRequest) {
 
   let isValidShipment = false;
   let menuZone: any = {}
   
-  console.log("[getShipmentZone] lineItems", lineItems)
+  // console.log("[getShipmentZone] lineItems", lineItems)
 
   // Get the menu_zone metaobject
-  const shipmentZones = await shopify.metaobjects.get('menu_zone')
+  const shipmentZones = menuZones || await shopify.metaobjects.get('menu_zone')
   const zipCodeFieldKey = 'zip_code_json'
   const subscriptionItems = lineItems.filter((item: any) => {
     // Convert item.properties array to an object
@@ -23,6 +24,8 @@ export async function getShipmentZone({ destinationZip, lineItems }: ShipmentZon
       return item.properties && item.properties._bundleId
     }
   })
+
+  // console.log("[getShipmentZone] subscriptionItems", subscriptionItems)
 
   // Handle Zips that are missing a leading zero
   const formattedZip = destinationZip.length < 5 ? '0' + destinationZip : destinationZip
@@ -52,9 +55,9 @@ export async function getShipmentZone({ destinationZip, lineItems }: ShipmentZon
     }
   })
 
-  console.log("formattedZip", formattedZip)
-  console.log("menuZone", menuZone.handle)
-  console.log("isValidShipment", isValidShipment)
+  // console.log("formattedZip", formattedZip)
+  // console.log("menuZone", menuZone.handle)
+  // console.log("isValidShipment", isValidShipment)
 
   menuZone = menuZone.fields.reduce((acc: any, value: { key: string, value: string }) => {
     if (value.value) {

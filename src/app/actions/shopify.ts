@@ -1,9 +1,10 @@
 import { CarrierService, LineItem, Order, CarrierServiceRequest, CarrierServiceResponse } from "@/app/utils/types"
 import { shopifyAdminApiRest, shopifyAdminApiGql } from "@/app/utils/shopify"
+import { delay } from "../utils/helpers"
 
 export const shopify = {
   fulfillmentServices: {
-    get: async (): Promise<any>  => {
+    get: async (): Promise<any> => {
       const request = `
         query {
           fulfillmentServices(first: 50) {
@@ -23,10 +24,10 @@ export const shopify = {
     }
   },
   carrierServices: {
-    get: async (id?: string): Promise<any>  => {
+    get: async (id?: string): Promise<any> => {
       const request = `
         {
-            carrierServices(first: 20 ${id ? `, query: "id:${id}"` : '' }) {
+            carrierServices(first: 20 ${id ? `, query: "id:${id}"` : ''}) {
                 edges {
                     node {
                         id
@@ -57,7 +58,11 @@ export const shopify = {
         requestData.id = Number(data.id)
       }
       // Can only update using the REST API
-      return await shopifyAdminApiRest('PUT', `carrier_services/${requestData.id}.json`, { carrier_service: requestData })
+      return await shopifyAdminApiRest({
+        method: 'PUT',
+        path: `carrier_services/${requestData.id}.json`,
+        body: { carrier_service: requestData }
+      })
     },
     test: async (data: CarrierServiceRequest | { shopify_order_id: string } | { shopify_draft_order_id: string }): Promise<CarrierServiceResponse[]> => {
 
@@ -112,7 +117,7 @@ export const shopify = {
                   return res
                 }
                 shipment_date.shift()
-                if (shipment_date.length > 0) { 
+                if (shipment_date.length > 0) {
                   return {
                     name: item.name,
                     quantity: item.quantity,
@@ -156,11 +161,14 @@ export const shopify = {
   orders: {
     get: async (order_id?: string) => {
       try {
-        const res = await shopifyAdminApiRest('GET', order_id ? `orders/${order_id}.json` : 'orders.json')
-        .then((data) => {
-          console.log('Orders:', data)
-          return data
+        const res = await shopifyAdminApiRest({
+          method: 'GET',
+          path: order_id ? `orders/${order_id}.json` : 'orders.json'
         })
+          .then((data) => {
+            console.log('Orders:', data)
+            return data
+          })
         if (order_id) {
           return res.order as any
         } else {
@@ -174,11 +182,15 @@ export const shopify = {
     post: async (order: Order) => {
       console.log("createOrder")
       try {
-        const res = await shopifyAdminApiRest('POST', 'orders.json', { order: order })
-        .then((data) => {
-          console.log('Order:', data)
-          return data
+        const res = await shopifyAdminApiRest({
+          method: 'POST',
+          path: 'orders.json',
+          body: { order: order }
         })
+          .then((data) => {
+            console.log('Order:', data)
+            return data
+          })
         return res as { order: Order }
       } catch (error) {
         console.error('Error creating order:', error)
@@ -188,11 +200,15 @@ export const shopify = {
     put: async (order: Order) => {
       console.log("updateOrder")
       try {
-        const res = await shopifyAdminApiRest('PUT', `orders/${order.id}.json`, { order: order })
-        .then((data) => {
-          console.log('Order:', data)
-          return data
+        const res = await shopifyAdminApiRest({
+          method: 'PUT',
+          path: `orders/${order.id}.json`,
+          body: { order: order }
         })
+          .then((data) => {
+            console.log('Order:', data)
+            return data
+          })
         return res as { order: Order }
       } catch (error) {
         console.error('Error updating order:', error)
@@ -202,11 +218,14 @@ export const shopify = {
     delete: async (order_id: string) => {
       console.log("deleteOrder")
       try {
-        const res = await shopifyAdminApiRest('DELETE', `orders/${order_id}.json`)
-        .then((data) => {
-          console.log('Order:', data)
-          return data
+        const res = await shopifyAdminApiRest({
+          method: 'DELETE',
+          path: `orders/${order_id}.json`
         })
+          .then((data) => {
+            console.log('Order:', data)
+            return data
+          })
         return res
       } catch (error) {
         console.error('Error deleting order:', error)
@@ -222,10 +241,10 @@ export const shopify = {
       console.log("getDraftOrders")
       try {
         const res = await shopifyAdminApiRest('GET', draft_order_id ? `draft_orders/${draft_order_id}.json` : 'draft_orders.json')
-        .then((data) => {
-          console.log('Draft Orders:', data)
-          return data
-        })
+          .then((data) => {
+            console.log('Draft Orders:', data)
+            return data
+          })
         if (draft_order_id) {
           return res as { draft_order: Order }
         } else {
@@ -240,10 +259,10 @@ export const shopify = {
       console.log("createDraftOrder")
       try {
         const res = await shopifyAdminApiRest('POST', 'draft_orders.json', { draft_order: draft_order })
-        .then((data) => {
-          console.log('Draft Order:', data)
-          return data
-        })
+          .then((data) => {
+            console.log('Draft Order:', data)
+            return data
+          })
         return res as { draft_order: Order }
       } catch (error) {
         console.error('Error creating draft order:', error)
@@ -254,9 +273,9 @@ export const shopify = {
       console.log("updateDraftOrder")
       try {
         const res = await shopifyAdminApiRest('PUT', `draft_orders/${draft_order.id}.json`, { draft_order: draft_order })
-        .then((data) => {
-          return data
-        })
+          .then((data) => {
+            return data
+          })
         return res as { draft_order: Order }
       } catch (error) {
         console.error('Error updating draft order:', error)
@@ -267,9 +286,9 @@ export const shopify = {
       console.log("deleteDraftOrder")
       try {
         const res = await shopifyAdminApiRest('DELETE', `draft_orders/${draft_order_id}.json`)
-        .then((data) => {
-          return data
-        })
+          .then((data) => {
+            return data
+          })
         return res
       } catch (error) {
         console.error('Error deleting draft order:', error)
@@ -301,7 +320,129 @@ export const shopify = {
   },
   customers: {
     getOrders: async (customer_id: string) => {
-      return await shopifyAdminApiRest('GET', `customers/${customer_id}/orders.json`)
-    }
+      return await shopifyAdminApiRest({
+        method: 'GET',
+        path: `customers/${customer_id}/orders.json`
+      })
+    },
+    getOrdersWithMetafields: async (customer_id: string) => {
+      const res = await shopifyAdminApiGql(`
+        query Orders {
+          orders(first: 20, query: "customer_id:${customer_id}", reverse: true) {
+            nodes {
+                    id
+                    name
+                    tags
+                    email
+                    createdAt
+                    customer {
+                        email
+                        firstName
+                        lastName
+                        metafields(first: 10) {
+                            nodes {
+                                key
+                                namespace
+                                value
+                                __typename
+                            }
+                        }
+                    }
+                    customAttributes {
+                        __typename
+                        key
+                        value
+                    }
+                    lineItems(first: 20) {
+                        nodes {
+                            id
+                            name
+                            title
+                            quantity
+                            originalUnitPriceSet {
+                                presentmentMoney {
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            sku
+                            customAttributes {
+                                __typename
+                                key
+                                value
+                            }
+                        }
+                    }
+                    shippingAddress {
+                        address1
+                        address2
+                        city
+                        province
+                        provinceCode
+                        country
+                        company
+                        firstName
+                        lastName
+                        zip               
+                    }
+                }
+            }
+        }
+      `)
+
+      // Reformat the nodes
+      const formattedNodes = res.orders.nodes.map((node: any) => {
+        return {
+          ...node,
+          customer: {
+            ...node.customer,
+            metafields: node.customer.metafields.nodes.map((metafield: any) => {
+              return {
+                [metafield.key]: metafield.value
+              }
+            }).reduce((acc: any, obj: any) => {
+              return { ...acc, ...obj }
+            })
+          },
+          customAttributes: node.customAttributes.map((attr: any) => {
+            return {
+              [attr.key]: attr.value
+            }
+          }).reduce((acc: any, obj: any) => {
+            return { ...acc, ...obj }
+          }, {}),
+          lineItems: node.lineItems.nodes.map((item: any) => {
+            return {
+              ...item,
+              price: Number(item.originalUnitPriceSet.presentmentMoney.amount)*100,
+              properties: item.customAttributes.map((attr: any) => {
+                return {
+                  [attr.key]: attr.value
+                }
+              }).reduce((acc: any, obj: any) => {
+                return { ...acc, ...obj }
+              }, {})
+            }
+          }),
+        }
+      })
+      // console.log("formattedNodes", formattedNodes)
+      return formattedNodes
+    },
+    updateMetafield: async (customer_id: string, metafield: any) => {
+      return await shopifyAdminApiRest({
+        method: 'POST',
+        path: `customers/${customer_id}/metafields.json`,
+        body: { metafield: metafield }
+      })
+    },
+    updateMetafields: async (customer_id: string, metafields: any[]) => {
+      const result = []
+      for (let metafield of metafields) {
+        result.push(await shopify.customers.updateMetafield(customer_id, metafield))
+        await delay(100)
+      }
+      return result
+    },
   }
 }

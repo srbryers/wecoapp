@@ -43,8 +43,8 @@ export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?:
   const lookaheadDays = 14
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-  console.log("date", date)
-  console.log("availableDeliveryDays",availableDeliveryDays)
+  // console.log("date", date)
+  // console.log("availableDeliveryDays",availableDeliveryDays)
 
   if (activeMenuZone.cutoff_time 
     && activeMenuZone.cutoff_hours
