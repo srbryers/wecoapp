@@ -163,7 +163,8 @@ export interface LoopSubscription {
     id: number
     shopifyId: number
   }
-  nextBillingDateEpoch: number
+  nextBillingDateEpoch?: number
+  nextOrderDateEpoch?: number
   deliveryPolicy: {
     interval: string
     intervalCount: number
@@ -175,6 +176,7 @@ export interface LoopSubscription {
     zip: string
   },
   action: React.ReactNode
+  customAttributes?: LoopCustomAttributes[]
   email?: string
   orders?: any[]
   sortedOrders?: Order[]
@@ -187,4 +189,9 @@ export interface LoopSubscription {
   nextOrderDeliveryDate?: string
   klaviyoProfile?: any
   klaviyoEvents?: any
+}
+
+export interface LoopCustomAttributes {
+  key: string
+  value: string
 }

@@ -92,7 +92,13 @@ export default function LoopSubscriptions({ subscriptions, pageInfo }: LoopSubsc
   }, [selectedItems, subscriptions])
 
   const tableData = subscriptions?.sort(
-    (a, b) => a.nextBillingDateEpoch - b.nextBillingDateEpoch
+    (a, b) => {
+      if (a.nextBillingDateEpoch && b.nextBillingDateEpoch) {
+        return a.nextBillingDateEpoch - b.nextBillingDateEpoch
+      } else {
+        return 0
+      }
+    }
   ).map((item) => {
     return getItemData(item)
   })

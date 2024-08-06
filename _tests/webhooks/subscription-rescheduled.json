@@ -1,0 +1,402 @@
+{
+  "payload": {
+    "id": 2725183,
+    "shopifyId": 15745613987,
+    "createdAt": "2024-07-18T17:54:56.000Z",
+    "status": "ACTIVE",
+    "originOrderShopifyId": 5593117753507,
+    "completedOrdersCount": 3,
+    "currencyCode": "USD",
+    "totalLineItemPrice": 112,
+    "totalLineItemDiscountedPrice": 112,
+    "deliveryPrice": 0,
+    "pausedAt": null,
+    "cancelledAt": null,
+    "cancellationReason": null,
+    "cancellationComment": null,
+    "hasCustomPlan": false,
+    "billingPolicy": {
+      "interval": "DAY",
+      "intervalCount": 7,
+      "minCycles": null,
+      "maxCycles": null,
+      "anchors": null
+    },
+    "deliveryPolicy": {
+      "interval": "DAY",
+      "intervalCount": 7
+    },
+    "isPrepaid": false,
+    "nextOrderDate": "2024-08-22T11:19:53.000Z",
+    "nextOrderDateEpoch": 1724325593,
+    "discounts": [],
+    "hasBundle": true,
+    "willAutoResume": false,
+    "note": null,
+    "customAttributes": [
+      {
+        "key": "Delivery Date",
+        "value": "2024-08-06"
+      },
+      {
+        "key": "Membership Tier",
+        "value": "Tier 3"
+      },
+      {
+        "key": "Loop Bundle Id",
+        "value": "c9d1c8d12a414b53af6047fb0909c363"
+      }
+    ],
+    "lineItems": [
+      {
+        "id": 9987142,
+        "shopifyId": "73952a5a-3e19-4206-a832-bab678c6eb2e",
+        "productShopifyId": 8519417626787,
+        "variantShopifyId": 44767288361123,
+        "name": "Meatballs & Tomato Sugo",
+        "productTitle": "Meatballs & Tomato Sugo",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/Meatballs_Tomato_Sugo_8324023255203.jpg?v=1722369914",
+        "quantity": 1,
+        "price": "14.00",
+        "basePrice": "14.00",
+        "discountedPrice": "14.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "14.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "14.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": "",
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      },
+      {
+        "id": 9987143,
+        "shopifyId": "7c0b6141-d093-42fc-a32c-f534d4c4f9f1",
+        "productShopifyId": 8519412777123,
+        "variantShopifyId": 44767277678755,
+        "name": "BBQ Glazed Flank Steak",
+        "productTitle": "BBQ Glazed Flank Steak",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/Screenshot_2024-07-24_at_12.40.27_PM.png?v=1722370001",
+        "quantity": 1,
+        "price": "14.00",
+        "basePrice": "14.00",
+        "discountedPrice": "14.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "14.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "14.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": null,
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      },
+      {
+        "id": 9987144,
+        "shopifyId": "f68a73b7-1140-460a-92e6-fb3a6944f748",
+        "productShopifyId": 8502262792355,
+        "variantShopifyId": 44735458738339,
+        "name": "Beef & Broccoli Lo Mein",
+        "productTitle": "Beef & Broccoli Lo Mein",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/Beef_Broccoli_Lo_Mein_8378125910179.jpg?v=1722369928",
+        "quantity": 1,
+        "price": "34.00",
+        "basePrice": "34.00",
+        "discountedPrice": "34.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "34.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "34.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": null,
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      },
+      {
+        "id": 9987145,
+        "shopifyId": "d62f392c-e283-4280-872e-5323b5e86254",
+        "productShopifyId": 8502269411491,
+        "variantShopifyId": 44735498158243,
+        "name": "Crispy Chicken & Sesame Salad",
+        "productTitle": "Crispy Chicken & Sesame Salad",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/Crispy_Chicken_Sesame_Salad_8275967901859.jpg?v=1722369875",
+        "quantity": 1,
+        "price": "34.00",
+        "basePrice": "34.00",
+        "discountedPrice": "34.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "34.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "34.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": null,
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      },
+      {
+        "id": 9987146,
+        "shopifyId": "6d3b7964-176b-43b5-86d2-08e808a1d514",
+        "productShopifyId": 8520199504035,
+        "variantShopifyId": 44768725860515,
+        "name": "Green Beans & Lemon Vinaigrette",
+        "productTitle": "Green Beans & Lemon Vinaigrette",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/Roasted_Green_Beans_with_Fried_Garlic_8483675046051.jpg?v=1722369972",
+        "quantity": 1,
+        "price": "8.00",
+        "basePrice": "8.00",
+        "discountedPrice": "8.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "8.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "8.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": null,
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      },
+      {
+        "id": 9987147,
+        "shopifyId": "ae73480f-296a-4416-9f99-7fb3c90b724a",
+        "productShopifyId": 8520183513251,
+        "variantShopifyId": 44768703742115,
+        "name": "Mini Broccoli Cheddar Frittatas",
+        "productTitle": "Mini Broccoli Cheddar Frittatas",
+        "variantTitle": "Default Title",
+        "variantImage": "https://cdn.shopify.com/s/files/1/0627/5317/7763/files/BroccoliCheddarFrittatas-5.jpg?v=1722369998",
+        "quantity": 1,
+        "price": "8.00",
+        "basePrice": "8.00",
+        "discountedPrice": "8.00",
+        "discountAllocations": [],
+        "pricingPolicy": {
+          "basePrice": {
+            "amount": "8.0",
+            "currencyCode": "USD"
+          },
+          "cycleDiscounts": [
+            {
+              "afterCycle": 0,
+              "computedPrice": {
+                "amount": "8.0",
+                "currencyCode": "USD"
+              },
+              "adjustmentType": "FIXED_AMOUNT",
+              "adjustmentValue": {
+                "amount": "0.0",
+                "currencyCode": "USD"
+              }
+            }
+          ]
+        },
+        "sellingPlanShopifyId": 1827733667,
+        "sellingPlanName": null,
+        "sku": null,
+        "requiresShipping": true,
+        "taxable": true,
+        "bundleTransactionId": 848391,
+        "bundleName": "WECO Membership",
+        "isOneTimeAdded": false,
+        "isOneTimeRemoved": false,
+        "attributes": [
+          {
+            "key": "_bundleId",
+            "value": "01J33BMM3PED4MXES4QRH88EM2"
+          },
+          {
+            "key": "_bundleName",
+            "value": "WECO Membership"
+          }
+        ]
+      }
+    ],
+    "shippingAddress": {
+      "firstName": "Sebastian",
+      "lastName": "Bryers",
+      "company": null,
+      "address1": "8 Garrison Street",
+      "address2": "APT 202",
+      "city": "Boston",
+      "zip": "02116",
+      "countryCode": "US",
+      "provinceCode": "MA"
+    },
+    "shippingLines": {
+      "code": "Standard Delivery - Northeast",
+      "title": "local_delivery"
+    },
+    "customer": {
+      "shopifyId": 7578454425763,
+      "firstName": "Sebastian",
+      "lastName": "Bryers",
+      "email": "srbryers@gmail.com",
+      "phone": "+15126364977"
+    }
+  },
+  "metaData": {
+    "myshopifyDomain": "e97e57-2.myshopify.com"
+  }
+}

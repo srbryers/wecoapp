@@ -20,6 +20,9 @@ export async function loopApi(request: LoopRequest) {
     body: JSON.stringify(request.body),
   } as any
 
+  console.log("requestOptions", requestOptions)
+  console.log("request.path", request.path)
+
   const result = await fetch(`https://api.loopsubscriptions.com/admin/${apiVersion}/${request.path}`, requestOptions)
     .then((response) => {
       if (response.status === 200) {
