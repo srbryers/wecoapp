@@ -27,7 +27,7 @@ function getItemData(data: LoopSubscription) {
     "Last Name": data.shippingAddress.lastName,
     "Subscription ID": data.id,
     "Customer ID": data.customer.id,
-    "Next Billing Date": data.nextBillingDateString,
+    "Next Billing Date": data.nextBillingDateEpoch ? new Date(data.nextBillingDateEpoch * 1000).toLocaleString() : "",
     "Delivery Frequency": `${data.deliveryPolicy.intervalCount} ${data.deliveryPolicy.interval}`,
     "State": data.shippingAddress.provinceCode,
     "Zip": data.shippingAddress.zip.split("-")[0],

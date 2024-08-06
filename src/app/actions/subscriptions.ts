@@ -48,8 +48,7 @@ export const subscriptions: Subscriptions = {
       // console.info("[getAll] orders", orders)
 
       // Parse the order details into a format we can use
-      const nextBillingDate = new Date(0)
-      nextBillingDate.setUTCSeconds(sub.nextBillingDateEpoch)
+      const nextBillingDate = new Date(sub.nextBillingDateEpoch * 1000)
       const lastOrder = sortedOrders?.[0]
       const lastOrderDeliveryDate = new Date(lastOrder?.customAttributes["Delivery Date"])
       const nextOrderDeliveryDate = new Date(lastOrderDeliveryDate)
@@ -57,6 +56,10 @@ export const subscriptions: Subscriptions = {
 
       // Set the email address
       sub.email = lastOrder?.email || ''
+
+      // console.log("[getAll] email", sub.email)
+      // console.log("[getAll] nextBillingDate", nextBillingDate.toLocaleString())
+      // console.log("------------------------")
 
       // Get the next delivery date
       let dates
@@ -119,8 +122,8 @@ export const subscriptions: Subscriptions = {
     let subscriptionsList: LoopSubscription[] = []
     // Start from tomorrow
     const dateStart = new Date()
-    dateStart.setHours(0, 0, 0, 0) 
-    dateStart.setDate(dateStart.getDate() + (days || 2)) // Look ahead 2 days by default
+    dateStart.setHours(0, 0, 0, 0)
+    dateStart.setDate(dateStart.getDate() + (days || 2))
     // End at the end of the day
     const dateEnd = new Date()
     dateEnd.setHours(23, 59, 59, 999)
@@ -131,33 +134,22 @@ export const subscriptions: Subscriptions = {
         page: page,
         query: `status=ACTIVE&nextBillingStartEpoch=${Math.floor(dateStart.valueOf() / 1000)}&nextBillingEndEpoch=${Math.floor(dateEnd.valueOf() / 1000)}`
       })
-      subscriptionsList = [...subscriptionsList, ...res.data]
+      subscriptionsList = [
+        ...subscriptionsList, 
+        ...res.data.sort((a: LoopSubscription, b: LoopSubscription) => {
+          return a.nextBillingDateEpoch - b.nextBillingDateEpoch
+        })
+      ]
       if (res.pageInfo.hasNextPage) {
         page++
         await getAllSubscriptions(page)
       }
     }
-    console.info("[getUpcomingSubscriptions] dateStart", dateStart)
-    console.info("[getUpcomingSubscriptions] dateEnd", dateEnd)
+    console.info("[getUpcomingSubscriptions] dateStart", dateStart.toLocaleString())
+    console.info("[getUpcomingSubscriptions] dateEnd", dateEnd.toLocaleString())
     // Get all the subscriptions with recursive calls
     await getAllSubscriptions(page)
 
-    // Get the min and max dates for the upcoming subscriptions
-    const minDate = new Date(0)
-    minDate.setUTCSeconds(Math.min(...subscriptionsList.map((sub: LoopSubscription) => sub.nextBillingDateEpoch)))
-    const maxDate = new Date(0)
-    maxDate.setUTCSeconds(Math.max(...subscriptionsList.map((sub: LoopSubscription) => sub.nextBillingDateEpoch)))
-
-    console.info("[getUpcomingSubscriptions] minDate", minDate)
-    console.info("[getUpcomingSubscriptions] maxDate", maxDate)
-
-    // Loop through the subscriptions and send the upcoming subscription email
-    // for (let i = 0; i < res.data.length; i++) {
-    //   console.info("[getUpcomingSubscriptions] sending email to customer", res.data[i].email)
-    //   await subscriptions.actions.sendUpcomingSubscriptionEmail(res.data[i])
-    //   // Wait 500ms between each call
-    //   await delay(500)
-    // }
     return subscriptionsList
   },
   actions: {

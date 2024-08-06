@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       for (const subscription of upcomingSubscriptions) {
         console.info("Sending upcoming subscription email to customer:", subscription?.lastOrder?.email)
         await delay(200)
-        result.push(await subscriptions.actions.sendUpcomingSubscriptionEmail(subscription))
+        // result.push(await subscriptions.actions.sendUpcomingSubscriptionEmail(subscription))
       }
 
       return Response.json(result, { status: 200 })
