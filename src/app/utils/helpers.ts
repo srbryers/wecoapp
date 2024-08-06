@@ -1,5 +1,6 @@
 import { FormEvent } from "react"
-import { FormValues, MenuZone } from "./types";
+import { FormValues, MenuZone, Order } from "./types";
+import { getShipmentZone } from "./carrierServices";
 
 // Delay function
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
@@ -94,4 +95,28 @@ export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?:
   }
 
   return availableDeliveryDates
+}
+
+/**
+ * Given a delivery date and a menu zone, calculate the ship by date
+ * @param activeMenuZone 
+ * @param deliveryDate 
+ */
+export const calculateShipByDate = async (deliveryDate: Date, order: Order, activeMenuZone?: MenuZone) => {
+
+  if (!activeMenuZone && !order) {
+    return null
+  }
+
+  const menuZone = activeMenuZone || (await getShipmentZone({
+    destinationZip: order?.shipping_address?.zip || "",
+    lineItems: order?.line_items || []
+  }))?.menuZone
+  
+  let deliveryDateCutoff = new Date(deliveryDate)
+  const leadTimeHours = (Number(menuZone.shipping_lead_time) || 48) - 12
+  let shipByDate = new Date(deliveryDateCutoff)
+  shipByDate.setHours(shipByDate.getHours() - leadTimeHours)
+
+  return shipByDate
 }

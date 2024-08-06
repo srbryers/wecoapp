@@ -134,6 +134,10 @@ export type Order = {
   created_at?: string
   processed_at?: string
   tags?: string
+  note_attributes?: {
+    name: string
+    value: string
+  }[]
 }
 
 export type MenuZone = {

@@ -23,15 +23,14 @@ export async function shipStationApi(request: ShipStationRequest) {
   } as any
 
   const result = await fetch(`${API_URL}/${request.path}`, requestOptions)
-    .then((response) => {
+    .then(async (response) => {
       if (response.status === 200) {
         return response.json()
       } else {
-        console.error(`Error fetching ShipStation data`,{ error: response.statusText, status: response.status })
+        console.error(`Error fetching ShipStation data`,{ error: await response.json(), status: response.status })
       }
     })
     .then((data) => {
-      console.log("data", data)
       return data
     })
     .catch((error) => console.error(error));
