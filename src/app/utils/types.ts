@@ -142,6 +142,7 @@ export type Order = {
 
 export type MenuZone = {
   title: string
+  handle: string
   zip_code_json?: string
   week_day_availability?: string[]
   shipping_service_name?: string
@@ -150,6 +151,8 @@ export type MenuZone = {
   menu_type?: string
   free_shipping_minimum?: string
   shipping_cost?: string
+  shipping_lead_time?: string
+  production_lead_time?: string
 }
 
 export interface LoopResponse {
@@ -198,4 +201,13 @@ export interface LoopSubscription {
 export interface LoopCustomAttributes {
   key: string
   value: string
+}
+
+/**
+ * Shipstation
+ */
+export interface ShipStationTags {
+  tagId: number,
+  name: string,
+  color: string
 }

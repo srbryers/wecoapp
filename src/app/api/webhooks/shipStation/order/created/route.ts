@@ -1,9 +1,47 @@
 import { shipStation } from "@/app/actions/shipStation"
 import { shopify } from "@/app/actions/shopify"
+import { getShipmentZone } from "@/app/utils/carrierServices"
 import { calculateShipByDate } from "@/app/utils/helpers"
-import { Order } from "@/app/utils/types"
+import { MenuZone, Order, ShipStationTags } from "@/app/utils/types"
 
 const SHIPSTATION_STORE_ID = 322511
+// const SHIPSTATION_PRODUCTION_TAGS = {
+//   3226: 0, // Sunday Production (Salem, NH)
+//   2685: 0, // Sunday Production (Edison, NJ)
+//   2686: 1, // Monday Production
+//   2905: 2, // Tuesday Production
+// }
+
+const getProductionTag = (shipByDate: Date, menuZone: MenuZone) => {
+  const productionDate = new Date(shipByDate)
+  const productionLeadHours = menuZone.production_lead_time || 0
+  const timeZoneOffsetHours = 4
+
+  if (productionLeadHours === 0) {
+    console.error("Could not find production lead time for menu zone", menuZone)
+    return
+  }
+
+  // Subtract the production lead time from the ship by date
+  productionDate.setDate(productionDate.getDate() - ((Number(productionLeadHours) + timeZoneOffsetHours) / 24))
+  const productionDay = productionDate.getDay()
+  
+  // Return the tag based on the menu zone and production date
+  switch (productionDay) {
+    case 0:
+      if (menuZone.handle === "edison-nj") {
+        return 2685 // Sunday Production (Edison, NJ)
+      } else {
+        return 3226 // Sunday Production (Salem, NH)
+      }
+    case 1:
+      return 2686 // Monday Production
+    case 2:
+      return 2905 // Tuesday Production
+  default:
+    return null
+  }
+}
 
 export async function POST(request: Request) {
 
@@ -59,8 +97,14 @@ export async function POST(request: Request) {
   }
 
   // Get the ship by date
+  const menuZone = (await getShipmentZone({
+    destinationZip: shopifyOrder?.shipping_address?.zip || "",
+    lineItems: shopifyOrder?.line_items || []
+  }))?.menuZone
   const deliveryDate = new Date(deliveryDateString)
-  const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder)
+  const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
+
+  console.log("menuZone", menuZone)
 
   if (!shipByDate) {
     console.error("Error calculating ship by date", deliveryDate, shopifyOrder)
@@ -70,22 +114,22 @@ export async function POST(request: Request) {
   console.log("Delivery Date", deliveryDate)
   console.log("Ship By Date", shipByDate)
 
-  // Update the ShipStation order with the dates
+  // @TODO: Add tagging logic here
+  // Tagging Logic
+  // 1. Get the tags list
+  // const tags = await shipStation.tags.get()
+  const productionTag = getProductionTag(shipByDate, menuZone)
+
+  // Update the ShipStation order with the dates and tags
   const updatedOrder = await shipStation.orders.update({
     ...shipStationOrder,
     shipByDate: shipByDate.toISOString(),
+    tagIds: productionTag ? [productionTag] : shipStationOrder.tagIds || null,
     advancedOptions: {
       customField1: deliveryDateString,
       storeId: SHIPSTATION_STORE_ID
     }
   })
-
-  // @TODO: Add tagging logic here
-  // Tagging Logic
-  // 1. Get the tags list
-  // const tags = await shipStation.tags.get()
-  // console.log("tags", tags)
-  // @TODO: Add batch allocation logic here
 
   return Response.json({ message: updatedOrder }, { status: 200 })
 }

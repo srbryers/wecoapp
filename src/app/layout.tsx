@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Navigation from "@/app/components/Navigation"
 
 const inter = Inter({ subsets: ["latin"] });
+
+const recoleta = localFont({
+  variable: '--font-recoleta',
+  src: './fonts/recoleta-semibold.woff',
+  display: 'swap'
+})
+
+const circularXx = localFont({
+  variable: '--font-circular-xx',
+  src: [
+    {
+      path: './fonts/circularxx-bold.woff',
+      weight: 'bold'
+    },
+    {
+      path: './fonts/circularxx-book.woff',
+      weight: 'normal'
+    }
+  ],
+  display: 'swap'
+})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className}`}>
+      <body className={`${inter.className} ${recoleta.className} ${circularXx.className}`}>
         <div className="grid grid-rows-1 grid-cols-2 grid-cols-[200px_1fr] min-h-screen bg-gray-900">
           {/* Side navigation */}
           <Navigation links={[

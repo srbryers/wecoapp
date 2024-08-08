@@ -69,7 +69,10 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
       }
     }
     return acc
-  }, {}) 
+  }, {
+    handle: menuZone.handle,
+    title: menuZone.title
+  }) 
 
   return {
     destinationZip: formattedZip,
