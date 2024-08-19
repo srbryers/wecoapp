@@ -161,6 +161,7 @@ export const subscriptions: Subscriptions = {
       ]
       if (res.pageInfo.hasNextPage) {
         page++
+        await delay(5001)
         await getAllSubscriptions(page)
       }
     }

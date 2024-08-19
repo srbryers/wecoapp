@@ -27,8 +27,8 @@ const getProductionTag = (shipByDate: Date, menuZone: MenuZone) => {
   const productionDay = productionDate.getDay()
   let tags: Number[] = []
 
-  console.log("Production Date", productionDate)
-  console.log("shipByDate", shipByDate)
+  console.log("Production Date", productionDate.toLocaleString())
+  console.log("shipByDate", shipByDate.toLocaleString())
 
   // Ship By Tags
   if (shipByDate.getDay() === 3) {
