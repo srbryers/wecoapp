@@ -20,18 +20,18 @@ interface LoopSubscriptionsProps {
 }
 
 function getItemData(data: LoopSubscription) {
+  const lastShopifyOrderId = String(data.lastOrder?.id)?.split("/").pop()
   return {
     "Check": "",
-    "Email": data?.email,
+    "Subscription ID": data.id,
+    "Email": <Link href={`https://e97e57-2.app.loopwork.co/subscriptions/${data.shopifyId}`} target="_blank" className="underline">{data?.email}</Link>,
     "First Name": data.shippingAddress.firstName,
     "Last Name": data.shippingAddress.lastName,
-    "Subscription ID": data.id,
-    "Customer ID": data.customer.id,
     "Next Billing Date": data.nextBillingDateEpoch ? new Date(data.nextBillingDateEpoch * 1000).toLocaleString() : "",
     "Delivery Frequency": `${data.deliveryPolicy.intervalCount} ${data.deliveryPolicy.interval}`,
     "State": data.shippingAddress.provinceCode,
     "Zip": data.shippingAddress.zip.split("-")[0],
-    "Last Order ID": <a href={`https://e97e57-2.myshopify.com/admin/orders/${data.lastOrder?.id}`} target="_blank">{data.lastOrder?.name}</a>,
+    "Last Order ID": <Link href={`https://e97e57-2.myshopify.com/admin/orders/${lastShopifyOrderId}`} target="_blank">{data.lastOrder?.name}</Link>,
     "Last Order Date": data.lastOrder?.created_at,
     "Last Order Delivery Date": data.lastOrderDeliveryDate,
     "Next Order Delivery Date": data.nextOrderDeliveryDate
@@ -100,6 +100,7 @@ export default function LoopSubscriptions({ subscriptions, pageInfo }: LoopSubsc
       }
     }
   ).map((item) => {
+    console.log("item", item)
     return getItemData(item)
   })
   const tableHeaders = subscriptions?.length > 0 ? Object.keys(tableData[0]) : []

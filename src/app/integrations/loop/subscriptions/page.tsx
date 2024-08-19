@@ -9,6 +9,8 @@ export default async function Page({ searchParams }: { searchParams: { page: str
     query: `status=ACTIVE&limit=200`
   })
 
+  // console.log("Loop Subscriptions", res)
+
   // @TODO: Get the Klaviyo segment for upcoming subscription customers (people who have the event) and add 
   // that data to the table so we know the last time we sent an email
   // https://developers.klaviyo.com/en/reference/get_segments

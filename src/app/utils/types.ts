@@ -166,6 +166,7 @@ export interface LoopResponse {
 
 export interface LoopSubscription {
   id: string
+  shopifyId: string
   customer: {
     id: number
     shopifyId: number
