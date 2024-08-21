@@ -176,7 +176,7 @@ export const subscriptions: Subscriptions = {
     sendUpcomingSubscriptionEmail: async (data: LoopSubscription) => {
       // Get the loop session token
       const sessionToken = await loop.customers.getSessionToken(data.customer.shopifyId)
-      const loginUrl = `https://e97e57-2.myshopify.com/a/loop_subscriptions/customer/${data.customer.shopifyId}?sessionToken=${sessionToken?.sessionToken}`
+      const loop_subscription_portal_link = `https://e97e57-2.myshopify.com/a/loop_subscriptions/customer/${data.customer.shopifyId}/subscription/${data.shopifyId}?sessionToken=${sessionToken?.sessionToken}`
 
       console.info("[sendUpcomingSubscriptionEmail] send email to customer", data.email)
 
@@ -196,7 +196,7 @@ export const subscriptions: Subscriptions = {
                       "Next Billing Date (Time)": `${data.nextBillingDate?.toLocaleTimeString()}`,
                       "Next Delivery Date": data.nextDeliveryDate,
                       "Next Delivery Date (Display)": data.nextDeliveryDateString,
-                      "Login URL": loginUrl
+                      "loop_subscription_portal_link": loop_subscription_portal_link
                     }
                   }
                 }
@@ -215,7 +215,7 @@ export const subscriptions: Subscriptions = {
                 "Next Billing Date (Time)": `${data.nextBillingDate?.toLocaleTimeString()}`,
                 "Next Delivery Date": data.nextDeliveryDate,
                 "Next Delivery Date (Display)": data.nextDeliveryDateString,
-                "Login URL": loginUrl
+                "loop_subscription_portal_link": loop_subscription_portal_link
               }
             }
           }
@@ -291,7 +291,7 @@ export const subscriptions: Subscriptions = {
 
       if (updateSessionToken) {
         const sessionToken = await loop.customers.getSessionToken(data.customer.shopifyId)
-        profile.data.attributes.properties["Login URL"] = `https://e97e57-2.myshopify.com/a/loop_subscriptions/customer/${data.customer.shopifyId}?sessionToken=${sessionToken?.sessionToken}`
+        profile.data.attributes.properties["loop_subscription_portal_link"] = `https://e97e57-2.myshopify.com/a/loop_subscriptions/customer/${data.customer.shopifyId}/subscription/${data.shopifyId}?sessionToken=${sessionToken?.sessionToken}`
       }
 
       const updatedProfile = await klaviyo.profiles.createOrUpdate(profile)

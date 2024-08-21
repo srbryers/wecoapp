@@ -13,10 +13,16 @@ import Input from "../forms/Input"
 import { useEffect, useState } from "react"
 import Button from "../Button"
 import { subscriptions } from "@/app/actions/subscriptions"
+import { loop } from "@/app/actions/loop"
 
 interface LoopSubscriptionsProps {
   subscriptions: LoopSubscription[]
   pageInfo?: LoopResponse["pageInfo"]
+}
+
+async function getSubscriptionPortalLink(customerId: number, subscriptionId: string) {
+  const token = await loop.customers.getSessionToken(customerId)
+  return `https://wecohospitality.com/a/loop_subscriptions/customer/${customerId}/subscription/${subscriptionId}?sessionToken=${token?.sessionToken}`
 }
 
 function getItemData(data: LoopSubscription) {
@@ -24,6 +30,10 @@ function getItemData(data: LoopSubscription) {
   return {
     "Check": "",
     "Subscription ID": data.id,
+    "Portal Link": <a onClick={async () => {
+      const link = await getSubscriptionPortalLink(data.customer.shopifyId, data.shopifyId)
+      window.open(link, "_blank")
+    }} target="_blank" className="underline cursor-pointer">{data.shopifyId}</a>,
     "Email": <Link href={`https://e97e57-2.app.loopwork.co/subscriptions/${data.shopifyId}`} target="_blank" className="underline">{data?.email}</Link>,
     "First Name": data.shippingAddress.firstName,
     "Last Name": data.shippingAddress.lastName,
@@ -100,7 +110,6 @@ export default function LoopSubscriptions({ subscriptions, pageInfo }: LoopSubsc
       }
     }
   ).map((item) => {
-    console.log("item", item)
     return getItemData(item)
   })
   const tableHeaders = subscriptions?.length > 0 ? Object.keys(tableData[0]) : []

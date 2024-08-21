@@ -34,11 +34,10 @@ export const loop = {
       })
     },
     getSessionToken: async (customerId: number): Promise<{ sessionToken: string } | undefined> => {
-      console.log("[getSessionToken] customerId", customerId)
-      return await loopApi({
+      return (await loopApi({
         method: 'POST',
         path: `customer/${customerId}/sessionToken`
-      })
+      })).data
     }
   },
   subscriptions: {
