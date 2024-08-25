@@ -59,7 +59,7 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   // console.log("menuZone", menuZone.handle)
   // console.log("isValidShipment", isValidShipment)
 
-  menuZone = menuZone.fields.reduce((acc: any, value: { key: string, value: string }) => {
+  menuZone = menuZone?.fields?.reduce((acc: any, value: { key: string, value: string }) => {
     if (value.value) {
       // Parse the value values
       if (value.value.includes('[') || value.value.includes('{')) {

@@ -35,8 +35,9 @@ export const formatDate = (yourDate: Date) => {
 }
 
 export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?: Date) => {
+
   // Available days
-  const availableDeliveryDays = activeMenuZone.week_day_availability
+  const availableDeliveryDays = activeMenuZone?.week_day_availability
   const availableDeliveryDates: string[] = []
 
   // Calculate the delivery dates
@@ -47,8 +48,8 @@ export const calculateAvailableDeliveryDates = (activeMenuZone: MenuZone, date?:
   // console.log("date", date)
   // console.log("availableDeliveryDays",availableDeliveryDays)
 
-  if (activeMenuZone.cutoff_time 
-    && activeMenuZone.cutoff_hours
+  if (activeMenuZone?.cutoff_time 
+    && activeMenuZone?.cutoff_hours
     && availableDeliveryDays) {
     // Calculate the cutoff time
     const cutoffTime = activeMenuZone.cutoff_time

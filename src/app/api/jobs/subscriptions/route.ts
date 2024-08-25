@@ -41,10 +41,10 @@ const actions = {
       await delay(200)
       const enrichedSubscription = await subscriptions.enrichSubscription(subscription) as LoopSubscription
 
-      console.log("Enriched Subscription", JSON.stringify(enrichedSubscription))
+      // console.log("Enriched Subscription", JSON.stringify(enrichedSubscription))
       if (!enrichedSubscription?.nextDeliveryDate || enrichedSubscription?.nextDeliveryDateString == "Invalid Date") {
         console.error("Could not get nextDeliveryDate for subscription:", enrichedSubscription)
-        result.push({ error: "Could not get nextDeliveryDate for subscription", subscription: subscription })
+        result.failed.push({ error: "Could not get nextDeliveryDate for subscription", subscription: subscription })
       }
 
       // Update Loop customAttributes with the new delivery date

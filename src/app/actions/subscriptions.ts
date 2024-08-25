@@ -60,7 +60,7 @@ export const subscriptions: Subscriptions = {
     // Set the email address
     sub.email = lastOrder?.email || ''
 
-    console.log("[enrichSubscription] email", sub.email)
+    // console.log("[enrichSubscription] email", sub.email)
     // console.log("[getAll] nextBillingDate", nextBillingDate.toLocaleString())
     // console.log("------------------------")
 
