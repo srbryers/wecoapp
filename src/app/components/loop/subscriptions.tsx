@@ -27,6 +27,7 @@ async function getSubscriptionPortalLink(customerId: number, subscriptionId: str
 
 function getItemData(data: LoopSubscription) {
   const lastShopifyOrderId = String(data.lastOrder?.id)?.split("/").pop()
+  // console.log("data", data)
   return {
     "Check": "",
     "Subscription ID": data.id,
@@ -35,6 +36,7 @@ function getItemData(data: LoopSubscription) {
       window.open(link, "_blank")
     }} target="_blank" className="underline cursor-pointer">{data.shopifyId}</a>,
     "Email": <Link href={`https://e97e57-2.app.loopwork.co/subscriptions/${data.shopifyId}`} target="_blank" className="underline">{data?.email}</Link>,
+    "Next Delivery Date": data.nextDeliveryDateString,
     "First Name": data.shippingAddress.firstName,
     "Last Name": data.shippingAddress.lastName,
     "Next Billing Date": data.nextBillingDateEpoch ? new Date(data.nextBillingDateEpoch * 1000).toLocaleString() : "",
@@ -44,7 +46,6 @@ function getItemData(data: LoopSubscription) {
     "Last Order ID": <Link href={`https://e97e57-2.myshopify.com/admin/orders/${lastShopifyOrderId}`} target="_blank">{data.lastOrder?.name}</Link>,
     "Last Order Date": data.lastOrder?.created_at,
     "Last Order Delivery Date": data.lastOrderDeliveryDate,
-    "Next Order Delivery Date": data.nextOrderDeliveryDate
   }
 }
 
