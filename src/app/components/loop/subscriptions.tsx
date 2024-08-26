@@ -36,10 +36,10 @@ function getItemData(data: LoopSubscription) {
       window.open(link, "_blank")
     }} target="_blank" className="underline cursor-pointer">{data.shopifyId}</a>,
     "Email": <Link href={`https://e97e57-2.app.loopwork.co/subscriptions/${data.shopifyId}`} target="_blank" className="underline">{data?.email}</Link>,
+    "Next Billing Date": data.nextBillingDateEpoch ? new Date(data.nextBillingDateEpoch * 1000).toLocaleString() : "",
     "Next Delivery Date": data.nextDeliveryDateString,
     "First Name": data.shippingAddress.firstName,
     "Last Name": data.shippingAddress.lastName,
-    "Next Billing Date": data.nextBillingDateEpoch ? new Date(data.nextBillingDateEpoch * 1000).toLocaleString() : "",
     "Delivery Frequency": `${data.deliveryPolicy.intervalCount} ${data.deliveryPolicy.interval}`,
     "State": data.shippingAddress.provinceCode,
     "Zip": data.shippingAddress.zip.split("-")[0],
