@@ -339,10 +339,40 @@ export const shopify = {
         path: `customers/${customer_id}/orders.json`
       })
     },
-    getOrdersWithMetafields: async (customer_id: string) => {
+    getPublicProfile: async (email: string) => {
+      const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
+      
+      const subscriptionOrders = orders.filter((order: any) => order.customer.tags?.includes('Subscription'))
+      const lastOrder = orders[0]
+
+      console.log("Subscription Orders", subscriptionOrders.length)
+      console.log("Customer Metafields", lastOrder.customer.metafields)
+
+      return {
+        id: lastOrder.customer.id,
+        metafields: lastOrder.customer.metafields,
+        subscription: {
+          isSubscriptionCustomer: subscriptionOrders.length > 0,
+          isActive: lastOrder.customer.tags?.includes('Active Subscriber')
+        }
+      }
+    },
+    getOrdersWithMetafields: async ({
+      customer_id,
+      email
+    }: {
+      customer_id?: string,
+      email?: string
+    }) => {
+
+      if (!customer_id && !email) {
+        throw new Error('Must provide either customer_id or email')
+      }
+
+      const querySelector = customer_id ? `customer_id:${customer_id}` : email ? `email:${email}` : ''
       const res = await shopifyAdminApiGql(`
         query Orders {
-          orders(first: 20, query: "customer_id:${customer_id}", reverse: true) {
+          orders(first: 20, query: "${querySelector}", reverse: true) {
             nodes {
                     id
                     name
@@ -353,6 +383,7 @@ export const shopify = {
                         email
                         firstName
                         lastName
+                        tags
                         metafields(first: 10) {
                             nodes {
                                 key

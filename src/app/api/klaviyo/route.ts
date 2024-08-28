@@ -1,8 +1,7 @@
-
+const apiKey = process.env.KLAVIYO_API_KEY
+const apiVersion = process.env.KLAVIYO_REVISION || '2024-02-15'
 
 export async function POST(request: Request) {
-  const apiKey = process.env.KLAVIYO_API_KEY
-  const apiVersion = process.env.KLAVIYO_REVISION || '2024-02-15'
 
   const req = await request.json()
 

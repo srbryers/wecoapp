@@ -33,7 +33,9 @@ export const subscriptions: Subscriptions = {
     const menuZones = zones || await shopify.metaobjects.get('menu_zone')
 
     // Get the shopify orders associated with the subscription and sort them
-    const orders = await shopify.customers.getOrdersWithMetafields(`${sub.customer.shopifyId}`)
+    const orders = await shopify.customers.getOrdersWithMetafields({
+      customer_id: `${sub.customer.shopifyId}`,
+    })
     const sortedOrders = orders.sort((a: any, b: any) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     }).filter((order: any) => {
