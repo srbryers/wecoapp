@@ -1,9 +1,6 @@
 import { shopify } from "@/app/actions/shopify"
 
-export async function GET(request: Request) {
-  const queryParams = new URL(request.url).searchParams
-  const action = queryParams.get('action')
-
+export async function OPTIONS() {
   const resConfig: ResponseInit = {
     status: 200,
     headers: {
@@ -13,11 +10,12 @@ export async function GET(request: Request) {
       'Content-Type': 'application/json'
     }
   }
+  return new Response(null, resConfig)
+}
 
-  if (request.method === 'OPTIONS') {
-    // Send response to OPTIONS requests
-    return new Response(null, resConfig)
-  }
+export async function GET(request: Request) {
+  const queryParams = new URL(request.url).searchParams
+  const action = queryParams.get('action')
 
   if (!action) {
     return new Response('Invalid request', { status: 400 })
@@ -30,7 +28,7 @@ export async function GET(request: Request) {
         return new Response('Email is required', { status: 400 })
       }
       const publicProfile = await shopify.customers.getPublicProfile(email)
-      return new Response(JSON.stringify(publicProfile), { status: 200, ...resConfig })
+      return new Response(JSON.stringify(publicProfile), { status: 200, headers: { 'Content-Type': 'application/json' } })
     default:
       return new Response('Invalid action', { status: 400 })
   }
