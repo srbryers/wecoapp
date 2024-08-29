@@ -341,12 +341,13 @@ export const shopify = {
     },
     getPublicProfile: async (email: string) => {
       const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
-      
-      const subscriptionOrders = orders.filter((order: any) => order.customer.tags?.includes('Subscription'))
-      const lastOrder = orders[0]
 
-      console.log("Subscription Orders", subscriptionOrders.length)
-      console.log("Customer Metafields", lastOrder.customer.metafields)
+      if (orders.length === 0) {
+        return null
+      }
+      
+      const subscriptionOrders = orders?.filter((order: any) => order.customer.tags?.includes('Subscription'))
+      const lastOrder = orders?.[0]
 
       return {
         id: lastOrder.customer.id,
