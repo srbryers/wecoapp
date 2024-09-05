@@ -350,7 +350,7 @@ export const shopify = {
       const lastOrder = orders?.[0]
 
       return {
-        id: lastOrder.customer.id,
+        lastOrderId: lastOrder.id,
         metafields: lastOrder.customer.metafields,
         subscription: {
           isSubscriptionCustomer: subscriptionOrders.length > 0,
