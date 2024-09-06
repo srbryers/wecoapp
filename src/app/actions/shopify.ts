@@ -346,7 +346,9 @@ export const shopify = {
         return null
       }
       
-      const subscriptionOrders = orders?.filter((order: any) => order.customer.tags?.includes('Subscription'))
+      const subscriptionOrders = orders?.filter((order: any) => {
+        return order.customer.tags?.includes('Subscription') && !order.customer.tags?.includes('Local Delivery Only')
+      })
       const lastOrder = orders?.[0]
 
       return {
