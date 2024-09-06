@@ -346,8 +346,10 @@ export const shopify = {
       })
     },
     getPublicProfile: async (email: string) => {
+
       const customer = (await shopify.customers.getByEmail(email))?.customers?.[0]
       const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
+      let isSubscriptionCustomer = false
 
       if (orders.length === 0) {
         return null
@@ -358,11 +360,17 @@ export const shopify = {
       })
       const lastOrder = orders?.[0]
 
+      if (!customer.tags?.includes('Local Delivery Only')) {
+        if (customer?.tags?.includes('Subscription') || subscriptionOrders.length > 0) {
+          isSubscriptionCustomer = true
+        }
+      }
+
       return {
         lastOrderId: lastOrder.id,
         metafields: lastOrder.customer.metafields,
         subscription: {
-          isSubscriptionCustomer: subscriptionOrders.length > 0 || (customer?.tags?.includes('Subscription') && !customer?.tags?.includes('Local Delivery Only')),
+          isSubscriptionCustomer: isSubscriptionCustomer,
           isActive: lastOrder.customer.tags?.includes('Active Subscriber')
         }
       }
