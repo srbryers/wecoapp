@@ -339,7 +339,14 @@ export const shopify = {
         path: `customers/${customer_id}/orders.json`
       })
     },
+    getByEmail: async (email: string) => {
+      return await shopifyAdminApiRest({
+        method: 'GET',
+        path: `customers.json?query=email:${email}`
+      })
+    },
     getPublicProfile: async (email: string) => {
+      const customer = (await shopify.customers.getByEmail(email))?.customers?.[0]
       const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
 
       if (orders.length === 0) {
@@ -347,7 +354,7 @@ export const shopify = {
       }
       
       const subscriptionOrders = orders?.filter((order: any) => {
-        return order.customer.tags?.includes('Subscription') && !order.customer.tags?.includes('Local Delivery Only')
+        return order.tags?.includes('Subscription')
       })
       const lastOrder = orders?.[0]
 
@@ -355,7 +362,7 @@ export const shopify = {
         lastOrderId: lastOrder.id,
         metafields: lastOrder.customer.metafields,
         subscription: {
-          isSubscriptionCustomer: subscriptionOrders.length > 0,
+          isSubscriptionCustomer: subscriptionOrders.length > 0 || (customer?.tags?.includes('Subscription') && !customer?.tags?.includes('Local Delivery Only')),
           isActive: lastOrder.customer.tags?.includes('Active Subscriber')
         }
       }
