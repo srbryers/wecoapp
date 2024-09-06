@@ -342,12 +342,14 @@ export const shopify = {
     getByEmail: async (email: string) => {
       return await shopifyAdminApiRest({
         method: 'GET',
-        path: `customers.json?query=email:${email}`
+        path: `customers.json?email=${email}`
       })
     },
     getPublicProfile: async (email: string) => {
 
       const customer = (await shopify.customers.getByEmail(email))?.customers?.[0]
+
+      console.log("customer", customer)
       const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
       let isSubscriptionCustomer = false
 
