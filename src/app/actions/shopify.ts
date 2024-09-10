@@ -1,6 +1,7 @@
 import { CarrierService, LineItem, Order, CarrierServiceRequest, CarrierServiceResponse } from "@/app/utils/types"
 import { shopifyAdminApiRest, shopifyAdminApiGql } from "@/app/utils/shopify"
 import { delay } from "../utils/helpers"
+import { klaviyo } from "./klaviyo"
 
 export const shopify = {
   fulfillmentServices: {
@@ -347,23 +348,62 @@ export const shopify = {
     },
     getPublicProfile: async (email: string) => {
 
-      const customer = (await shopify.customers.getByEmail(email))?.customers?.[0]
+      const transitionTags = [
+        {
+          tag: 'Wave0_Lapsed_GroupA',
+          transitionDate: '2024-09-10'
+        },
+        {
+          tag: 'Wave0_Lapsed_GroupB',
+          transitionDate: '2024-09-17'
+        },
+        {
+          tag: 'Wave0_Lapsed_GroupC',
+          transitionDate: '2024-09-24'
+        },
+        // @TODO:Add remaining transition tags here after they are created in Klaviyo
+      ]
 
-      console.log("customer", customer)
-      const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
       let isSubscriptionCustomer = false
 
-      if (orders.length === 0) {
-        return null
+      /* 1. Get the Klaviyo profile */
+      const klaviyoQuery = `?filter=equals(email,%22${email}%22)`
+      const klaviyoCustomer = (await klaviyo.profiles.get(klaviyoQuery))?.data?.[0]
+
+      if (!klaviyoCustomer) {
+        return null // Return null if the Klaviyo profile is not found
       }
+
+      // Check the properties for a TransitionTag
+      const transitionTag = klaviyoCustomer?.attributes?.properties?.TransitionTag
       
+      if (transitionTag) {
+        const transitionTagData = transitionTags.find((tag) => tag.tag === transitionTag)
+        if (transitionTagData) {
+          const transitionDate = new Date(transitionTagData.transitionDate)
+          const currentDate = new Date()
+          if (currentDate >= transitionDate) {
+            isSubscriptionCustomer = true // Return the subscription experience if the TransitionTag is found
+          }
+        }
+      }
+
+      /* 2. Get the Shopify customer and orders */
+      const shopifyCustomer = (await shopify.customers.getByEmail(email))?.customers?.[0]
+      const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
+      
+      if (orders.length === 0) {
+        return null // Return null if the customer has no orders
+      }
+
+      /* 3. Check if the customer is a subscription customer */
       const subscriptionOrders = orders?.filter((order: any) => {
         return order.tags?.includes('Subscription')
       })
       const lastOrder = orders?.[0]
 
-      if (!customer.tags?.includes('Local Delivery Only')) {
-        if (customer?.tags?.includes('Subscription') || subscriptionOrders.length > 0) {
+      if (!shopifyCustomer?.tags?.includes('Local Delivery Only')) {
+        if (shopifyCustomer?.tags?.includes('Subscription') || subscriptionOrders.length > 0) {
           isSubscriptionCustomer = true
         }
       }
@@ -371,6 +411,7 @@ export const shopify = {
       return {
         lastOrderId: lastOrder.id,
         metafields: lastOrder.customer.metafields,
+        tags: shopifyCustomer?.tags,
         subscription: {
           isSubscriptionCustomer: isSubscriptionCustomer,
           isActive: lastOrder.customer.tags?.includes('Active Subscriber')
