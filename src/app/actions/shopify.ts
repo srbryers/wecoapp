@@ -351,7 +351,7 @@ export const shopify = {
       const transitionTags = [
         {
           tag: 'Wave0_Lapsed_GroupA',
-          transitionDate: '2024-09-10'
+          transitionDate: '2024-09-11'
         },
         {
           tag: 'Wave0_Lapsed_GroupB',
