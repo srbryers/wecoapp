@@ -78,7 +78,6 @@ export async function POST(request: Request) {
             profileData
           ]
         },
-        "historical_import": false
       },
       "relationships": {
         "list": {
