@@ -21,14 +21,18 @@ export async function klaviyoApi(request: KlaviyoRequest) {
     body: JSON.stringify(request.body),
   } as any
 
+  console.log("requestoptions", requestOptions)
+
   const result = await fetch(`https://a.klaviyo.com/api${request.path}`, requestOptions)
-    .then((response) => {
+    .then(async (response) => {
       if (response.status === 200) {
         return response.json()
       } else if (response.status === 202) {
         return { status: response.status, message: response.statusText }
       } else {
-        console.error(`Error fetching Klaviyo data`,{ error: response.statusText, status: response.status })
+        const json = await response.json()
+        console.error(`Error fetching Klaviyo data`,{ error: response.statusText, status: response.status, body: json.errors })
+        return { status: response.status, errors: json.errors }
       }
     })
     .then((data) => {

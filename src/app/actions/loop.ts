@@ -1,5 +1,5 @@
 import { loopApi } from "../utils/loop"
-import { LoopCustomAttributes, LoopResponse, LoopSubscription } from "../utils/types"
+import { LoopCustomAttributes, LoopResponse, LoopSubscription, LoopSubscriptionRequest } from "../utils/types"
 
 export interface LoopCustomer {
   id: number
@@ -51,6 +51,13 @@ export const loop = {
       return await loopApi({
         method: 'GET',
         path: `subscription/${subscriptionId || ''}`
+      })
+    },
+    create: async (data: LoopSubscriptionRequest) => {
+      return await loopApi({
+        method: 'POST',
+        path: `subscription`,
+        body: data
       })
     },
     patchCustomAttributes: async (subscriptionId: string, customAttributes: LoopCustomAttributes[]) => {

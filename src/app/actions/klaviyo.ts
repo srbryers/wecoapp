@@ -31,6 +31,13 @@ export const klaviyo = {
       }).catch((error) => {
         console.error("Error creating or updating Klaviyo profile", error)
       })
+    },
+    subscribe: async (data: any) => {
+      return await klaviyoApi({
+        method: 'POST',
+        path: '/profile-subscription-bulk-create-jobs',
+        body: data
+      })
     }
   }
 }

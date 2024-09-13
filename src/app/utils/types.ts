@@ -138,6 +138,13 @@ export type Order = {
     name: string
     value: string
   }[]
+  customer?: {
+    id: number
+    email: string
+    phone: string
+    first_name: string
+    last_name: string
+  }
 }
 
 export type MenuZone = {
@@ -162,6 +169,26 @@ export interface LoopResponse {
     hasNextPage: boolean
     hasPreviousPage: boolean
   }
+}
+
+export interface LoopSubscriptionRequest {
+  customerShopifyId: number
+  nextBillingDateEpoch: number
+  currencyCode: string
+  paymentMethodId: string
+  billingPolicy: {
+    interval: "WEEK" | "MONTH" | "YEAR"
+    intervalCount: number
+  }
+  deliveryPolicy: {
+    interval: "WEEK" | "MONTH" | "YEAR"
+    intervalCount: number
+  }
+  lines: {
+    variantShopifyId: number
+    quantity: number
+  }
+  shippingAddress: Address
 }
 
 export interface LoopSubscription {
