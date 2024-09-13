@@ -5,15 +5,15 @@ interface SubscribeRequest {
   email?: string
   phone_number?: string
   listId: string
-  consent: {
-    email: {
-      marketing: {
+  consent?: {
+    email?: {
+      marketing?: {
         consent: string
         consented_at?: string
       }
     }
-    sms: {
-      marketing: {
+    sms?: {
+      marketing?: {
         consent: string
         consented_at?: string
       }
@@ -25,7 +25,7 @@ interface KlaviyoProfile {
   id?: string
   type: string
   attributes: {
-    subscriptions: SubscribeRequest['consent']
+    subscriptions?: SubscribeRequest['consent']
     email: string
     phone_number: string
   }
@@ -41,21 +41,26 @@ export async function POST(request: Request) {
 
   let profileData: KlaviyoProfile = {
     "type": "profile",
-    "attributes": {
-      "subscriptions": {
-        "email": {
-          "marketing": {
-            "consent": req.consent.email.marketing.consent,
-          }
-        },
-        "sms": {
-          "marketing": {
-            "consent": req.consent.sms.marketing.consent,
-          }
-        }
-      },
+    "attributes": {      
       "email": email,
-      "phone_number": phone_number
+      "phone_number": phone_number,
+      "subscriptions": {} // Initialize subscriptions object
+    }
+  }
+
+  if (req.consent?.email?.marketing?.consent) {
+    profileData.attributes.subscriptions!.email = {
+      marketing: {
+        consent: req.consent.email.marketing.consent,
+      }
+    }
+  }
+
+  if (req.consent?.sms?.marketing?.consent) {
+    profileData.attributes.subscriptions!.sms = {
+      marketing: {
+        consent: req.consent.sms.marketing.consent,
+      }
     }
   }
 
