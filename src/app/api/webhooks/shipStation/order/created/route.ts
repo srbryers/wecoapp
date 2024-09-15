@@ -27,8 +27,8 @@ const getProductionTag = (shipByDate: Date, menuZone: MenuZone) => {
   const productionDay = productionDate.getDay()
   let tags: Number[] = []
 
-  console.log("Production Date", productionDate.toLocaleString())
-  console.log("shipByDate", shipByDate.toLocaleString())
+  // console.log("Production Date", productionDate.toLocaleString())
+  // console.log("shipByDate", shipByDate.toLocaleString())
 
   // Ship By Tags
   if (shipByDate.getDay() === 3) {
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const json = await request.json()
 
-  console.log("ShipStation Order Updated Webhook", JSON.stringify(json))
+  // console.log("ShipStation Order Updated Webhook", JSON.stringify(json))
 
   if (!json.resource_url) {
     console.error("Missing resource_url in request", json)
@@ -129,17 +129,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
   }
 
-  console.log("Delivery Date", deliveryDate)
-  console.log("Ship By Date", shipByDate)
+  // console.log("Delivery Date", deliveryDate)
+  // console.log("Ship By Date", shipByDate)
 
   // @TODO: Add tagging logic here
   // Tagging Logic
   // 1. Get the tags list
   const tags = await shipStation.tags.get()
-  console.log("Tags", tags)
+  // console.log("Tags", tags)
   const productionTags = getProductionTag(shipByDate, menuZone) || []
 
-  console.log("productionTags", productionTags)
+  // console.log("productionTags", productionTags)
 
   // Update the ShipStation order with the dates and tags
   const updatedOrder = await shipStation.orders.update({

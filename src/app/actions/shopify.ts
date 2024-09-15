@@ -232,6 +232,21 @@ export const shopify = {
         console.error('Error deleting order:', error)
         throw error
       }
+    },
+    list: async (params?: string) => {
+      return await shopifyAdminApiGql(
+        `
+        query {
+          orders(first: 250 ${params || ''}) {
+            nodes {
+              id
+              name
+              createdAt
+            }
+          }
+        }
+        `
+      )
     }
   },
   /**
