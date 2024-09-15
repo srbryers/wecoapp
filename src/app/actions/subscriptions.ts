@@ -301,7 +301,7 @@ export const subscriptions: Subscriptions = {
       // Update the customer's metafields in Shopify
       await subscriptions.actions.updateShopifyCustomer({ data })
 
-      console.info("[updateKlaviyoProfile] updatedProfile", updatedProfile)
+      console.info("[updateKlaviyoProfile] updatedProfile", JSON.stringify(updatedProfile))
       return updatedProfile
 
     },

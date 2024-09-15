@@ -167,7 +167,7 @@ export const shopify = {
           path: order_id ? `orders/${order_id}.json` : 'orders.json'
         })
           .then((data) => {
-            console.log('Orders:', data)
+            // console.log('Orders:', data)
             return data
           })
         if (order_id) {
