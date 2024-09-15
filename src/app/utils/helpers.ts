@@ -109,13 +109,17 @@ export const calculateShipByDate = async (deliveryDate: Date, order: Order, acti
     return null
   }
 
+  // console.log("[calculateShipByDate] Active Menu Zone", activeMenuZone)
+
   const menuZone = activeMenuZone || (await getShipmentZone({
     destinationZip: order?.shipping_address?.zip || "",
     lineItems: order?.line_items || []
   }))?.menuZone
+
+  // console.log("[calculateShipByDate] Menu Zone", menuZone)
   
   let deliveryDateCutoff = new Date(deliveryDate)
-  const leadTimeHours = (Number(menuZone.shipping_lead_time) || 48) - 12
+  const leadTimeHours = (Number(menuZone?.shipping_lead_time) || 48) - 12
   let shipByDate = new Date(deliveryDateCutoff)
   shipByDate.setHours(shipByDate.getHours() - leadTimeHours)
 

@@ -12,6 +12,7 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   let menuZone: any = {}
   
   // console.log("[getShipmentZone] lineItems", lineItems)
+  console.log("[getShipmentZone] destinationZip", destinationZip)
 
   // Get the menu_zone metaobject
   const shipmentZones = menuZones || await shopify.metaobjects.get('menu_zone')
@@ -28,7 +29,8 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   // console.log("[getShipmentZone] subscriptionItems", subscriptionItems)
 
   // Handle Zips that are missing a leading zero
-  const formattedZip = destinationZip.length < 5 ? '0' + destinationZip : destinationZip
+  let formattedZip = destinationZip.length < 5 ? '0' + destinationZip : destinationZip
+  formattedZip = formattedZip.slice(0, 5)
 
   // Loop through the zones and find the matching zone
   shipmentZones.forEach((shipmentZone: any) => {
