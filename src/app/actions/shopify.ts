@@ -384,6 +384,21 @@ export const shopify = {
       /* 1. Get the Klaviyo profile */
       const klaviyoQuery = `?filter=equals(email,%22${email}%22)`
       const klaviyoCustomer = (await klaviyo.profiles.get(klaviyoQuery))?.data?.[0]
+      const shopifyCustomer = (await shopify.customers.getByEmail(email))?.customers?.[0]
+      const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
+
+      // If the customer is only allowed local delivery, return the last order and metafields
+      if (shopifyCustomer?.tags?.includes('Local Delivery Only')) {
+        return {
+          lastOrderId: orders?.[0]?.id,
+          metafields: orders?.[0]?.customer?.metafields,
+          tags: shopifyCustomer?.tags,
+          subscription: {
+            isSubscriptionCustomer: false,
+            isActive: false
+          }
+        }
+      }
 
       if (!klaviyoCustomer) {
         return null // Return null if the Klaviyo profile is not found
@@ -403,10 +418,6 @@ export const shopify = {
         }
       }
 
-      /* 2. Get the Shopify customer and orders */
-      const shopifyCustomer = (await shopify.customers.getByEmail(email))?.customers?.[0]
-      const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
-      
       if (orders.length === 0) {
         return null // Return null if the customer has no orders
       }
