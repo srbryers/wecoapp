@@ -387,19 +387,6 @@ export const shopify = {
       const shopifyCustomer = (await shopify.customers.getByEmail(email))?.customers?.[0]
       const orders = await shopify.customers.getOrdersWithMetafields({ email: email })
 
-      // If the customer is only allowed local delivery, return the last order and metafields
-      if (shopifyCustomer?.tags?.includes('Local Delivery Only')) {
-        return {
-          lastOrderId: orders?.[0]?.id,
-          metafields: orders?.[0]?.customer?.metafields,
-          tags: shopifyCustomer?.tags,
-          subscription: {
-            isSubscriptionCustomer: false,
-            isActive: false
-          }
-        }
-      }
-
       if (!klaviyoCustomer) {
         return null // Return null if the Klaviyo profile is not found
       }
@@ -420,6 +407,19 @@ export const shopify = {
 
       if (orders.length === 0) {
         return null // Return null if the customer has no orders
+      }
+
+      // If the customer is only allowed local delivery, return the last order and metafields
+      if (shopifyCustomer?.tags?.includes('Local Delivery Only')) {
+        return {
+          lastOrderId: orders?.[0]?.id,
+          metafields: orders?.[0]?.customer?.metafields,
+          tags: shopifyCustomer?.tags,
+          subscription: {
+            isSubscriptionCustomer: false,
+            isActive: false
+          }
+        }
       }
 
       /* 3. Check if the customer is a subscription customer */
