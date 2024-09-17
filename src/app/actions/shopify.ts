@@ -368,14 +368,14 @@ export const shopify = {
           tag: 'Wave0_Lapsed_GroupA',
           transitionDate: '2024-09-11'
         },
-        {
-          tag: 'Wave0_Lapsed_GroupB',
-          transitionDate: '2024-09-17'
-        },
-        {
-          tag: 'Wave0_Lapsed_GroupC',
-          transitionDate: '2024-09-24'
-        },
+        // {
+        //   tag: 'Wave0_Lapsed_GroupB',
+        //   transitionDate: '2024-09-17'
+        // },
+        // {
+        //   tag: 'Wave0_Lapsed_GroupC',
+        //   transitionDate: '2024-09-24'
+        // },
         // @TODO:Add remaining transition tags here after they are created in Klaviyo
       ]
 
