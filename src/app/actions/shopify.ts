@@ -42,6 +42,7 @@ export const shopify = {
         }
       `
       const res = await shopifyAdminApiGql(request)
+      console.log("res", res.carrierServices.edges)
 
       return res ? res.carrierServices.edges.map((x: any) => {
         const legacy_id = Number(x.node.id.split('/').pop())
@@ -63,6 +64,13 @@ export const shopify = {
         method: 'PUT',
         path: `carrier_services/${requestData.id}.json`,
         body: { carrier_service: requestData }
+      })
+    },
+    create: async (data: CarrierService): Promise<any> => {
+      return await shopifyAdminApiRest({
+        method: 'POST',
+        path: 'carrier_services.json',
+        body: { carrier_service: data }
       })
     },
     test: async (data: CarrierServiceRequest | { shopify_order_id: string } | { shopify_draft_order_id: string }): Promise<CarrierServiceResponse[]> => {
