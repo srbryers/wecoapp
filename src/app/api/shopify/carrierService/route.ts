@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  console.log("menuZone", JSON.stringify(menuZone))
+  // console.log("menuZone", JSON.stringify(menuZone))
 
   // Get the rate price
   const rateField = menuZone.shipping_rate

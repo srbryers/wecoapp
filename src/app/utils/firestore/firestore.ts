@@ -1,4 +1,5 @@
 import { Firestore, Settings } from '@google-cloud/firestore';
+import { unescape } from 'node:querystring';
 
 export enum FirestoreActions {
   add = "add",
@@ -15,21 +16,17 @@ export const firestore = () => {
     databaseId: "weco",
   } as Settings
 
-  if (process.env["NODE_ENV"] === "production") {
-    const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
-    if (GOOGLE_APPLICATION_CREDENTIALS) {
-      try {
-        // Parse the secret that has been added as a JSON string
-        // to retrieve database credentials
-        config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS.toString());
-      } catch (err) {
-        throw Error(
-          `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
-        );
-      }
+  const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
+
+  if (GOOGLE_APPLICATION_CREDENTIALS) {
+    try {
+      // Unescape the credentials string and parse it as JSON
+      config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS)
+    } catch (err) {
+      throw Error(
+        `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
+      );
     }
-  } else {
-    config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
   }
 
   const db = new Firestore(config)

@@ -1,6 +1,7 @@
 import { firestore } from '@/app/utils/firestore/firestore';
 import { google } from 'googleapis';
 import { sf } from "@/app/utils/snowflake/snowflake"
+import { unescape } from 'node:querystring';
 
 const initGoogleSheets = async () => {
   let config = {
@@ -8,22 +9,20 @@ const initGoogleSheets = async () => {
       'https://www.googleapis.com/auth/spreadsheets',
     ],
   } as any
-  if (process.env["NODE_ENV"] === "production") {
-    const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
-    if (GOOGLE_APPLICATION_CREDENTIALS) {
-      try {
-        // Parse the secret that has been added as a JSON string
-        // to retrieve database credentials
-        config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS.toString());
-      } catch (err) {
-        throw Error(
-          `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
-        );
-      }
+  
+  const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
+
+  if (GOOGLE_APPLICATION_CREDENTIALS) {
+    try {
+      // Unescape the credentials string and parse it as JSON
+      config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS)
+    } catch (err) {
+      throw Error(
+        `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
+      );
     }
-  } else {
-    config.keyFilename = process.env["GOOGLE_APPLICATION_CREDENTIALS"]
   }
+  
   const auth = new google.auth.GoogleAuth(config)
   return google.sheets({version: 'v4', auth});
 }

@@ -13,6 +13,7 @@
   "dependencies": {
     "@google-cloud/firestore": "^7.7.0",
     "@google-cloud/local-auth": "^2.1.0",
+    "firebase-admin": "^12.5.0",
     "googleapis": "^105.0.0",
     "jotai": "^2.8.0",
     "jsonwebtoken": "^9.0.2",
