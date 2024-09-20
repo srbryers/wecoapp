@@ -24,6 +24,7 @@ const CarrierServices: FC<CarrierServicesProps> = (props) => {
         {sortedCarrierServices?.length > 0
           ?
           sortedCarrierServices.map((service, index) => {
+            const legacyId = service.legacyId || service?.id?.split('/').pop()
             return service && (
               <div 
                 key={`service-${index}`} 
@@ -35,8 +36,8 @@ const CarrierServices: FC<CarrierServicesProps> = (props) => {
                   <p className="text-xs"><b>Active:</b> {service.active ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="service-actions flex flex-row gap-2">
-                  <CustomLink href={`shopify/carrierService/${service.legacy_id}`}>View</CustomLink>
-                  <CustomLink href={`shopify/carrierService/${service.legacy_id}/edit`}>Edit</CustomLink>
+                  <CustomLink href={`shopify/carrierService/${legacyId}`}>View</CustomLink>
+                  <CustomLink href={`shopify/carrierService/${legacyId}/edit`}>Edit</CustomLink>
                 </div>
               </div>
             )

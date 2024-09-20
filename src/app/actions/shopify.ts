@@ -57,7 +57,7 @@ export const shopify = {
       // Parse the id into a number if it is a number
       let requestData = data
       if (!isNaN(Number(data.id))) {
-        requestData.id = Number(data.id)
+        requestData.id = String(data.id)
       }
       console.log("requestData", requestData)
       try {
