@@ -20,9 +20,9 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   const subscriptionItems = lineItems.filter((item: any) => {
     // Convert item.properties array to an object
     if (Array.isArray(item.properties)) {
-      return item.properties && item.properties.find((property: { name: string, value: string }) => property.name === '_bundleId')
+      return item.properties && item.properties.find((property: { name: string, value: string }) => property.name === '_bundleId' || property.name === '_bundleVariantId')
     } else {
-      return item.properties && item.properties._bundleId
+      return item.properties && (item.properties._bundleId || item.properties._bundleVariantId)
     }
   })
 

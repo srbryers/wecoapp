@@ -14,8 +14,8 @@ export async function POST(request: Request) {
   // Setup the carrier service request
   const carrierServiceRequest = await request.json() // carrierRequest
   const destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
-  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && item.properties._bundleId)
-  
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && (item.properties._bundleId || item.properties._bundleVariantId))
+  console.log("subscriptionItems", subscriptionItems)
   // Get the menuZone
   const menuZoneRequest = await getShipmentZone({
     destinationZip: destinationZip,
