@@ -11,7 +11,7 @@ export default function Layout({
         title={"Shopify"}
         description={""}
       />
-      <div className="flex flex-col h-full items-start">{children}</div>
+      <div className="flex flex-col h-full items-start w-full">{children}</div>
     </>
   )
 }

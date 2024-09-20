@@ -6,53 +6,65 @@ import Form from "@/app/components/forms/Form"
 import Input from "@/app/components/forms/Input"
 import { formatKeyToTitle } from "@/app/utils/helpers"
 import { CarrierService } from "@/app/utils/types"
+import { useState } from "react"
+import { Code } from "../Code"
 
 export default function EditCarrierService({ carrierService }: { carrierService: CarrierService }) {
 
-  return (
-    <Form onSubmit={(form) => {
+  const [loading, setLoading] = useState<boolean>(false)
+  const [result, setResult] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
 
-      console.log("submit carrier service", form)
-      if (carrierService?.id) {
-        form.id = carrierService.id
-        shopify.carrierServices.update(form)
-      } else {
-        shopify.carrierServices.create(form)
-      }
-    }} className="max-w-sm mt-4">
-      {/* <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={carrierService?.name} /> */}
-      {/* <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={carrierService?.callback_url} /> */}
-      {/* <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly /> */}
-      <div className="checkboxes flex flex-row flex-wrap gap-3">
-        {Object.entries(carrierService || {}).map(([key, value], index) => {
-          if (typeof value === 'boolean') {
-            return (
-              <div className="flex flex-row items-center gap-2 w-full py-2">
-                <Input
-                  key={`input-${index}`}
-                  label={formatKeyToTitle(key)}
-                  type="checkbox"
-                  name={key}
-                  checked={value}
-                />
-              </div>
-            )
-          } else if (typeof value === 'string') {
-            return (
-              <Input
-                key={`input-${index}`}
-                label={formatKeyToTitle(key)}
-                type="text"
-                name={key}
-                value={value}
-              />
-            )
+  return (
+    <div className="flex flex-col w-full gap-6">
+      <Form onSubmit={async (form) => {
+
+        setLoading(true)
+        setError(null)
+        setResult(null)
+
+        console.log("submit carrier service", form)
+        try {
+          if (carrierService?.id) {
+            form.id = carrierService.id.split("/").pop()
+            const result = await shopify.carrierServices.update(form)
+            setResult(result)
           } else {
-            return null
+            const result = await shopify.carrierServices.create(form)
+            setResult(result)
           }
-        })}
+        } catch (e) {
+          setError(e)
+        } finally {
+          setLoading(false)
+        }
+      }} className="max-w-sm flex flex-col w-full mt-4">
+        <Input label="Name" type="text" placeholder="Name" name="name" required defaultValue={carrierService?.name} />
+        <Input label="Callback URL" type="text" placeholder="Callback URL" name="callback_url" required defaultValue={carrierService?.callbackUrl} />
+        <Input label="Format" type="hidden" placeholder="Format" name="format" value="json" readOnly />
+        <div className="checkboxes flex flex-row flex-wrap gap-3">
+          {Object.entries(carrierService || {}).map(([key, value], index) => {
+            if (typeof value === 'boolean') {
+              return (
+                <div key={`input-${index}`} className="flex flex-row items-center gap-2 w-full">
+                  <Input
+                    label={formatKeyToTitle(key)}
+                    type="checkbox"
+                    name={key}
+                    defaultChecked={value}
+                  />
+                </div>
+              )
+            }
+          })}
+        </div>
+        <Button label={`${carrierService ? "Update" : "Create"} Carrier Service`} type="submit" disabled={loading} />
+        {loading && <div>Loading...</div>}
+        {error && <div>Error: {error}</div>}
+      </Form>
+      <div className="flex flex-col w-full">
+        {result && <Code value={result} />}
       </div>
-      <Button label={`${carrierService ? "Update" : "Create"} Carrier Service`} type="submit" />
-    </Form>
+    </div>
   )
 }

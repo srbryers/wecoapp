@@ -10,6 +10,7 @@ type InputProps = {
   placeholder?: string
   value?: string
   defaultValue?: string
+  defaultChecked?: boolean
   step?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   containerClassName?: string
@@ -17,7 +18,7 @@ type InputProps = {
   readOnly?: boolean
 }
 
-const Input: FC<InputProps> = ({ label, name, type, checked, required, placeholder, value, defaultValue, onChange, ...props }) => {
+const Input: FC<InputProps> = ({ label, name, type, checked, required, placeholder, value, defaultValue, defaultChecked, onChange, ...props }) => {
 
   const [error, setError] = useState<string | undefined>()
 
@@ -66,6 +67,7 @@ const Input: FC<InputProps> = ({ label, name, type, checked, required, placehold
         value={value}
         defaultValue={defaultValue}
         checked={checked}
+        defaultChecked={defaultChecked}
         onChange={onChange}
         className={inputClasses}
         required={required}

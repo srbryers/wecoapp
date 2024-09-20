@@ -7,7 +7,7 @@ export default function Layout({
   children: React.ReactNode,
 }) {
   return (
-    <div className={`flex flex-col h-full`}>
+    <div className={`flex flex-col h-full w-full`}>
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col h-full items-start w-full">{children}</div>

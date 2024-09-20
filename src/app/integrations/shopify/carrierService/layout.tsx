@@ -6,10 +6,8 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div>
-      <Suspense fallback={<div>Loading...</div>}>
-        {children}
-      </Suspense>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      {children}
+    </Suspense>
   )
 }

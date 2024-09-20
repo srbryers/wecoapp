@@ -83,13 +83,13 @@ export type FulfillmentService = {
 }
 
 export type CarrierService = {
-  id?: number
+  id?: string
   active?: boolean
-  callback_url?: string
+  callbackUrl?: string
   name?: string
-  service_discovery?: boolean
-  carrier_service_type?: "api" | "legacy"
-  legacy_id?: number
+  serviceDiscovery?: boolean
+  carrierServiceType?: "api" | "legacy"
+  legacyId?: number
 }
 
 export type LineItem = {

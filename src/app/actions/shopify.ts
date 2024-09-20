@@ -59,12 +59,18 @@ export const shopify = {
       if (!isNaN(Number(data.id))) {
         requestData.id = Number(data.id)
       }
-      // Can only update using the REST API
-      return await shopifyAdminApiRest({
-        method: 'PUT',
-        path: `carrier_services/${requestData.id}.json`,
-        body: { carrier_service: requestData }
-      })
+      console.log("requestData", requestData)
+      try {
+        // Can only update using the REST API
+        return await shopifyAdminApiRest({
+          method: 'PUT',
+          path: `carrier_services/${requestData.id}.json`,
+          body: { carrier_service: requestData }
+        })
+      } catch (e) {
+        console.error("Error updating carrier service:", e)
+        throw e
+      }
     },
     create: async (data: CarrierService): Promise<any> => {
       return await shopifyAdminApiRest({
@@ -265,7 +271,7 @@ export const shopify = {
       console.log("getDraftOrders")
       try {
         const res = await shopifyAdminApiRest({
-          method: 'GET', 
+          method: 'GET',
           path: draft_order_id ? `draft_orders/${draft_order_id}.json` : 'draft_orders.json'
         })
           .then((data) => {
@@ -286,8 +292,8 @@ export const shopify = {
       console.log("createDraftOrder")
       try {
         const res = await shopifyAdminApiRest({
-          method: 'POST', 
-          path: 'draft_orders.json', 
+          method: 'POST',
+          path: 'draft_orders.json',
           body: { draft_order: draft_order }
         })
           .then((data) => {
@@ -304,8 +310,8 @@ export const shopify = {
       console.log("updateDraftOrder")
       try {
         const res = await shopifyAdminApiRest({
-          method: 'PUT', 
-          path: `draft_orders/${draft_order.id}.json`, 
+          method: 'PUT',
+          path: `draft_orders/${draft_order.id}.json`,
           body: { draft_order: draft_order }
         })
           .then((data) => {
@@ -321,7 +327,7 @@ export const shopify = {
       console.log("deleteDraftOrder")
       try {
         const res = await shopifyAdminApiRest({
-          method: 'DELETE', 
+          method: 'DELETE',
           path: `draft_orders/${draft_order_id}.json`
         })
           .then((data) => {
@@ -401,7 +407,7 @@ export const shopify = {
 
       // Check the properties for a TransitionTag
       const transitionTag = klaviyoCustomer?.attributes?.properties?.TransitionTag
-      
+
       if (transitionTag) {
         const transitionTagData = transitionTags.find((tag) => tag.tag === transitionTag)
         if (transitionTagData) {
@@ -554,7 +560,7 @@ export const shopify = {
           lineItems: node.lineItems.nodes?.map((item: any) => {
             return {
               ...item,
-              price: Number(item.originalUnitPriceSet.presentmentMoney.amount)*100,
+              price: Number(item.originalUnitPriceSet.presentmentMoney.amount) * 100,
               properties: item.customAttributes.map((attr: any) => {
                 return {
                   [attr.key]: attr.value
