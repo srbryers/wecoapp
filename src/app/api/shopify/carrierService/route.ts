@@ -18,8 +18,7 @@ export async function POST(request: Request) {
   const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => {
     return item.properties && (
       item.properties._bundleId || 
-      item.properties._bundleVariantId || 
-      item.properties?.find((property: any) => property?.name === '_bundleId' || property?.name === '_bundleVariantId')
+      item.properties._bundleVariantId
     )
 })
   console.log("subscriptionItems", JSON.stringify(subscriptionItems))

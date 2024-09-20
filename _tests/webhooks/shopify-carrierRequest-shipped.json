@@ -1,0 +1,59 @@
+{
+  "rate": {
+    "origin": {
+      "country": "US",
+      "postal_code": "01720",
+      "province": "MA",
+      "city": "Acton",
+      "name": null,
+      "address1": "256 Arlington Street",
+      "address2": "",
+      "address3": null,
+      "latitude": 42.4767151,
+      "longitude": -71.4741904,
+      "phone": "",
+      "fax": null,
+      "email": null,
+      "address_type": null,
+      "company_name": "WECO Hospitality"
+    },
+    "destination": {
+      "country": "US",
+      "postal_code": "02116",
+      "province": "MA",
+      "city": "Boston",
+      "name": "Sebastian Bryers",
+      "address1": "8 Garrison Street",
+      "address2": "APT 202",
+      "address3": null,
+      "latitude": null,
+      "longitude": null,
+      "phone": "+15126364977",
+      "fax": null,
+      "email": null,
+      "address_type": null,
+      "company_name": null
+    },
+    "items": [
+      {
+        "name": "Weekly Subscription Box - 2 People / 2 Days",
+        "sku": "",
+        "quantity": 1,
+        "grams": 0,
+        "price": 10886,
+        "vendor": "WECO Hospitality",
+        "requires_shipping": true,
+        "taxable": true,
+        "fulfillment_service": "manual",
+        "properties": {
+          "Products": "~New~ Kids' Fried Chicken & Waffles,\n~New~ Maple-Glazed Pork Tenderloin,\n~New~ Kids' Super Veggie Fried Rice,\n~New~ Fried Chicken & Waffles",
+          "Delivery Date": "2024-09-26"
+        },
+        "product_id": 8601815744675,
+        "variant_id": 45232574562467
+      }
+    ],
+    "currency": "USD",
+    "locale": "en-US"
+  }
+}
