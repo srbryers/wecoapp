@@ -13,9 +13,16 @@ export async function POST(request: Request) {
 
   // Setup the carrier service request
   const carrierServiceRequest = await request.json() // carrierRequest
+  console.log("carrierServiceRequest", JSON.stringify(carrierServiceRequest))
   const destinationZip = carrierServiceRequest.rate.destination.postal_code?.indexOf("-") ? carrierServiceRequest.rate.destination.postal_code?.split("-")[0] : carrierServiceRequest.rate.destination.postal_code;
-  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => item.properties && (item.properties._bundleId || item.properties._bundleVariantId))
-  console.log("subscriptionItems", subscriptionItems)
+  const subscriptionItems = carrierServiceRequest.rate.items.filter((item: any) => {
+    return item.properties && (
+      item.properties._bundleId || 
+      item.properties._bundleVariantId || 
+      item.properties?.find((property: any) => property?.name === '_bundleId' || property?.name === '_bundleVariantId')
+    )
+})
+  console.log("subscriptionItems", JSON.stringify(subscriptionItems))
   // Get the menuZone
   const menuZoneRequest = await getShipmentZone({
     destinationZip: destinationZip,
@@ -39,18 +46,17 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  console.log("menuZone", menuZone)
+  console.log("menuZone", JSON.stringify(menuZone))
 
   // Get the rate price
   const rateField = menuZone.shipping_rate
   const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
 
-  console.log("zoneRate", zoneRate)
+  console.log("zoneRate", JSON.stringify(zoneRate))
 
   // Filter out the delivery skus if applicable
-  const lineItems = carrierServiceRequest.rate.items.filter((item: LineItem) => {
-    return !item?.name?.includes("Delivery")
-  })
+  const lineItems = carrierServiceRequest.rate.items
+
   // Get the shipment dates from the line_items
   lineItems.forEach((item: any) => {
     // Get the shipment date from the SKU, if it exists
@@ -82,7 +88,7 @@ export async function POST(request: Request) {
     })
   }) as ShippingProfile[]
 
-  console.log("shippingProfiles", shippingProfiles)
+  console.log("shippingProfiles", JSON.stringify(shippingProfiles))
 
   // Calculate the rates for each shipment date and add them together
   const rates = shipment_dates.map(({ shipment_date, price, quantity }) => {
