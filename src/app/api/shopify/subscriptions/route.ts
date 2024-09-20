@@ -1,6 +1,6 @@
 /**
  * Create a subscription order in our chosen platform
- * - Fired by the creation of a new Shopify order with a "Delivery Date" customAttribute
+ * - Fired by the creation of a new Shopify order with a "Delivery Date" and "_productVariantIds" customAttribute
  */
 
 import { loop } from "@/app/actions/loop"

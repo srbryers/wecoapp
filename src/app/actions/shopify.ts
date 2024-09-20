@@ -3,6 +3,23 @@ import { shopifyAdminApiRest, shopifyAdminApiGql } from "@/app/utils/shopify"
 import { delay } from "../utils/helpers"
 import { klaviyo } from "./klaviyo"
 
+const metafieldKeys = [
+  "custom.summaryData",
+  "custom.short_description",
+  "custom.reheating_article",
+  "custom.badges",
+  "filter.allergens",
+  "custom.ingredients",
+  "global.description_tag",
+  "filter.diets",
+  "filter.proteins",
+  "filter.menu_group",
+  "custom.product_size",
+  "custom.nutrition_facts",
+  "custom.product_type",
+  "custom.title_tag"
+]
+
 export const shopify = {
   fulfillmentServices: {
     get: async (): Promise<any> => {
@@ -261,6 +278,130 @@ export const shopify = {
         }
         `
       )
+    },
+    editAddVariants: async ({
+      order_id,
+      variantLines,
+      allowDuplicates
+    }: {
+      order_id: string,
+      variantLines: any,
+      allowDuplicates: boolean
+    }) => {
+      const orderEditBeginMutation = `
+        mutation orderEditBegin($id: ID!) {
+          orderEditBegin(id: $id) {
+            calculatedOrder {
+              # CalculatedOrder fields
+              id
+              lineItems(first: 20) {
+                nodes {
+                    id
+                }
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `
+      const beginEditingRes = await shopifyAdminApiGql(orderEditBeginMutation, { id: order_id })
+      const calculatedOrderId = beginEditingRes?.orderEditBegin?.calculatedOrder?.id
+      beginEditingRes && console.log("[shopify.orders.edit] began order edit:", calculatedOrderId)
+      const variantMutations = variantLines.map((variant: any, index: number) => {
+        // console.log("variant", variant.id)
+        return `
+          addVariant${index}: orderEditAddVariant(id: "${calculatedOrderId}", quantity: ${variant.quantity}, variantId: "${variant.id}", allowDuplicates: $allowDuplicates) {
+            calculatedLineItem {
+              # CalculatedLineItem fields
+              id
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        `
+      })
+
+      const orderEditAddVariantsRes = await shopifyAdminApiGql(`
+        mutation orderEditAddVariants($allowDuplicates: Boolean!) {
+          ${variantMutations.join("\n")}
+        }
+      `, {
+        "allowDuplicates": allowDuplicates
+      })
+
+      // Check for errors
+      const lineItemErrors = Object.values(orderEditAddVariantsRes).filter((value: any) => value.userErrors.length > 0)
+      if (lineItemErrors.length > 0) {
+        console.error("[shopify.orders.edit] line item errors:", JSON.stringify(lineItemErrors))
+        return {
+          success: false,
+          lineItemErrors
+        }
+      }
+
+      // Parse the response to get the calculatedLineItem.id from each mutation
+      const calculatedLineItemIds = Object.values(orderEditAddVariantsRes).map((value: any) => {
+        return value.calculatedLineItem.id
+      })
+
+      orderEditAddVariantsRes && console.log("[shopify.orders.edit] added variants:", JSON.stringify(calculatedLineItemIds))
+
+      const orderEditLineItemDiscountMutation = calculatedLineItemIds.map((id: string, index: number) => {
+        return `
+          addLineItemDiscount${index}: orderEditAddLineItemDiscount(discount: $discount, id: "${calculatedOrderId}", lineItemId: "${id}") {
+            addedDiscountStagedChange {
+              id
+              value {
+                __typename
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        `
+      })
+
+      const orderEditAddLineItemDiscountRes = await shopifyAdminApiGql(`
+        mutation orderEditAddLineItemDiscount($discount: OrderEditAppliedDiscountInput!) {
+          ${orderEditLineItemDiscountMutation.join("\n")}
+        }
+      `, {
+        "discount": {
+          "description": "Bundle Product",
+          "percentValue": 100
+        },
+      })
+
+      orderEditAddLineItemDiscountRes && console.log("[shopify.orders.edit] added line item discounts:", JSON.stringify(orderEditAddLineItemDiscountRes))
+
+      const orderEditCommitMutation = `
+        mutation orderEditCommit {
+          orderEditCommit(id: "${calculatedOrderId}") {
+            order {
+              # Order fields
+              id
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `
+
+      const commitEditingRes = await shopifyAdminApiGql(orderEditCommitMutation)
+
+      commitEditingRes && console.log("[shopify.orders.edit] committed order edit")
+
+      return commitEditingRes
+
     }
   },
   /**
@@ -590,5 +731,229 @@ export const shopify = {
       }
       return result
     },
-  }
+  },
+  collections: {
+    getProducts: async (collection_handle: string) => {
+
+      async function getAllProducts(collection_handle: string, cursor?: string) {
+        const variables = { handle: collection_handle, cursor: cursor }
+        const res = await shopifyAdminApiGql(`
+          fragment MediaImage on MediaImage {
+              image {
+                  url
+                  altText
+              }    
+          }
+          fragment Metaobject on Metaobject {
+              handle
+              fields {
+                  key,
+                  value,
+                  type,
+                  __typename,
+                  reference {
+                      __typename,
+                      ...MediaImage
+                  }
+              }
+          }
+          fragment Metafield on Metafield {
+              key,
+              value,
+              type,
+              __typename,
+              reference {
+                  __typename
+                  ...MediaImage
+                  ...Metaobject
+              },
+              references(first: 10) {
+                  nodes {
+                      ...Metaobject
+                  }
+              }
+          }
+          query getCollectionFromHandle($handle: String!, $cursor: String) {
+            collectionByHandle(handle: $handle) {
+              id
+              products(first: 50, after: $cursor) {
+                pageInfo {
+                  hasNextPage
+                  hasPreviousPage
+                }
+                edges {
+                  cursor
+                  node {
+                    id
+                    handle
+                    title
+                    status
+                    description
+                    tags
+                    totalInventory
+                    featuredImage {
+                        url
+                        altText
+                    }
+                    metafields(first: 20, keys: ${JSON.stringify(metafieldKeys)}) {
+                      nodes {
+                        __typename
+                        ...Metafield
+                      }
+                    }
+                    bundleParent: metafield(namespace: "custom", key: "bundle_parent") {
+                      __typename
+                      id: value
+                    }
+                    variants(first: 7) {
+                        nodes {
+                            id
+                            availableForSale
+                            inventoryPolicy
+                            inventoryQuantity
+                            selectedOptions {
+                              name
+                              value
+                            }
+                        }
+                    }
+                    sellingPlanGroups(first: 3) {
+                      nodes {
+                        id
+                        name
+                        summary
+                        sellingPlans(first: 3) {
+                            nodes {
+                                id
+                                name
+                                description
+                            }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `, variables)
+
+        const products = res.collectionByHandle.products.edges.map((x: any) => x.node)
+        if (res.collectionByHandle.products.pageInfo.hasNextPage) {
+          const moreProducts: any = await getAllProducts(collection_handle, res.collectionByHandle.products.edges.pop().cursor)
+          return products.concat(moreProducts)
+        } else {
+          return products
+        }
+
+      }
+
+      function parseMetafieldReference(ref: any) {
+        if (ref.fields) {
+          const referenceFields = ref.fields.map((field: any) => {
+            if (field.reference) {
+              return {
+                [field.key]: parseMetafieldReference(field.reference)
+              }
+            } else {
+              return {
+                [field.key]: field.value
+              }
+            }
+          }).reduce((acc: any, obj: any) => {
+            return { ...acc, ...obj }
+          }, {})
+          return {
+            handle: ref.handle,
+            ...referenceFields
+          }
+        } else {
+          return {
+            handle: ref.handle,
+            ...ref
+          }
+        }
+      }
+
+      const productNodes = await getAllProducts(collection_handle)
+      const products = productNodes.map((node: any) => {
+        return {
+          ...node,
+          metafields: node.metafields.nodes?.map((metafield: any) => {
+            let value = metafield.value
+            if (metafield.value.includes("[") || metafield.value.includes("{")) {
+              value = JSON.parse(metafield.value)
+            } else if (metafield.reference) {
+              value = parseMetafieldReference(metafield.reference)
+            }
+
+            if (metafield.references) {
+              value = metafield.references.nodes.map((ref: any) => {
+                return parseMetafieldReference(ref)
+              })
+            }
+            return {
+              [metafield.key.split(".")[1]]: value
+            }
+          })?.reduce((acc: any, obj: any) => {
+            return { ...acc, ...obj }
+          }, {}),
+          variants: node.variants.nodes.map((variant: any) => {
+            return variant
+          }),
+          sellingPlanGroups: node.sellingPlanGroups.nodes.map((group: any) => {
+            return {
+              id: group.id,
+              name: group.name,
+              summary: group.summary,
+              sellingPlans: group.sellingPlans.nodes.map((plan: any) => {
+                return {
+                  id: plan.id,
+                  name: plan.name,
+                  description: plan.description
+                }
+              })
+            }
+          })
+        }
+      })
+      return products
+    }
+  },
+  products: {
+    get: async (product_id: string) => {
+      const res = await shopifyAdminApiGql(`
+        query {
+          product(id: "${product_id}") {
+            id
+            title
+            description
+            variants(first: 20) {
+              nodes {
+                id
+                title
+                availableForSale
+                selectedOptions {
+                  name
+                  value
+                }
+                price
+                sellingPlanGroups(first: 5) {
+                    nodes {
+                        sellingPlans(first: 5) {
+                            nodes {
+                                id
+                                name
+                            }
+                        }
+                    }
+                }
+              }
+            }
+          }
+        }
+      `)
+      return res.product
+    }
+  },
 }
