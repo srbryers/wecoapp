@@ -147,6 +147,10 @@ export type Order = {
   currency?: string
   locale?: string
   line_items?: LineItem[]
+  updated_at?: string
+  updatedAt?: string
+  fulfillment_status?: string
+  fulfillmentStatus?: string
   lineItems?: {
     nodes?: LineItem[]
   }

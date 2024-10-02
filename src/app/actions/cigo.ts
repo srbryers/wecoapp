@@ -23,9 +23,20 @@ export interface CigoJobCreate {
   }[]
 }
 
+export interface CigoJobSearch {
+  start_date: string
+  end_date?: string
+  first_name?: string
+  last_name?: string
+  phone_number?: string
+  invoice_number?: string
+  quick_desc?: string
+  reference_id?: string
+}
+
 export const cigo = {
   jobs: {
-    search: async (data: any) => {
+    search: async (data: CigoJobSearch) => {
       return await cigoApi({
         method: 'POST',
         path: `jobs/search`,
@@ -60,6 +71,25 @@ export const cigo = {
     },
   },
   helpers: {
+    getDeliveryDates: async (order: Order, deliveryDate?: string) => {
+      const lineItems = order.lineItems?.nodes || order.line_items
+      let orderDeliveryDates = lineItems?.map((item) => {
+        const variantTitle = item.variant_title || item.variant?.title
+        // console.log("[CIGO] variant title", variantTitle)
+        // Check if variant_title is in YYYY-MM-DD format
+        if (variantTitle && variantTitle?.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          return variantTitle
+        }
+      })
+
+      if (deliveryDate) {
+        orderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined) => date === deliveryDate)
+      }
+
+      // Unique the orderDeliveryDates
+      const uniqueOrderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined, index: number) => orderDeliveryDates?.indexOf(date) === index).filter((date: string | undefined) => date) as string[]
+      return uniqueOrderDeliveryDates
+    },
     convertOrderToJob: async ({
       order,
       date,
@@ -69,7 +99,9 @@ export const cigo = {
       date: string
       skip_staging: boolean
     }) => {
-      const dropoffNotes = order.customAttributes?.filter((note) => note.key.includes('Drop-off'))
+      const dropoffNotes = order.note_attributes ?
+        order.note_attributes?.filter((note) => note.name.includes('Drop-off'))
+        : order.customAttributes?.filter((note) => note.key.includes('Drop-off'))
       const quickDesc = dropoffNotes?.map((note, index) => {
         if (index === 0) {
           return `C:${note.value.slice(0, 1)}`
@@ -80,20 +112,21 @@ export const cigo = {
         }
       }).join(' ').trim()
       const shortOrderId = order.id?.toString().split("/").pop() ?? ""
-      const fullAddress = order.shippingAddress?.address1 ?
-        `${order.shippingAddress?.address1 ?? ""} ${order.shippingAddress?.address2 ?? ""} ${order.shippingAddress?.city ?? ""} ${order.shippingAddress?.provinceCode ?? ""} ${order.shippingAddress?.zip?.slice(0, 5) ?? ""}`
-        : `${order.billingAddress?.address1 ?? ""} ${order.billingAddress?.address2 ?? ""} ${order.billingAddress?.city ?? ""} ${order.billingAddress?.provinceCode ?? ""} ${order.billingAddress?.zip?.slice(0, 5) ?? ""}`
+      const address = order.shipping_address || order.billing_address || order.shippingAddress || order.billingAddress
+      const fullAddress = address?.address1 ?
+        `${address?.address1 ?? ""} ${address?.address2 ?? ""} ${address?.city ?? ""} ${address?.provinceCode || address?.province_code || ""} ${address?.zip?.slice(0, 5) ?? ""}`
+        : `${address?.address1 ?? ""} ${address?.address2 ?? ""} ${address?.city ?? ""} ${address?.provinceCode || address?.province_code || ""} ${address?.zip?.slice(0, 5) ?? ""}`
 
       const data = {
         date: date,
-        first_name: (order.shippingAddress?.firstName || order.billingAddress?.firstName) ?? "",
-        last_name: (order.shippingAddress?.lastName || order.billingAddress?.lastName) ?? "",
+        first_name: (address?.firstName || address?.first_name) ?? "",
+        last_name: (address?.lastName || address?.last_name) ?? "",
         email: order.email ?? "",
-        phone_number: (order.customer?.phone || order.shippingAddress?.phone || order.billingAddress?.phone) ?? "",
-        mobile_number: (order.customer?.phone || order.shippingAddress?.phone || order.billingAddress?.phone) ?? "",
+        phone_number: (order.customer?.phone || address?.phone) ?? "",
+        mobile_number: (order.customer?.phone || address?.phone) ?? "",
         address: fullAddress,
-        apartment: (order.shippingAddress?.address2 || order.billingAddress?.address2) ?? "",
-        postal_code: (order.shippingAddress?.zip || order.billingAddress?.zip)?.slice(0, 5) ?? "",
+        apartment: (address?.address2) ?? "",
+        postal_code: (address?.zip)?.slice(0, 5) ?? "",
         skip_staging: skip_staging ?? false,
         invoices: [
           `${shortOrderId ?? ""}-${date}`,

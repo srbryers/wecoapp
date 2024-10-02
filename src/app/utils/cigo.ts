@@ -22,8 +22,6 @@ export async function cigoApi(request: KlaviyoRequest) {
     body: JSON.stringify(request.body),
   } as any
 
-  console.log("requestoptions", requestOptions)
-
   const result = await fetch(`https://cigotracker.com/api/v1/${request.path}`, requestOptions)
     .then(async (response) => {
       if (response.status === 200) {

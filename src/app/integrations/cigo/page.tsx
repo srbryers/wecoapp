@@ -24,9 +24,7 @@ export default function CigoPage() {
         end_date: data.end_date,
         first_name: data.first_name,
         last_name: data.last_name,
-        email: data.email,
         phone_number: data.phone_number,
-        mobile_number: data.mobile_number,
       })
       setResult(res)
       setRunning(false)
@@ -59,21 +57,9 @@ export default function CigoPage() {
       orders = orders?.slice(0, request.count ?? 10)
 
       for (const order of orders ?? []) {
-        let orderDeliveryDates = order.lineItems?.nodes?.map((item) => {
-          // Check if variant_title is in YYYY-MM-DD format
-          if (item.variant?.title?.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return item.variant?.title
-          }
-        })
+        const deliveryDates = await cigo.helpers.getDeliveryDates(order, request.deliveryDate)
 
-        if (request.deliveryDate) {
-          orderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined) => date === request?.deliveryDate)
-        }
-
-        // Unique the orderDeliveryDates
-        const uniqueOrderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined, index: number) => orderDeliveryDates?.indexOf(date) === index).filter((date: string | undefined) => date) as string[]
-
-        for (const date of uniqueOrderDeliveryDates ?? []) {
+        for (const date of deliveryDates ?? []) {
           const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: request.skip_staging ?? false })
           console.log("================================================")
           console.log("[Create Job] creating job for order name: ", order.name, " with date: ", date)
