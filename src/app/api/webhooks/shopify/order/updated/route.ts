@@ -1,14 +1,8 @@
-import { cigo } from "@/app/actions/cigo"
 import { shopify } from "@/app/actions/shopify"
 import crypto from "node:crypto"
 
 export async function POST(req: Request) {
-  const payload = await req.json()
-  // Get the order from Shopify
-  const order = await shopify.orders.get(payload.id)
-  const now = new Date()
-  const orderLastUpdated = new Date(order.updated_at)
-  const orderFulfillmentStatus = order.fulfillment_status
+  const body = await req.text()
 
   // Validate shopify hmac
   const hmac = req.headers.get("X-Shopify-Hmac-Sha256")
@@ -19,21 +13,27 @@ export async function POST(req: Request) {
   if (!shopifyWebhookSecret) {
     return Response.json({ success: false, error: "Shopify webhook secret not set" }, { status: 500 })
   }
-  const generatedHmac = crypto.createHmac('sha256', shopifyWebhookSecret).update(JSON.stringify(payload)).digest('base64')
+  // Generate HMAC from secret and request body
+  const generatedHmac = crypto.createHmac('sha256', shopifyWebhookSecret).update(body).digest('base64')
 
-  console.log("generatedHmac", generatedHmac)
-  console.log("hmac", hmac)
-  console.log("Payload", JSON.stringify(payload))
   // Compare hmacs
   const result = crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(generatedHmac))
-  console.log("HMAC comparison result", result)
-  // if (!result) {
-  //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
-  // }
+  const payload = JSON.parse(body)
+  console.log(`[${payload.name}] HMAC comparison result:`, result)
+
+  if (!result) {
+    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  }
+
+  // Get the order from Shopify
+  const order = await shopify.orders.get(payload.id)
+  const now = new Date()
+  const orderLastUpdated = new Date(order.updated_at)
+  const orderFulfillmentStatus = order.fulfillment_status
 
   // Check if order has been updated in the last 24hrs
   if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled") {
-    console.log("Order has been updated in the last 24hrs and is not fulfilled and paid")
+    console.log(`[${order.name}] Order has been updated in the last 24hrs and is not fulfilled and paid`)
     // Add/update the job in CIGO
     // const job = await cigo.jobs.create()
     //Send update to SNOMS
@@ -45,11 +45,11 @@ export async function POST(req: Request) {
         "X-Shopify-Topic": "orders/updated"
       },
       body: JSON.stringify(payload),
-    }).then((res) => res.text())
-    console.log("res", res)
+    })
+    console.log(`[${order.name}] sent to SNOMS - status:`, res.status)
     return Response.json({ success: true, updated: true, sentUpdateToSNOMS: true, res: res, order: order })
   } else {
-    console.log("Order has not been updated in the last 24hrs")
+    console.log(`[${order.name}] Order has not been updated in the last 24hrs or is fulfilled already`)
     return Response.json({ success: true, updated: false, sentUpdateToSNOMS: false, res: null, order: order })
   }
 }
