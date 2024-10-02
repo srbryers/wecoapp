@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   // Get the delivery date from the order
   const deliveryDate = order.note_attributes.find((note) => note.name === "Delivery Date")?.value
   // set next billing date to created at + 1 week
-  const nextBillingDate = new Date(order.created_at || new Date()).getTime() + (7 * 24 * 60 * 60 * 1000)
-  const nextBillingDateEpoch = nextBillingDate / 1000 
+  // const nextBillingDate = new Date(order.created_at || new Date()).getTime() + (7 * 24 * 60 * 60 * 1000)
+  // const nextBillingDateEpoch = nextBillingDate / 1000 
 
   // Create the subscription
   // const subscription = await loop.subscriptions.create({

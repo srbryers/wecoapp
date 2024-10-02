@@ -267,11 +267,82 @@ export const shopify = {
       return await shopifyAdminApiGql(
         `
         query {
-          orders(first: 250 ${params || ''}) {
+          orders(first: 250 ${params ? `, ${params}` : ''}) {
             nodes {
               id
               name
-              createdAt
+              tags
+              email
+              channelInformation {
+                  channelDefinition {
+                      handle
+                  }
+              }
+              customer {
+                  email
+                  firstName
+                  lastName
+                  phone
+              }
+              customAttributes {
+                  __typename
+                  key
+                  value
+              }
+              lineItems(first: 20) {
+                nodes {
+                    id
+                    name
+                    title
+                    quantity
+                    variant {
+                        id
+                        title
+                    }
+                    originalUnitPriceSet {
+                        presentmentMoney {
+                            amount
+                            currencyCode
+                        }
+                    }
+                    image {
+                        url
+                        altText
+                    }
+                    sku
+                    customAttributes {
+                        __typename
+                        key
+                        value
+                    }
+                }
+              }
+              billingAddress {
+                firstName
+                lastName
+                address1
+                address2
+                city
+                province
+                provinceCode
+                country
+                countryCode
+                zip
+                phone
+              }
+              shippingAddress {
+                  address1
+                  address2
+                  city
+                  province
+                  provinceCode
+                  country
+                  company
+                  firstName
+                  lastName
+                  zip     
+                  phone          
+              }
             }
           }
         }

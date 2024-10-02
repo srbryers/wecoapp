@@ -93,7 +93,7 @@ export type CarrierService = {
 }
 
 export type LineItem = {
-  id?: number
+  id?: number | string
   product_id?: number
   variant_id?: number
   quantity?: number
@@ -101,6 +101,14 @@ export type LineItem = {
   title?: string
   sku?: string
   [key: string]: any
+  variant?: {
+    id: number
+    title: string
+  }
+  product?: {
+    id: number
+    title: string
+  }
 }
 
 export type Address = {
@@ -115,6 +123,11 @@ export type Address = {
   province_code?: string
   zip?: string
   city?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  countryCode?: string
+  provinceCode?: string
 }
 
 export type Order = {
@@ -122,8 +135,11 @@ export type Order = {
   email?: string
   phone?: string
   name?: string
+  created_at?: string
   shipping_address?: Address
+  shippingAddress?: Address
   billing_address?: Address
+  billingAddress?: Address
   city?: string
   province?: string
   country?: string
@@ -131,8 +147,15 @@ export type Order = {
   currency?: string
   locale?: string
   line_items?: LineItem[]
-  created_at?: string
-  processed_at?: string
+  lineItems?: {
+    nodes?: LineItem[]
+  }
+  customAttributes?: {
+    key: string
+    value: string
+  }[]
+  createdAt?: string
+  processedAt?: string
   tags?: string
   note_attributes?: {
     name: string

@@ -52,6 +52,7 @@ export default function RootLayout({
             { title: "Klaviyo", href: "/integrations/klaviyo" },
             { title: "Database", href: "/data/database" },
             { title: "Snowflake", href: "/data/snowflake" },
+            { title: "Cigo", href: "/integrations/cigo" },
           ]} />
           {/* Main content */}
           <div className="flex flex-col overflow-hidden">
