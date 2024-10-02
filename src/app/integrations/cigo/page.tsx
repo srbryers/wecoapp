@@ -71,58 +71,10 @@ export default function CigoPage() {
         }
 
         // Unique the orderDeliveryDates
-        const uniqueOrderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined, index: number) => orderDeliveryDates?.indexOf(date) === index)
+        const uniqueOrderDeliveryDates = orderDeliveryDates?.filter((date: string | undefined, index: number) => orderDeliveryDates?.indexOf(date) === index).filter((date: string | undefined) => date) as string[]
 
         for (const date of uniqueOrderDeliveryDates ?? []) {
-          const dropoffNotes = order.customAttributes?.filter((note) => note.key.includes('Drop-off'))
-          const quickDesc = dropoffNotes?.map((note, index) => {
-            if (index === 0) {
-              return `C:${note.value.slice(0, 1)}`
-            } else if (index === 1) {
-              return `DB:${note.value.slice(0, 1)}`
-            } else {
-              return ''
-            }
-          }).join(' ').trim()
-          const shortOrderId = order.id?.toString().split("/").pop() ?? ""
-          const fullAddress = order.shippingAddress?.address1 ? 
-            `${order.shippingAddress?.address1 ?? ""} ${order.shippingAddress?.address2 ?? ""} ${order.shippingAddress?.city ?? ""} ${order.shippingAddress?.provinceCode ?? ""} ${order.shippingAddress?.zip?.slice(0, 5) ?? ""}`
-            : `${order.billingAddress?.address1 ?? ""} ${order.billingAddress?.address2 ?? ""} ${order.billingAddress?.city ?? ""} ${order.billingAddress?.provinceCode ?? ""} ${order.billingAddress?.zip?.slice(0, 5) ?? ""}`
-
-          const data = {
-            date: date,
-            first_name: (order.shippingAddress?.firstName || order.billingAddress?.firstName) ?? "",
-            last_name: (order.shippingAddress?.lastName || order.billingAddress?.lastName) ?? "",
-            email: order.email ?? "",
-            phone_number: (order.customer?.phone || order.shippingAddress?.phone || order.billingAddress?.phone) ?? "",
-            mobile_number: (order.customer?.phone || order.shippingAddress?.phone || order.billingAddress?.phone) ?? "",
-            address: fullAddress,
-            apartment: (order.shippingAddress?.address2 || order.billingAddress?.address2) ?? "",
-            postal_code: (order.shippingAddress?.zip || order.billingAddress?.zip)?.slice(0, 5) ?? "",
-            skip_staging: request.skip_staging ?? false,
-            invoices: [
-              `${shortOrderId ?? ""}-${date}`,
-            ],
-            reference_id: `${shortOrderId}-${date}`,
-            quick_desc: quickDesc,
-            actions: [
-              {
-                id: `${shortOrderId ?? ""}-${date}`,
-                type: "Delivery",
-                description: dropoffNotes?.map((note, index) => {
-                  if (index === 0) {
-                    return `C:${note.value}`
-                  } else if (index === 1) {
-                    return `DB:${note.value}`
-                  } else {
-                    return note.value
-                  }
-                }).join(', ') || "C:N, DB:N",
-                invoice_number: `${shortOrderId ?? ""}-${date}`,
-                quantity: 1,
-              }
-            ]
-          } as CigoJobCreate
+          const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: request.skip_staging ?? false })
           console.log("================================================")
           console.log("[Create Job] creating job for order name: ", order.name, " with date: ", date)
           const cigoJob = await cigo.jobs.create(data)
