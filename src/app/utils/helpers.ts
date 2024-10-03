@@ -12,6 +12,14 @@ export const formatKeyToTitle = (key: string) => {
     .replace(/^./, (str) => str.toUpperCase());
 }
 
+export const formatPhone = (phone: string) => {
+  if (!phone) return ""
+  if (phone.length === 10) return `(${phone.slice(0, 3)}) ${phone.slice(3, 6)}-${phone.slice(6, 10)}`
+  if (phone.length === 11) return `+${phone.slice(0, 1)} (${phone.slice(1, 4)}) ${phone.slice(4, 7)}-${phone.slice(7, 11)}`
+  if (phone.length === 12) return `${phone.slice(0, 2)} (${phone.slice(2, 5)}) ${phone.slice(5, 8)}-${phone.slice(8, 12)}`
+  return phone
+}
+
 export const parseFormData = (event: FormEvent<HTMLFormElement>) => {
   const data = new FormData(event.currentTarget)
   const entries = data.entries() as unknown as any[]

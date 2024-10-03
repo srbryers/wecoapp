@@ -171,6 +171,8 @@ export type Order = {
     phone: string
     first_name: string
     last_name: string
+    firstName?: string
+    lastName?: string
   }
 }
 

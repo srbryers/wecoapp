@@ -5,14 +5,6 @@ import { useEffect, useState } from "react";
 import { shopify } from "@/app/actions/shopify";
 import { cigo } from "@/app/actions/cigo";
 
-const PDFViewer = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
-  {
-    ssr: false,
-    loading: () => <p>Loading...</p>,
-  }
-);
-
 export default function Page({ params }: { params: { id: string } }) {
 
   const [order, setOrder] = useState<any>(null)
@@ -20,7 +12,9 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const order = await shopify.orders.get(params.id)
+      const orderData = await shopify.orders.list(`query: "id:${params.id}"`)
+      console.log("[BagTags] orderData", orderData)
+      const order = orderData?.orders?.nodes?.[0]
       const deliveryDates = await cigo.helpers.getDeliveryDates(order)
       setOrder(order)
       setDeliveryDates(deliveryDates)
@@ -33,8 +27,6 @@ export default function Page({ params }: { params: { id: string } }) {
   const deliveryDate = deliveryDates?.[0]
 
   return order && deliveryDate && (
-    <PDFViewer className="w-full h-full">
-      <BagTags order={order} deliveryDate={deliveryDate} />
-    </PDFViewer>
+    <BagTags order={order} deliveryDate={deliveryDate} />
   )
 }
