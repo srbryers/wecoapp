@@ -9,6 +9,7 @@
 import Image from "next/image"
 import { Order } from "../utils/types"
 import Link from "next/link"
+import { formatPhone } from "../utils/helpers"
 
 export const BagTags = ({
   order,

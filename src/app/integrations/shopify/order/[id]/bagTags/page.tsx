@@ -1,6 +1,5 @@
 "use client"
-import BagTags from "@/app/documents/BagTags";
-import dynamic from "next/dynamic";
+import { BagTags } from "@/app/documents/BagTags";
 import { useEffect, useState } from "react";
 import { shopify } from "@/app/actions/shopify";
 import { cigo } from "@/app/actions/cigo";

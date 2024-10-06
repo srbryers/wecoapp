@@ -44,7 +44,10 @@ export async function POST(req: Request) {
         "X-Shopify-Hmac-Sha256": hmac,
         "X-Shopify-Topic": "orders/updated"
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        "X-Shopify-Hmac-Sha256": hmac,
+      }),
     })
     console.log(`[${order.name}] sent to SNOMS - status:`, res.status)
     return Response.json({ success: true, updated: true, sentUpdateToSNOMS: true, res: res, order: order })
