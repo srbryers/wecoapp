@@ -29,6 +29,8 @@ export async function GET(request: Request) {
       if (!email) {
         return new Response('Email is required', { status: 400 , headers: resConfig.headers })
       }
+      // Wait for 1 second so we don't get rate limited by Klaviyo or shopify
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const publicProfile = await shopify.customers.getPublicProfile(email)
       return new Response(JSON.stringify(publicProfile), { status: 200, headers: resConfig.headers })
     default:
