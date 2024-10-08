@@ -201,7 +201,6 @@ export const shopify = {
             return data
           })
         if (order_id) {
-          console.log("order", res)
           return res.order as any
         } else {
           return res as { orders: Order[] }
@@ -507,6 +506,7 @@ export const shopify = {
                     nodes {
                       id
                       totalQuantity
+                      variantTitle
                     }
                   }
                 
@@ -515,7 +515,6 @@ export const shopify = {
           }
         }
       `)
-      console.log("order", order)
       return order
     }
   },
@@ -1136,6 +1135,7 @@ export const shopify = {
         fulfillment: null,
         order: null
       }
+      const jobDate = job.date
       const jobReferenceId = job.reference_id?.split("-")[0]
       const jobStatus = job?.status
       const trackingNumber = job.post_staging?.tracking.tracking_number
@@ -1145,26 +1145,39 @@ export const shopify = {
       // console.log("order", JSON.stringify(order))
 
       // If there are no fulfollment orders, then error
-      if (order?.fulfillmentOrders?.nodes?.length === 0) {
-        console.error("Order is not fulfilled", order?.name)
-        return {
-          success: false,
-          order: order,
-          errors: ["Order is not fulfilled"]
-        }
-      }
+      // if (order?.fulfillmentOrders?.nodes?.length === 0) {
+      //   console.error("Order is not fulfilled", order?.name)
+      //   return {
+      //     success: false,
+      //     order: order,
+      //     errors: ["Order is not fulfilled"]
+      //   }
+      // }
+      
+      console.log("[createFulfillmentsFromJob] creating fulfillment for order", order?.name, jobDate)
+      console.log("[createFulfillmentsFromJob] trackingNumber", trackingNumber)
+      console.log("[createFulfillmentsFromJob] trackingUrl", trackingUrl)
+      console.log("[createFulfillmentsFromJob] order fulfillment_status", order?.fulfillment_status)
+      console.log("[fulfillmentOrders]", order?.fulfillmentOrders?.nodes)
 
       // If there are no fulfillments, then create one
-      if (order?.fulfillments?.length === 0 && jobStatus === "completed" && trackingNumber && trackingUrl) {
-        console.log("Order is not fulfilled", order?.name)
-        // Get the order's fulfillment orders
-        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.[0]
-
+      if (!order?.fulfillment_status && jobStatus === "completed" && trackingNumber && trackingUrl) {
+        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN")
+        if (!fulfillmentOrder) {
+          console.error("No open fulfillment order found for order", order?.name)
+          return {
+            success: false,
+            order: order,
+            errors: ["No open fulfillment order found"]
+          }
+        }
         // Create a fulfillment
         try {
           const fulfillment = await shopify.fulfillments.create({
             fulfillmentOrderId: fulfillmentOrder.id,
-            lineItems: fulfillmentOrder.lineItems.nodes,
+            lineItems: fulfillmentOrder.lineItems.nodes.filter((lineItem: any) => {
+              return lineItem.variantTitle.includes(jobDate)
+            }),
             trackingInfo: {
               company: "WECO",
               number: trackingNumber,

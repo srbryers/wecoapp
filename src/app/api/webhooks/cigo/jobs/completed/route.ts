@@ -28,19 +28,18 @@ export async function POST(req: Request) {
   // Get the job
   const job = (await cigo.jobs.get(body.job_id))?.job
   result.job = job
-  console.log("CIGO job", JSON.stringify(job))
+  // console.log("CIGO job", job)
+
+  console.log("jobStatus", job.status)
 
   // Check the status
   if (job.status === "completed") {
-    const order = await shopify.orders.get(job.reference_id.split("-")[0])
-    if (order?.fulfillments?.length === 0) {
-      const res = await shopify.helpers.createFulfillmentsFromJob(job)
-      if (!res?.success) {
-        result.errors.push(...(res?.errors || []))
-      }
-      result.fulfillment = res?.fulfillment
+    const res = await shopify.helpers.createFulfillmentsFromJob(job)
+    if (!res?.success) {
+      result.errors.push(...(res?.errors || []))
     }
-    result.order = order
+    result.fulfillment = res?.fulfillment
+    result.order = res?.order
   }
 
 
