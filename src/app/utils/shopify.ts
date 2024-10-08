@@ -57,6 +57,8 @@ export async function shopifyAdminApiGql (request: any, variables?: any) {
       redirect: "follow"
     } as any
 
+    console.log("requestBody", requestBody)
+
     const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
       .then((response) => {
         console.log("[shopifyApi.graphQl] response", response.status, response.statusText)
@@ -67,9 +69,9 @@ export async function shopifyAdminApiGql (request: any, variables?: any) {
         }
       })
       .then((data) => {
-        console.log("[shopifyApi.graphQl] data", data?.data)
-        if (data?.data?.errors) {
-          console.error("[shopifyApi.graphQl] errors", data?.data?.errors)
+        console.log("[shopifyApi.graphQl] data", data)
+        if (data?.errors) {
+          console.error("[shopifyApi.graphQl] errors", data?.errors)
         }
         return data
       })

@@ -201,6 +201,7 @@ export const shopify = {
             return data
           })
         if (order_id) {
+          console.log("order", res)
           return res.order as any
         } else {
           return res as { orders: Order[] }
@@ -472,6 +473,107 @@ export const shopify = {
 
       return commitEditingRes
 
+    },
+    getWithFulfillments: async (order_id: string) => {
+      console.log("getWithFulfillments", order_id)
+      const order = await shopifyAdminApiGql(`
+        query {
+          order(id: "gid://shopify/Order/${order_id}") {
+            id
+            name
+            email
+            fulfillments(first: 5) {
+              id
+              status
+              trackingInfo {
+                number
+                url
+              }
+            }
+            fulfillmentOrders(first: 5) {
+              nodes {
+                  id
+                  status
+                  destination {
+                      firstName
+                      lastName
+                      address1
+                      address2
+                      city
+                      zip
+                      province
+                  }
+                  lineItems(first: 20) {
+                    nodes {
+                      id
+                      totalQuantity
+                    }
+                  }
+                
+              }
+            }
+          }
+        }
+      `)
+      console.log("order", order)
+      return order
+    }
+  },
+  /**
+   * Fulfillments
+   */
+  fulfillments: {
+    create: async ({
+      fulfillmentOrderId,
+      lineItems,
+      trackingInfo
+    }: {
+      fulfillmentOrderId: string,
+      lineItems: {
+        id: string,
+        quantity: number
+      }[]
+      trackingInfo: {
+        company: string,
+        number: string,
+        url: string
+      }
+    }) => {
+      console.log("createFulfillment", lineItems)
+      try {
+        const res = await shopifyAdminApiGql(`
+          mutation fulfillmentCreate($fulfillment: FulfillmentInput!) {
+            fulfillmentCreate(fulfillment: $fulfillment) {
+              fulfillment {
+                # Fulfillment fields
+                id
+              }
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+        `, {
+          fulfillment: {
+            lineItemsByFulfillmentOrder: [
+              {
+                fulfillmentOrderId: fulfillmentOrderId,
+                fulfillmentOrderLineItems: lineItems.map((lineItem: any) => ({
+                  id: lineItem.id,
+                  quantity: lineItem.totalQuantity
+                }))
+              }
+            ],
+            notifyCustomer: false,
+            trackingInfo: trackingInfo
+          }
+        })
+        return res
+      } catch (error) {
+        console.error('Error creating fulfillment:', error)
+        throw error
+      }
     }
   },
   /**
@@ -1026,4 +1128,63 @@ export const shopify = {
       return res.product
     }
   },
+  helpers: {
+    createFulfillmentsFromJob: async (job: any): Promise<{ success: boolean, fulfillment?: any, order?: any, errors?: any[] } | null> => {
+      
+      let result = {
+        success: true,
+        fulfillment: null,
+        order: null
+      }
+      const jobReferenceId = job.reference_id?.split("-")[0]
+      const jobStatus = job?.status
+      const trackingNumber = job.post_staging?.tracking.tracking_number
+      const trackingUrl = job.post_staging?.tracking.url
+      const order = (await shopify.orders.getWithFulfillments(jobReferenceId))?.order
+
+      // console.log("order", JSON.stringify(order))
+
+      // If there are no fulfollment orders, then error
+      if (order?.fulfillmentOrders?.nodes?.length === 0) {
+        console.error("Order is not fulfilled", order?.name)
+        return {
+          success: false,
+          order: order,
+          errors: ["Order is not fulfilled"]
+        }
+      }
+
+      // If there are no fulfillments, then create one
+      if (order?.fulfillments?.length === 0 && jobStatus === "completed" && trackingNumber && trackingUrl) {
+        console.log("Order is not fulfilled", order?.name)
+        // Get the order's fulfillment orders
+        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.[0]
+
+        // Create a fulfillment
+        try {
+          const fulfillment = await shopify.fulfillments.create({
+            fulfillmentOrderId: fulfillmentOrder.id,
+            lineItems: fulfillmentOrder.lineItems.nodes,
+            trackingInfo: {
+              company: "WECO",
+              number: trackingNumber,
+              url: trackingUrl
+            }
+          })
+          result.fulfillment = fulfillment
+          result.order = order
+        } catch (error) {
+          console.error("Error creating fulfillment", error)
+          return {
+            success: false,
+            order: order,
+            errors: [error]
+          }
+        }
+
+      }
+
+      return result
+    }
+  }
 }

@@ -185,6 +185,13 @@ export async function POST(request: Request) {
   
   console.log("uniqueRates", JSON.stringify(uniqueRates))
 
+  if (uniqueRates.length === 0) {
+    console.error("No rates found for the given request.")
+    return Response.json({
+      rates: [] as CarrierServiceResponse[]
+    }, { status: 200 })
+  }
+
   // Return the rates
   return Response.json({
     rates: uniqueRates as CarrierServiceResponse[]

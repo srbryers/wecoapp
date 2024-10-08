@@ -69,6 +69,23 @@ export const cigo = {
         path: `jobs/${id}`
       })
     },
+    getAll: async (date: string, additionalParams?: any) => {
+      console.log("date", date)
+      console.log("additionalParams", additionalParams)
+      // Get the jobs for a given date
+      const jobs = await cigo.jobs.search({
+        start_date: date,
+        end_date: date,
+        ...additionalParams
+      })
+      const jobIds = jobs?.post_staging?.ids
+      // Loop through the jobs and get the details based on the ids
+      const jobsWithDetails = await Promise.all(jobIds.map(async (jobId: string) => {
+        const jobDetails = await cigo.jobs.get(jobId)
+        return jobDetails
+      }))
+      return jobsWithDetails
+    }
   },
   helpers: {
     getDeliveryDates: async (order: Order, deliveryDate?: string) => {
