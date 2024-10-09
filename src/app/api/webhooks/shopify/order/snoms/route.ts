@@ -34,19 +34,21 @@ export async function POST(req: Request) {
   // Check if order has been updated in the last 24hrs
   if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled") {
     console.log(`[${order.name}] Order has been updated in the last 24hrs and is not fulfilled and paid`)
-    // Add/update the job in CIGO
-    // const job = await cigo.jobs.create()
-    //Send update to SNOMS
+    console.log(JSON.stringify({
+      ...payload,
+      "X-Shopify-Hmac-Sha256": result,
+    }))
+    // Send update to SNOMS
     const res = await fetch("https://snoms.wecohospitality.com/wh/shopify/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Shopify-Hmac-Sha256": hmac,
+        "X-Shopify-Hmac-Sha256": "ukCsBYCdrDktlQNE",
         "X-Shopify-Topic": "orders/updated"
       },
       body: JSON.stringify({
         ...payload,
-        "X-Shopify-Hmac-Sha256": hmac,
+        "X-Shopify-Hmac-Sha256": "ukCsBYCdrDktlQNE",
       }),
     })
     console.log(`[${order.name}] sent to SNOMS - status:`, res.status)

@@ -36,6 +36,7 @@ export async function POST(req: Request) {
   const now = new Date()
   const orderLastUpdated = new Date(order.updated_at || order.updatedAt || "")
   const orderFulfillmentStatus = order.fulfillment_status
+  const orderStatus = order.status
   const isPickup = order.tags?.includes("pickup") ?? false
   const isSubscription = order.note_attributes?.some((attribute) => attribute.name.toLowerCase().includes("delivery date")) ?? false
 
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
   } else if (isPickup) {
     console.log(`[${order.name}] Order is a pickup order`)
     return Response.json({ success: true, updated: true, addedToCigo: false, res: res, order: order })
-  } else if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled") {
+  } else if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled" && orderStatus !== "refunded") {
     console.log(`[${order.name}] Order has been updated in the last 24hrs and is not fulfilled and paid`)
     // Add/update the job in CIGO
     // Check if the order has been sent to CIGO

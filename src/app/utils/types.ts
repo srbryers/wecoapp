@@ -146,6 +146,7 @@ export type Order = {
   zip?: string
   currency?: string
   locale?: string
+  status?: string
   line_items?: LineItem[]
   updated_at?: string
   updatedAt?: string
