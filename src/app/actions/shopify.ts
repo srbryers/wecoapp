@@ -481,12 +481,18 @@ export const shopify = {
             id
             name
             email
+            displayFulfillmentStatus
             fulfillments(first: 5) {
               id
               status
               trackingInfo {
                 number
                 url
+              }
+              fulfillmentOrders(first: 5) {
+                nodes {
+                  id
+                }
               }
             }
             fulfillmentOrders(first: 5) {
@@ -571,6 +577,48 @@ export const shopify = {
         return res
       } catch (error) {
         console.error('Error creating fulfillment:', error)
+        throw error
+      }
+    },
+    updateTrackingInfo: async ({
+      fulfillment_id,
+      trackingInfo
+    }: {
+      fulfillment_id: string,
+      trackingInfo: {
+        company: string,
+        number: string,
+        url: string
+      }
+    }) => {
+      console.log("fulfillment_id", fulfillment_id)
+      console.log("Tracking Info", trackingInfo)
+      try {
+        const res = await shopifyAdminApiGql(`
+          mutation fulfillmentTrackingInfoUpdate($fulfillmentId: ID!, $trackingInfoInput: FulfillmentTrackingInput!) {
+            fulfillmentTrackingInfoUpdate(fulfillmentId: $fulfillmentId, trackingInfoInput: $trackingInfoInput) {
+              fulfillment {
+                # Fulfillment fields
+                id
+              }
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+        `, {
+          fulfillmentId: fulfillment_id,
+          trackingInfoInput: {
+            company: trackingInfo.company || "WECO",
+            number: trackingInfo.number || "",
+            url: trackingInfo.url || ""
+          }
+        })
+        console.log("[shopify.fulfillments.updateTrackingInfo] res", res)
+        return res
+      } catch (error) {
+        console.error('Error updating fulfillment:', error)
         throw error
       }
     }
@@ -1133,7 +1181,8 @@ export const shopify = {
       let result = {
         success: true,
         fulfillment: null,
-        order: null
+        order: null,
+        errors: []
       }
       const jobDate = job.date
       const jobReferenceId = job.reference_id?.split("-")[0]
@@ -1142,27 +1191,27 @@ export const shopify = {
       const trackingUrl = job.post_staging?.tracking.url
       const order = (await shopify.orders.getWithFulfillments(jobReferenceId))?.order
 
-      // console.log("order", JSON.stringify(order))
+      console.log("[createFulfillmentsFromJob] Evaluating fulfillments for order:", order?.name, jobDate)
+      console.log("[createFulfillmentsFromJob] trackingNumber:", trackingNumber)
+      console.log("[createFulfillmentsFromJob] trackingUrl:", trackingUrl)
+      console.log("[createFulfillmentsFromJob] order fulfillmentStatus:", order?.displayFulfillmentStatus)
+      console.log("[fulfillmentOrders]", JSON.stringify(order?.fulfillmentOrders?.nodes))
 
-      // If there are no fulfollment orders, then error
-      // if (order?.fulfillmentOrders?.nodes?.length === 0) {
-      //   console.error("Order is not fulfilled", order?.name)
-      //   return {
-      //     success: false,
-      //     order: order,
-      //     errors: ["Order is not fulfilled"]
-      //   }
-      // }
-      
-      console.log("[createFulfillmentsFromJob] creating fulfillment for order", order?.name, jobDate)
-      console.log("[createFulfillmentsFromJob] trackingNumber", trackingNumber)
-      console.log("[createFulfillmentsFromJob] trackingUrl", trackingUrl)
-      console.log("[createFulfillmentsFromJob] order fulfillment_status", order?.fulfillment_status)
-      console.log("[fulfillmentOrders]", order?.fulfillmentOrders?.nodes)
+      // If the order is not already fulfilled, then create a fulfillment
+      if (order?.displayFulfillmentStatus !== "FULFILLED") {
 
-      // If there are no fulfillments, then create one
-      if (!order?.fulfillment_status && jobStatus === "completed" && trackingNumber && trackingUrl) {
-        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN")
+        // If we don't have tracking info and a tracking number, then we can't create a fulfillment
+        if (!trackingNumber || !trackingUrl) {
+          console.error("No tracking info found for order", order?.name)
+          return {
+            success: false,
+            order: order,
+            errors: ["No tracking info found"]
+          }
+        }
+
+        // Find the first open or in progress fulfillment order
+        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN" || fulfillmentOrder.status === "IN_PROGRESS")
         if (!fulfillmentOrder) {
           console.error("No open fulfillment order found for order", order?.name)
           return {
@@ -1171,33 +1220,100 @@ export const shopify = {
             errors: ["No open fulfillment order found"]
           }
         }
-        // Create a fulfillment
-        try {
-          const fulfillment = await shopify.fulfillments.create({
-            fulfillmentOrderId: fulfillmentOrder.id,
-            lineItems: fulfillmentOrder.lineItems.nodes.filter((lineItem: any) => {
-              return lineItem.variantTitle.includes(jobDate)
-            }),
-            trackingInfo: {
-              company: "WECO",
-              number: trackingNumber,
-              url: trackingUrl
+
+        // If the fulfillment order is in progress, then update the tracking info
+        if (fulfillmentOrder.status === "IN_PROGRESS") {
+          console.info("[createFulfillmentsFromJob] Fulfillment order is in progress - attempting to update tracking info")
+          // Fin the fulfillments that have a fulfillmentOrderId matching the one we're looking at
+          const fulfillment = order?.fulfillments?.find((fulfillment: any) => fulfillment.fulfillmentOrders?.nodes?.find((node: any) => node.id === fulfillmentOrder.id))
+
+          if (fulfillment?.id) {
+            // If we already have tracking info, return
+            if (fulfillment?.trackingInfo?.length > 0) {
+              console.log("[createFulfillmentsFromJob] Order already has tracking info: ", order?.name)
+              return {
+                success: false,
+                errors: ["Order already has tracking info"],
+                order: order,
+                fulfillment: fulfillment,
+              }
             }
-          })
-          result.fulfillment = fulfillment
-          result.order = order
-        } catch (error) {
-          console.error("Error creating fulfillment", error)
-          return {
-            success: false,
-            order: order,
-            errors: [error]
+            // If fulfillment order is in progress and we don't have tracking info, then update the tracking info 
+            try {
+              console.log("[createFulfillmentsFromJob] Updating tracking info for order:", order?.name)
+              const updateFulfillment = await shopify.fulfillments.updateTrackingInfo({
+                fulfillment_id: fulfillment.id,
+                trackingInfo: {
+                  company: "WECO",
+                  number: trackingNumber,
+                  url: trackingUrl
+                }
+              })
+              result.fulfillment = updateFulfillment
+              result.order = order
+            } catch (error) {
+              console.error("[createFulfillmentsFromJob] Failed to update tracking info", error)
+              return {
+                success: false,
+                errors: [error],
+                order: order,
+                fulfillment: fulfillment
+              }
+            }
+          } else {
+            console.log("[createFulfillmentsFromJob] Could not find existing fulfillment to update, or tracking info has already been added.")
+            return {
+              success: false,
+              errors: ["Could not find existing fulfillment to update, or tracking info has already been added."],
+              order: order
+            }
+          }
+        } else {
+          // If the fulfillment order is open, then create a fulfillment
+          try {
+            const fulfillment = await shopify.fulfillments.create({
+              fulfillmentOrderId: fulfillmentOrder.id,
+              lineItems: fulfillmentOrder.lineItems.nodes.filter((lineItem: any) => {
+                return lineItem.variantTitle.includes(jobDate)
+              }),
+              trackingInfo: {
+                company: "WECO",
+                number: trackingNumber,
+                url: trackingUrl
+              }
+            })
+            result.fulfillment = fulfillment
+            result.order = order
+          } catch (error) {
+            console.error("Error creating fulfillment", error)
+            return {
+              success: false,
+              order: order,
+              errors: [error]
+            }
           }
         }
 
+      } else {
+        console.log("[createFulfillmentsFromJob] Order is already fulfilled")
+        return {
+          success: false,
+          errors: [],
+          order: order,
+          fulfillment: order?.fulfillments?.[0],
+        }
       }
 
       return result
+    },
+    updateFulfillmentTracking: async (job: any) => {
+      const jobDate = job.date
+      const jobReferenceId = job.reference_id?.split("-")[0]
+      const jobStatus = job?.status
+      const trackingNumber = job.post_staging?.tracking.tracking_number
+      const trackingUrl = job.post_staging?.tracking.url
+      const order = (await shopify.orders.getWithFulfillments(jobReferenceId))?.order
+      
     }
   }
 }

@@ -4,13 +4,13 @@ import { shopify } from "@/app/actions/shopify"
 export async function POST(req: Request) {
   let result = {
     success: true,
+    errors: [] as any[],
     job: null,
     order: null,
     fulfillment: null,
-    errors: [] as any[]
   }
   const body = await req.json()
-  console.log("CIGO webhook received", JSON.stringify(body))
+  console.log("[CIGO] webhook received", JSON.stringify(body))
 
   if (!body.job_id) {
     return Response.json({ success: false, error: "Job ID not set" }, { status: 400 })
@@ -30,10 +30,10 @@ export async function POST(req: Request) {
   result.job = job
   // console.log("CIGO job", job)
 
-  console.log("jobStatus", job.status)
+  console.log("[CIGO] jobStatus", job.status)
 
   // Check the status
-  if (job.status === "completed") {
+  if (job.status === "completed" || job.status === "in progress") {
     const res = await shopify.helpers.createFulfillmentsFromJob(job)
     if (!res?.success) {
       result.errors.push(...(res?.errors || []))
