@@ -7,6 +7,7 @@ import crypto from "node:crypto"
 export async function POST(req: Request) {
   const body = await req.text()
 
+
   // Validate shopify hmac
   const hmac = req.headers.get("X-Shopify-Hmac-Sha256")
   if (!hmac) {
@@ -24,6 +25,8 @@ export async function POST(req: Request) {
   const payload = JSON.parse(body)
   console.log(`[${payload.name}] HMAC comparison result:`, result)
 
+  // console.log("payload", JSON.stringify(payload))
+
   // Return if HMAC is invalid
   if (!result) {
     return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
   // Get the order from Shopify
   let res: any[] = []
   await delay(2000) // Wait for 2 seconds to make sure the order is updated
-  const order = await shopify.orders.get(payload.id) as Order
+  const order = payload as Order
   const now = new Date()
   const orderLastUpdated = new Date(order.updated_at || order.updatedAt || "")
   const orderFulfillmentStatus = order.fulfillment_status
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
     // Check if the order has been sent to CIGO
     let existingJobs = []
     const deliveryDates = await cigo.helpers.getDeliveryDates(order)
-    console.log("[CIGO] delivery dates", deliveryDates)
+    // console.log("[CIGO] delivery dates", deliveryDates)
     for (const date of deliveryDates ?? []) {
       // Check if delivery date is before today, if so, we don't want to create a new job
       const deliveryDate = new Date(date)
@@ -72,15 +75,49 @@ export async function POST(req: Request) {
         console.log("[CIGO] job does not exist for order name: ", order.name, " with date: ", date)
         const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
         console.log("[CIGO] creating job for order name: ", order.name, " with date: ", date)
-        console.log("[CIGO] data", data)
         const job = await cigo.jobs.create(data)
-        res.push(job)
-        // existingJobs.push(data)
+        res.push({ created: job })
       }
     }
     existingJobs = existingJobs.flat()
     console.log("[CIGO] existing jobs", existingJobs)
-    console.log("[CIGO] res", res)
+    // Now update existing jobs with any new job details
+    for (const jobId of existingJobs) {
+      // Get the job from CIGO
+      const jobData = (await cigo.jobs.get(jobId))?.job
+      if (jobData) {
+        const date = jobData.date
+        const jobOrderData = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
+        const existingJobData = {
+          quick_desc: jobData.quick_desc || "",
+          first_name: jobData.first_name || "",
+          last_name: jobData.last_name || "",
+          phone_number: jobData.phone_number || "",
+          mobile_number: jobData.mobile_number || "",
+          email: jobData.email || "",
+          apartment: jobData.apartment || "",
+        }
+        const updateJobRequest = {
+          quick_desc: jobOrderData.quick_desc,
+          first_name: jobOrderData.first_name,
+          last_name: jobOrderData.last_name,
+          phone_number: jobOrderData.phone_number,
+          mobile_number: jobOrderData.mobile_number,
+          email: jobOrderData.email,
+          apartment: jobOrderData.apartment,
+        }
+
+        if (JSON.stringify(existingJobData) !== JSON.stringify(updateJobRequest)) {
+          console.log("[CIGO] job data has changed, updating job")
+          const updatedJob = await cigo.jobs.update(jobId, updateJobRequest)
+          console.log("[CIGO] updated job for order name: ", order.name, " with date: ", date)
+          res.push({ updated: true, job: updatedJob })
+        } else {
+          console.log("[CIGO] job data has not changed, skipping update")
+        }
+
+      }
+    }
     // const job = await cigo.jobs.create()
     //Send update to SNOMS
     // const res = await fetch("https://snoms.wecohospitality.com/wh/shopify/", {

@@ -34,10 +34,10 @@ export async function POST(req: Request) {
   // Check if order has been updated in the last 24hrs
   if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled") {
     console.log(`[${order.name}] Order has been updated in the last 24hrs and is not fulfilled and paid`)
-    console.log(JSON.stringify({
-      ...payload,
-      "X-Shopify-Hmac-Sha256": result,
-    }))
+    // console.log(JSON.stringify({
+    //   ...payload,
+    //   "X-Shopify-Hmac-Sha256": result,
+    // }))
     // Send update to SNOMS
     const res = await fetch("https://snoms.wecohospitality.com/wh/shopify/", {
       method: "POST",
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
       }),
     })
     console.log(`[${order.name}] sent to SNOMS - status:`, res.status)
+    console.log(`[${order.name}] sent to SNOMS - body:`, res.body)
     return Response.json({ success: true, updated: true, sentUpdateToSNOMS: true, res: res, order: order })
   } else {
     console.log(`[${order.name}] Order has not been updated in the last 24hrs or is fulfilled already`)

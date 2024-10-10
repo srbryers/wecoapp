@@ -52,8 +52,8 @@ export const cigo = {
     },
     update: async (id: string, data: any) => {
       return await cigoApi({
-        method: 'PUT',
-        path: `jobs/${id}`,
+        method: 'PATCH',
+        path: `jobs/id/${id}`,
         body: data
       })
     },
@@ -66,12 +66,10 @@ export const cigo = {
     delete: async (id: string) => {
       return await cigoApi({
         method: 'DELETE',
-        path: `jobs/${id}`
+        path: `jobs/id/${id}`
       })
     },
     getAll: async (date: string, additionalParams?: any) => {
-      console.log("date", date)
-      console.log("additionalParams", additionalParams)
       // Get the jobs for a given date
       const jobs = await cigo.jobs.search({
         start_date: date,
