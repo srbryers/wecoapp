@@ -766,18 +766,18 @@ export const shopify = {
       }
 
       // Check the properties for a TransitionTag
-      const transitionTag = klaviyoCustomer?.attributes?.properties?.TransitionTag
+      // const transitionTag = klaviyoCustomer?.attributes?.properties?.TransitionTag
 
-      if (transitionTag) {
-        const transitionTagData = transitionTags.find((tag) => tag.tag === transitionTag)
-        if (transitionTagData) {
-          const transitionDate = new Date(transitionTagData.transitionDate)
-          const currentDate = new Date()
-          if (currentDate >= transitionDate) {
-            isSubscriptionCustomer = true // Return the subscription experience if the TransitionTag is found
-          }
-        }
-      }
+      // if (transitionTag) {
+      //   const transitionTagData = transitionTags.find((tag) => tag.tag === transitionTag)
+      //   if (transitionTagData) {
+      //     const transitionDate = new Date(transitionTagData.transitionDate)
+      //     const currentDate = new Date()
+      //     if (currentDate >= transitionDate) {
+      //       isSubscriptionCustomer = true // Return the subscription experience if the TransitionTag is found
+      //     }
+      //   }
+      // }
 
       if (orders.length === 0) {
         return null // Return null if the customer has no orders
@@ -798,7 +798,7 @@ export const shopify = {
 
       /* 3. Check if the customer is a subscription customer */
       const subscriptionOrders = orders?.filter((order: any) => {
-        return order.tags?.includes('Subscription')
+        return order.tags && order.tags?.includes('Subscription')
       })
       const lastOrder = orders?.[0]
 
@@ -814,7 +814,7 @@ export const shopify = {
         tags: shopifyCustomer?.tags,
         subscription: {
           isSubscriptionCustomer: isSubscriptionCustomer,
-          isActive: lastOrder.customer.tags?.includes('Active Subscriber')
+          isActive: shopifyCustomer?.tags?.includes('Active Subscriber')
         }
       }
     },
