@@ -10,16 +10,26 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
 
   let isValidShipment = false;
   let menuZone: any = {}
+  let shipmentZones: any = menuZones
   
   // console.log("[getShipmentZone] lineItems", lineItems)
-  console.log("[getShipmentZone] destinationZip", destinationZip)
+  // console.log("[getShipmentZone] destinationZip", destinationZip)
+
+  if (!shipmentZones) {
+    console.log("[getShipmentZone] No shipment zones found, fetching from Shopify")
+    shipmentZones = await shopify.metaobjects.get('menu_zone')
+  }
 
   // Get the menu_zone metaobject
-  const shipmentZones = menuZones || await shopify.metaobjects.get('menu_zone')
   const zipCodeFieldKey = 'zip_code_json'
+  // Filter the line items to only include subscription items
   const subscriptionItems = lineItems.filter((item: any) => {
-    // Convert item.properties array to an object
-    if (Array.isArray(item.properties)) {
+    if (item?.sellingPlan?.sellingPlanId) {
+      return true
+    } else if (item?.customAttributes) {
+      return item.customAttributes.find((attribute: { key: string, value: string }) => attribute.key === '_bundleId' || attribute.key === '_bundleVariantId')
+    } else if (Array.isArray(item.properties)) {
+      // Convert item.properties array to an object
       return item.properties && item.properties.find((property: { name: string, value: string }) => property.name === '_bundleId' || property.name === '_bundleVariantId')
     } else {
       return item.properties && (item.properties._bundleId || item.properties._bundleVariantId)

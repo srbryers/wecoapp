@@ -1,31 +1,6 @@
 import { firestore } from '@/app/utils/firestore/firestore';
-import { google } from 'googleapis';
 import { sf } from "@/app/utils/snowflake/snowflake"
-import { unescape } from 'node:querystring';
-
-const initGoogleSheets = async () => {
-  let config = {
-    scopes: [
-      'https://www.googleapis.com/auth/spreadsheets',
-    ],
-  } as any
-  
-  const {GOOGLE_APPLICATION_CREDENTIALS} = process.env;
-
-  if (GOOGLE_APPLICATION_CREDENTIALS) {
-    try {
-      // Unescape the credentials string and parse it as JSON
-      config.credentials = JSON.parse(GOOGLE_APPLICATION_CREDENTIALS)
-    } catch (err) {
-      throw Error(
-        `Unable to parse secret from Secret Manager. Make sure that the secret is JSON formatted: ${err}`
-      );
-    }
-  }
-  
-  const auth = new google.auth.GoogleAuth(config)
-  return google.sheets({version: 'v4', auth});
-}
+import { sheets } from '@/app/utils/google';
 
 /**
  * Route to sync data from Snowflake to Google Sheets
@@ -43,7 +18,6 @@ export async function POST(request: Request) {
   if (!queryId) { return Response.json({ error: "Must provide a valid queryId" }, { status: 500 })}
   if (!sheetTab) { return Response.json({ error: "Must provide a valid sheetTab" }, { status: 500 })}
 
-  const sheets = await initGoogleSheets()
 
   try {
     const res = await db.collection("snowflake").doc(queryId).get().then((response) => {

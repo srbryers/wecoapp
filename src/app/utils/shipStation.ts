@@ -20,6 +20,7 @@ export async function shipStationApi(request: ShipStationRequest) {
     method: request.method,
     headers: headers,
     body: JSON.stringify(request.body),
+    cache: 'no-cache'
   } as any
 
   const result = await fetch(`${API_URL}/${request.path}`, requestOptions)
