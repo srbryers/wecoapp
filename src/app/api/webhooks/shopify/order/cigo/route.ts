@@ -40,8 +40,10 @@ export async function POST(req: Request) {
   const orderLastUpdated = new Date(order.updated_at || order.updatedAt || "")
   const orderFulfillmentStatus = order.fulfillment_status
   const orderStatus = order.status
-  const isPickup = order.tags?.includes("pickup") ?? false
+  const isPickup = (order.tags?.includes("pickup") || !order.shipping_address) ?? false
   const isSubscription = order.note_attributes?.some((attribute) => attribute.name.toLowerCase().includes("delivery date")) ?? false
+
+  console.log("[CIGO] order", JSON.stringify(order))
 
   // Check if order has been updated in the last 24hrs
   if (isSubscription) {

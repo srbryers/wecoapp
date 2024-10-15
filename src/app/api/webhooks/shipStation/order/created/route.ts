@@ -136,10 +136,10 @@ export async function POST(request: Request) {
   // Tagging Logic
   // 1. Get the tags list
   const tags = await shipStation.tags.get()
-  // console.log("Tags", tags)
+  console.log("Tags", tags)
   const productionTags = getProductionTag(shipByDate, menuZone) || []
 
-  // console.log("productionTags", productionTags)
+  console.log("productionTags", productionTags)
 
   // Update the ShipStation order with the dates and tags
   const updatedOrder = await shipStation.orders.update({
