@@ -650,11 +650,11 @@ export const shopify = {
           }
         `, {
           fulfillmentId: fulfillment_id,
+          notifyCustomer: true,
           trackingInfoInput: {
             company: trackingInfo.company || "WECO",
             number: trackingInfo.number || "",
             url: trackingInfo.url || "",
-            notifyCustomer: true
           }
         })
         console.log("[shopify.fulfillments.updateTrackingInfo] res", res)
