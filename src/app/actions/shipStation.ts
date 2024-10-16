@@ -10,7 +10,6 @@ export const shipStation = {
       })
     },
     create: async (body: ShipStationOrder) => {
-      console.log(`[shipStation.orders.create] creating order`, body)
       return await shipStationApi({
         method: 'POST',
         path: `orders/createorder`,

@@ -653,7 +653,8 @@ export const shopify = {
           trackingInfoInput: {
             company: trackingInfo.company || "WECO",
             number: trackingInfo.number || "",
-            url: trackingInfo.url || ""
+            url: trackingInfo.url || "",
+            notifyCustomer: true
           }
         })
         console.log("[shopify.fulfillments.updateTrackingInfo] res", res)
@@ -1241,7 +1242,7 @@ export const shopify = {
       console.log("[fulfillmentOrders]", JSON.stringify(order?.fulfillmentOrders?.nodes))
 
       // If the order is not already fulfilled, then create a fulfillment
-      if (order?.displayFulfillmentStatus !== "FULFILLED") {
+      // if (order?.displayFulfillmentStatus !== "FULFILLED") {
 
         // If we don't have tracking info and a tracking number, then we can't create a fulfillment
         if (!trackingNumber || !trackingUrl) {
@@ -1254,19 +1255,19 @@ export const shopify = {
         }
 
         // Find the first open or in progress fulfillment order
-        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN" || fulfillmentOrder.status === "IN_PROGRESS")
-        if (!fulfillmentOrder) {
-          console.error("No open fulfillment order found for order", order?.name)
-          return {
-            success: false,
-            order: order,
-            errors: ["No open fulfillment order found"]
-          }
-        }
+        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN" || fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED")
+        // if (!fulfillmentOrder) {
+        //   console.error("No open fulfillment order found for order", order?.name)
+        //   return {
+        //     success: false,
+        //     order: order,
+        //     errors: ["No open fulfillment order found"]
+        //   }
+        // }
 
-        // If the fulfillment order is in progress, then update the tracking info
-        if (fulfillmentOrder.status === "IN_PROGRESS") {
-          console.info("[createFulfillmentsFromJob] Fulfillment order is in progress - attempting to update tracking info")
+        // If the fulfillment order is in progress or closed, then update the tracking info
+        if (fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED") {
+          console.info("[createFulfillmentsFromJob] Fulfillment order is in progress or is CLOSED - attempting to update tracking info")
           // Fin the fulfillments that have a fulfillmentOrderId matching the one we're looking at
           const fulfillment = order?.fulfillments?.find((fulfillment: any) => fulfillment.fulfillmentOrders?.nodes?.find((node: any) => node.id === fulfillmentOrder.id))
 
@@ -1290,7 +1291,7 @@ export const shopify = {
                   company: "WECO",
                   number: trackingNumber,
                   url: trackingUrl
-                }
+                },
               })
               result.fulfillment = updateFulfillment
               result.order = order
@@ -1337,15 +1338,15 @@ export const shopify = {
           }
         }
 
-      } else {
-        console.log("[createFulfillmentsFromJob] Order is already fulfilled")
-        return {
-          success: false,
-          errors: [],
-          order: order,
-          fulfillment: order?.fulfillments?.[0],
-        }
-      }
+      // } else {
+      //   console.log("[createFulfillmentsFromJob] Order is already fulfilled")
+      //   return {
+      //     success: false,
+      //     errors: [],
+      //     order: order,
+      //     fulfillment: order?.fulfillments?.[0],
+      //   }
+      // }
 
       return result
     },
