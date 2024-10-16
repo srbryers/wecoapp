@@ -611,7 +611,7 @@ export const shopify = {
                 }))
               }
             ],
-            notifyCustomer: false,
+            notifyCustomer: true,
             trackingInfo: trackingInfo
           }
         })
