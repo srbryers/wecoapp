@@ -28,9 +28,9 @@ export async function POST(req: Request) {
   // console.log("payload", JSON.stringify(payload))
 
   // Return if HMAC is invalid
-  if (!result) {
-    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
-  }
+  // if (!result) {
+  //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  // }
 
   // Get the order from Shopify
   let res: any[] = []
@@ -38,14 +38,15 @@ export async function POST(req: Request) {
   const order = payload as Order
   const now = new Date()
   const orderLastUpdated = new Date(order.updated_at || order.updatedAt || "")
+  const orderCreated = new Date(order.created_at || order.createdAt || "")
   const orderFulfillmentStatus = order.fulfillment_status
   const orderStatus = order.status
   const isPickup = (order.tags?.includes("pickup") || !order.shipping_address) ?? false
   const isSubscription = order.note_attributes?.some((attribute) => attribute.name.toLowerCase().includes("delivery date")) ?? false
+  const isCancelled = order.cancelled_at ? true : false
 
-  console.log("[CIGO] order", JSON.stringify(order))
+  // console.log("[CIGO] order", JSON.stringify(order))
 
-  // Check if order has been updated in the last 24hrs
   if (isSubscription) {
     console.log(`[${order.name}] Order is a subscription order`)
     return Response.json({ success: true, updated: true, addedToCigo: false, res: res, order: order })
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
     let existingJobs = []
     const deliveryDates = await cigo.helpers.getDeliveryDates(order)
     // console.log("[CIGO] delivery dates", deliveryDates)
+
     for (const date of deliveryDates ?? []) {
       // Check if delivery date is before today, if so, we don't want to create a new job
       const deliveryDate = new Date(date)
@@ -74,15 +76,22 @@ export async function POST(req: Request) {
         console.log("[CIGO] job already exists for order name: ", order.name, " with date: ", date)
         existingJobs.push(existingJob?.post_staging?.ids)
       } else {
-        console.log("[CIGO] job does not exist for order name: ", order.name, " with date: ", date)
-        const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
-        console.log("[CIGO] creating job for order name: ", order.name, " with date: ", date)
-        const job = await cigo.jobs.create(data)
-        res.push({ created: job })
+        if (!isCancelled) {
+          console.log("[CIGO] job does not exist for order name: ", order.name, " with date: ", date)
+          const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
+          console.log("[CIGO] creating job for order name: ", order.name, " with date: ", date)
+          const job = await cigo.jobs.create(data)
+          res.push({ created: job })
+        } else {
+          console.log("[CIGO] job is cancelled, skipping creation")
+        }
       }
     }
+
+
     existingJobs = existingJobs.flat()
     console.log("[CIGO] existing jobs", existingJobs)
+    console.log("[CIGO] is job cancelled?", isCancelled)
     // Now update existing jobs with any new job details
     for (const jobId of existingJobs) {
       // Get the job from CIGO
@@ -99,17 +108,35 @@ export async function POST(req: Request) {
           email: jobData.email || "",
           apartment: jobData.apartment || "",
         }
+        // Only get the phone number without the area code
+        const phoneNumber = jobOrderData.phone_number.replace(/^(\+\d{1})(\d+)/, "$2")
+        const mobileNumber = jobOrderData.mobile_number.replace(/^(\+\d{1})(\d+)/, "$2")
         const updateJobRequest = {
           quick_desc: jobOrderData.quick_desc,
           first_name: jobOrderData.first_name,
           last_name: jobOrderData.last_name,
-          phone_number: jobOrderData.phone_number,
-          mobile_number: jobOrderData.mobile_number,
+          phone_number: phoneNumber,
+          mobile_number: mobileNumber,
           email: jobOrderData.email,
           apartment: jobOrderData.apartment,
         }
 
-        if (JSON.stringify(existingJobData) !== JSON.stringify(updateJobRequest)) {
+        if (isCancelled) {
+          // Make sure the job is removed from the itinerary
+          const itineraries = (await cigo.itineraries.retrieveByDate(date))?.itineraries
+          console.log("[CIGO] itineraries", itineraries)
+          if (itineraries?.length > 0) {
+            for (const itinerary of itineraries) {
+              await cigo.itineraries.removeJob(itinerary.id, jobId)
+            }
+          }
+
+          // Then delete the job
+          await cigo.jobs.delete(jobId)
+          console.log("[CIGO] job deleted for order name: ", order.name, " with date: ", date)
+          res.push({ deleted: jobId })
+
+        } else if (JSON.stringify(existingJobData) !== JSON.stringify(updateJobRequest)) {
           console.log("[CIGO] job data has changed, updating job")
           const updatedJob = await cigo.jobs.update(jobId, updateJobRequest)
           console.log("[CIGO] updated job for order name: ", order.name, " with date: ", date)
@@ -120,18 +147,6 @@ export async function POST(req: Request) {
 
       }
     }
-    // const job = await cigo.jobs.create()
-    //Send update to SNOMS
-    // const res = await fetch("https://snoms.wecohospitality.com/wh/shopify/", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     "X-Shopify-Hmac-Sha256": hmac,
-    //     "X-Shopify-Topic": "orders/updated"
-    //   },
-    //   body: JSON.stringify(payload),
-    // })
-    // console.log(`[${order.name}] sent to SNOMS - status:`, res.status)
     return Response.json({ success: true, updated: true, addedToCigo: true, res: res, order: order })
   } else {
     console.log(`[${order.name}] Order has not been updated in the last 24hrs or is fulfilled already`)

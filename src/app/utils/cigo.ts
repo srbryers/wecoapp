@@ -24,8 +24,15 @@ export async function cigoApi(request: KlaviyoRequest) {
 
   const result = await fetch(`https://cigotracker.com/api/v1/${request.path}`, requestOptions)
     .then(async (response) => {
-      if (response.status === 200) {
-        return response.json()
+      // If method is DELETE, then we don't need to return the body
+      if (request.method === 'DELETE') {
+        return { status: response.status, message: response.statusText }
+      } else if (response.status === 200) {
+        if (response.body) {
+          return response.json()
+        } else {
+          return { status: response.status, message: response.statusText }
+        }
       } else if (response.status === 202) {
         return { status: response.status, message: response.statusText }
       } else {

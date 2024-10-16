@@ -136,6 +136,7 @@ export type Order = {
   phone?: string
   name?: string
   created_at?: string
+  cancelled_at?: string
   shipping_address?: Address
   shippingAddress?: Address
   billing_address?: Address

@@ -85,6 +85,23 @@ export const cigo = {
       return jobsWithDetails
     }
   },
+  itineraries: {
+    retrieveByDate: async (date: string) => {
+      return await cigoApi({
+        method: 'GET',
+        path: `itineraries/date/${date}`
+      })
+    },
+    removeJob: async (itineraryId: string, jobId: string) => {
+      return await cigoApi({
+        method: 'PATCH',
+        path: `itineraries/id/${itineraryId}`,
+        body: {
+          delete_ids: [jobId]
+        }
+      })
+    }
+  },
   helpers: {
     getDeliveryDates: async (order: Order, deliveryDate?: string) => {
       const lineItems = order.lineItems?.nodes || order.line_items
