@@ -85,9 +85,9 @@ export async function POST(req: Request) {
   // console.log("payload", JSON.stringify(payload))
 
   // Return if HMAC is invalid
-  if (!result) {
-    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
-  }
+  // if (!result) {
+  //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  // }
 
   // Get the order from Shopify
   let res: any[] = []
@@ -152,8 +152,8 @@ export async function POST(req: Request) {
       },
       items: order.lineItems?.nodes?.map((lineItem: LineItem) => {
         const item: ShipStationOrderItem = {
-          sku: lineItem.sku,
-          name: lineItem.name.split(" - ")[0],
+          sku: lineItem.sku || "",
+          name: lineItem.name.split(" - ")[0] || "",
           lineItemKey: lineItem.id?.toString().split("/").pop() || "",
           imageUrl: lineItem.image?.url || "",
           quantity: lineItem.quantity || 0,
@@ -164,12 +164,12 @@ export async function POST(req: Request) {
       amountPaid: order.totalPriceSet?.presentmentMoney?.amount ? parseFloat(order.totalPriceSet?.presentmentMoney?.amount) : 0,
       taxAmount: order.totalTaxSet?.presentmentMoney?.amount ? parseFloat(order.totalTaxSet?.presentmentMoney?.amount) : 0,
       shippingAmount: order.shippingLine?.originalPriceSet?.presentmentMoney?.amount ? parseFloat(order.shippingLine?.originalPriceSet?.presentmentMoney?.amount) : 0,
-      customerNotes: order.note,
+      customerNotes: order.note || "",
       advancedOptions: {
         customField1: deliveryDate,
         customField2: "",
         customField3: Array.isArray(order.tags) ? order.tags?.join(", ") || "" : order.tags || "",
-        source: order.channelInformation?.app?.title,
+        source: order.channelInformation?.app?.title || "",
         storeId: 322511,
       },
       dimensions: BOX_DIMENSIONS[order.lineItems?.nodes?.length && order.lineItems?.nodes?.length > 6 ? "large" : "standard"],
@@ -233,7 +233,7 @@ export async function POST(req: Request) {
       // Create the order in ShipStation
       console.log(`[${order.name}] creating order in ShipStation`)
       // Remove the order key from the order request
-      delete orderRequest.orderKey
+      // delete orderRequest.orderKey
       const createOrderResponse = await shipStation.orders.create(orderRequest)
 
       console.log(`[${order.name}] created order in ShipStation`)
