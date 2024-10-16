@@ -85,15 +85,15 @@ export async function POST(req: Request) {
   // console.log("payload", JSON.stringify(payload))
 
   // Return if HMAC is invalid
-  // if (!result) {
-  //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
-  // }
+  if (!result) {
+    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  }
 
   // Get the order from Shopify
   let res: any[] = []
   await delay(2000) // Wait for 2 seconds to make sure the order is updated
   const order = (await shopify.orders.list(`query: "id:${payload.id}"`))?.orders?.nodes?.[0] as Order
-  console.log("[CIGO] order", JSON.stringify(order))
+  // console.log("[CIGO] order", JSON.stringify(order))
   const now = new Date()
   const orderLastUpdated = new Date(order.updatedAt || "")
   const orderCreated = new Date(order.createdAt || "")
