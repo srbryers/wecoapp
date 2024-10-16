@@ -276,8 +276,41 @@ export const shopify = {
               tags
               email
               createdAt
+              cancelledAt
               displayFinancialStatus
               displayFulfillmentStatus
+              channelInformation {
+                channelId
+                app {
+                    title
+                }
+              }
+              customer {
+                id
+              }
+              totalPriceSet {
+                presentmentMoney {
+                  amount
+                }
+              }
+              totalTaxSet {
+                presentmentMoney {
+                    amount
+                    currencyCode
+                }
+              }
+              shippingLine {
+                title
+                shippingRateHandle
+                code
+                source
+                
+                originalPriceSet {
+                    presentmentMoney {
+                        amount
+                    }
+                }
+              }
               channelInformation {
                   channelDefinition {
                       handle
@@ -300,6 +333,9 @@ export const shopify = {
                     name
                     title
                     quantity
+                    sellingPlan {
+                      sellingPlanId
+                    }
                     variant {
                         id
                         title

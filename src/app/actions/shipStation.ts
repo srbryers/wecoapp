@@ -1,4 +1,5 @@
 import { shipStationApi } from "../utils/shipStation"
+import { ShipStationOrder } from "../utils/types"
 
 export const shipStation = {
   orders: {
@@ -8,11 +9,24 @@ export const shipStation = {
         path: `orders${params || ''}`,
       })
     },
-    update: async (body: any) => {
+    create: async (body: ShipStationOrder) => {
       return await shipStationApi({
         method: 'POST',
         path: `orders/createorder`,
         body: body
+      })
+    },
+    update: async (body: ShipStationOrder) => {
+      return await shipStationApi({
+        method: 'POST',
+        path: `orders/createorder`,
+        body: body
+      })
+    },
+    delete: async (orderId: string) => {
+      return await shipStationApi({
+        method: 'DELETE',
+        path: `orders/${orderId}`,
       })
     },
     list: async (params?: string) => {

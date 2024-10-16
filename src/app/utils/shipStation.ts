@@ -28,10 +28,11 @@ export async function shipStationApi(request: ShipStationRequest) {
       if (response.status === 200) {
         return response.json()
       } else {
-        console.error(`Error fetching ShipStation data`,{ error: await response.json(), status: response.status })
+        console.error(`Error fetching ShipStation data`,{ error: response.statusText, status: response.status })
       }
     })
     .then((data) => {
+      // console.log(`ShipStation API Response`, data)
       return data
     })
     .catch((error) => console.error(error));

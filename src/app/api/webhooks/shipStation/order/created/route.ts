@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Error getting order from Shopify" }, { status: 500 })
   }
   // Filter out orders that are not subscriptions
-  if (shopifyOrder.tags?.toLowerCase().includes("subscription") === false) {
+  if (Array.isArray(shopifyOrder.tags) && shopifyOrder.tags?.some((tag) => tag.toLowerCase().includes("subscription")) === false) {
     console.log("Order is not a subscription", shopifyOrder)
     return Response.json({ message: "Order is not a subscription, no actions taken." }, { status: 200 })
   }

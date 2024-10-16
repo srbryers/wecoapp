@@ -109,6 +109,11 @@ export type LineItem = {
     id: number
     title: string
   }
+  originalUnitPriceSet?: {
+    presentmentMoney?: {
+      amount?: string
+    }
+  }
 }
 
 export type Address = {
@@ -135,12 +140,39 @@ export type Order = {
   email?: string
   phone?: string
   name?: string
+  note?: string
   created_at?: string
   cancelled_at?: string
+  createdAt?: string
+  cancelledAt?: string
+  processedAt?: string
+  channelInformation?: {
+    channelId: string
+    app?: {
+      title: string
+    }
+  }
   shipping_address?: Address
   shippingAddress?: Address
   billing_address?: Address
   billingAddress?: Address
+  totalTaxSet?: {
+    presentmentMoney?: {
+      amount?: string
+      currencyCode?: string
+    }
+  }
+  shippingLine?: {
+    title: string
+    shippingRateHandle: string
+    code: string
+    source: string
+    originalPriceSet?: {
+      presentmentMoney?: {
+        amount?: string
+      }
+    }
+  }
   city?: string
   province?: string
   country?: string
@@ -153,6 +185,13 @@ export type Order = {
   updatedAt?: string
   fulfillment_status?: string
   fulfillmentStatus?: string
+  displayFulfillmentStatus?: string
+  displayFinancialStatus?: string
+  totalPriceSet?: {
+    presentmentMoney?: {
+      amount?: string
+    }
+  }
   lineItems?: {
     nodes?: LineItem[]
   }
@@ -160,19 +199,17 @@ export type Order = {
     key: string
     value: string
   }[]
-  createdAt?: string
-  processedAt?: string
-  tags?: string
+  tags?: string[] | string
   note_attributes?: {
     name: string
     value: string
   }[]
   customer?: {
-    id: number
-    email: string
-    phone: string
-    first_name: string
-    last_name: string
+    id?: string | number
+    email?: string
+    phone?: string
+    first_name?: string
+    last_name?: string
     firstName?: string
     lastName?: string
   }
@@ -269,4 +306,120 @@ export interface ShipStationTags {
   tagId: number,
   name: string,
   color: string
+}
+
+export interface ShipStationAddress {
+  name: string
+  company?: string
+  street1: string
+  street2?: string
+  street3?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  phone: string
+  residential?: boolean
+  readonly addressVerified?: string
+}
+
+export interface ShipStationWeight {
+  value: number
+  units: "pounds" | "ounces" | "grams"
+}
+
+export interface ShipStationDimensions {
+  length: number
+  width: number
+  height: number
+  units: "inches" | "centimeters"
+}
+
+export interface ShipStationInsuranceOptions {
+  provider: "shipsurance" | "carrier" | "provider" | "xcover" | "parcelguard"
+  insureShipment: boolean
+  insuredValue: number
+}
+
+export interface ShipStationInternationalOptions {
+  contents: "merchandise" | "documents" | "gift" | "returned_goods" | "sample"
+}
+
+export interface ShipStationAdvancedOptions {
+  warehouseId?: number
+  nonMachinable?: boolean
+  saturdayDelivery?: boolean
+  containsAlcohol?: boolean
+  storeId?: number
+  customField1?: string
+  customField2?: string
+  customField3?: string
+  source?: string
+  readonly mergedOrSplit?: boolean
+  readonly mergedIds?: string[] 
+  readonly parentId?: number
+  billToParty?: "myaccount" | "my_other_account" | "recipient" | "thirdparty"
+  billToAccount?: string
+  billToPostalCode?: string
+  billToCountryCode?: string
+  billToMyOtherAccount?: string
+}
+
+export interface ShipStationOrderItem {
+  orderItemId?: number
+  lineItemKey?: string
+  sku?: string
+  name?: string
+  imageUrl?: string
+  weight?: ShipStationWeight
+  quantity: number
+  unitPrice: number
+  taxAmount?: number
+  shippingAmount?: number
+  warehouseLocation?: string
+  options?: {
+    name: string
+    value: string
+  }[]
+  productId?: number
+  fulfillmentSku?: string
+  adjustment?: boolean
+  upc?: string
+  readonly createDate?: string
+  readonly modifyDate?: string
+}
+
+export interface ShipStationOrder {
+  orderNumber: string
+  orderKey?: string
+  orderDate: string
+  paymentDate?: string
+  shipByDate?: string
+  orderStatus: "awaiting_payment" | "awaiting_shipment" | "shipped" | "on_hold" | "cancelled" | "pending_fulfillment"
+  customerUsername?: string
+  customerEmail?: string
+  billTo?: ShipStationAddress
+  shipTo?: ShipStationAddress
+  items?: ShipStationOrderItem[]
+  amountPaid?: number
+  taxAmount?: number
+  shippingAmount?: number
+  customerNotes?: string
+  internalNotes?: string
+  gift?: boolean
+  giftMessage?: string
+  paymentMethod?: string
+  requestedShippingService?: string
+  carrierCode?: string
+  serviceCode?: string
+  packageCode?: string
+  confirmation?: "none" | "signature" | "adult_signature" | "direct_signature"
+  shipDate?: string
+  weight?: ShipStationWeight
+  dimensions?: ShipStationDimensions
+  insuranceOptions?: ShipStationInsuranceOptions
+  internationalOptions?: ShipStationInternationalOptions
+  customsCountryCode?: string
+  advancedOptions?: ShipStationAdvancedOptions
+  tagIds?: number[] | null
 }
