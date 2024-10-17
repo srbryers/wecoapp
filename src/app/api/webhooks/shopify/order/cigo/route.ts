@@ -142,7 +142,6 @@ export async function POST(req: Request) {
       requestedShippingService: requestedShippingService,
       carrierCode: defaultCarrier,
       serviceCode: defaultServiceCode,
-      packageCode: "package",
       confirmation: "none",
       customerUsername: `${order?.customer?.id}`.split("/").pop(),
       customerEmail: order.email || "",
