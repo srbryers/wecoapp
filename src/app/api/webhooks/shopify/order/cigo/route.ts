@@ -86,9 +86,9 @@ export async function POST(req: Request) {
   // console.log("payload", JSON.stringify(payload))
 
   // Return if HMAC is invalid
-  // if (!result) {
-  //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
-  // }
+  if (!result) {
+    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  }
 
   // Get the order from Shopify
   let res: any[] = []
@@ -256,11 +256,11 @@ export async function POST(req: Request) {
       console.log(`[${order.name}] orderRequest`, JSON.stringify(orderRequest))
       let createOrderResponse = await shipStation.orders.create(orderRequest)
 
-      if (!createOrderResponse?.data?.success) {
-        // We need to add a `-1` to the end of the order key
-        orderRequest.orderKey = (order.id?.toString().split("/").pop() || "") + "-1"
-        createOrderResponse = await shipStation.orders.create(orderRequest)
-      }
+      // if (!createOrderResponse?.data?.success) {
+      //   // We need to add a `-1` to the end of the order key
+      //   orderRequest.orderKey = (order.id?.toString().split("/").pop() || "") + "-1"
+      //   createOrderResponse = await shipStation.orders.create(orderRequest)
+      // }
 
       console.log(`[${order.name}] created order in ShipStation`)
       return Response.json({ success: true, message: "Order created in ShipStation", data: createOrderResponse })
