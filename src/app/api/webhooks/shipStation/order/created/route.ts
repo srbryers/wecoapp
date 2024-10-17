@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   let updatedOrders: ShipStationOrder[] = []
 
   for (const shipStationOrder of shipStationOrders) {
-    console.log("[ShipStation] shipStationOrder.orderNumber", shipStationOrder.orderNumber)
+    console.log("[ShipStation] shipStationOrder orderNumber", shipStationOrder.orderNumber)
     const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
 
     if (!shopifyOrder) {
@@ -69,6 +69,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
     }
 
+    console.log(`[ShipStation][${shipStationOrder.orderNumber}] shopifyOrder zip`, shopifyOrder?.shippingAddress?.zip)
+    console.log(`[ShipStation][${shipStationOrder.orderNumber}] deliveryDateString`, deliveryDateString)
+
     // Get the ship by date
     const menuZone = (await getShipmentZone({
       destinationZip: shopifyOrder?.shippingAddress?.zip || "",
@@ -84,8 +87,6 @@ export async function POST(request: Request) {
 
     // Tagging Logic
     // 1. Get the tags list
-    const tags = await shipStation.tags.get()
-    console.log(`[ShipStation][${shipStationOrder.orderNumber}] Tags`, JSON.stringify(tags))
     const productionTags = shipStation.helpers.getProductionTag(shipByDate, menuZone) || []
 
     console.log(`[ShipStation][${shipStationOrder.orderNumber}] productionTags`, JSON.stringify(productionTags))

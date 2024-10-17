@@ -124,20 +124,22 @@ export async function POST(req: Request) {
       destinationZip: order?.shippingAddress?.zip || "",
       lineItems: order?.lineItems?.nodes || []
     }))?.menuZone 
-    console.log(`[${order.name}] menuZone`, JSON.stringify(menuZone))
-    console.log(`[${order.name}] shipByDate`, shipByDate)
+    console.log(`[${order.name}] menuZone:`, menuZone?.handle)
+    console.log(`[${order.name}] shipByDate:`, shipByDate)
 
     // Get the production tags
     const productionTags = shipByDate && menuZone ? shipStation.helpers.getProductionTag(shipByDate, menuZone) || [] : []
-    console.log(`[${order.name}] productionTags`, JSON.stringify(productionTags))
+    console.log(`[${order.name}] productionTags:`, JSON.stringify(productionTags))
+    const requestedShippingService = menuZone?.handle === "edison-nj" ? "Standard Delivery - East" : "Standard Delivery - Northeast"
+    console.log(`[${order.name}] requestedShippingService:`, requestedShippingService)
 
-    const orderRequest = {
+    let orderRequest = {
       orderDate: new Date(order.createdAt || "").toISOString().split("T")[0],
       shipByDate: shipByDate?.toISOString().split("T")[0],
       orderKey: order.id?.toString().split("/").pop() || "",
       orderNumber: order.name || "",
       orderStatus: "awaiting_shipment",
-      requestedShippingService: order.shippingLine?.title || "Standard Delivery - Northeast",
+      requestedShippingService: requestedShippingService,
       carrierCode: defaultCarrier,
       serviceCode: defaultServiceCode,
       packageCode: "package",
@@ -197,8 +199,10 @@ export async function POST(req: Request) {
     // Now, check if the order is already in ShipStation
     const shipStationOrders = (await shipStation.orders.list(`?orderNumber=${order.name}`))?.orders?.filter((shipStationOrder: ShipStationOrder) => {
       return (shipStationOrder.orderStatus === "awaiting_shipment" || shipStationOrder.orderStatus === "shipped") 
-            && shipStationOrder.orderKey === order.id?.toString().split("/").pop()
-    })
+            && shipStationOrder.orderKey?.includes(order.id?.toString().split("/").pop() || "")
+    }) || []
+
+    console.log(`[${order.name}] shipStationOrders:`, JSON.stringify(shipStationOrders))
 
     if (shipStationOrders?.length > 0) {
       // If the order is cancelled, cancel the order in ShipStation
@@ -250,7 +254,14 @@ export async function POST(req: Request) {
       console.log(`[${order.name}] creating order in ShipStation`)
       // Remove the order key from the order request
       // delete orderRequest.orderKey
-      const createOrderResponse = await shipStation.orders.create(orderRequest)
+      console.log(`[${order.name}] orderRequest`, JSON.stringify(orderRequest))
+      let createOrderResponse = await shipStation.orders.create(orderRequest)
+
+      if (!createOrderResponse?.data?.success) {
+        // We need to add a `-1` to the end of the order key
+        orderRequest.orderKey = (order.id?.toString().split("/").pop() || "") + "-1"
+        createOrderResponse = await shipStation.orders.create(orderRequest)
+      }
 
       console.log(`[${order.name}] created order in ShipStation`)
       return Response.json({ success: true, message: "Order created in ShipStation", data: createOrderResponse })

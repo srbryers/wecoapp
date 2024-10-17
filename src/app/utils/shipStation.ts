@@ -25,7 +25,10 @@ export async function shipStationApi(request: ShipStationRequest) {
 
   const result = await fetch(`${API_URL}/${request.path}`, requestOptions)
     .then(async (response) => {
-      if (response.status === 200) {
+      console.log(`[ShipStation] response.status`, response.status)
+      if (response.status === 404) {
+        return { success: false, message: "Order has previously been created" }
+      } else if (response.status === 200 || response.status === 201 || response.status === 204) {
         return response.json()
       } else {
         console.error(`Error fetching ShipStation data`,{ error: response.statusText, status: response.status })

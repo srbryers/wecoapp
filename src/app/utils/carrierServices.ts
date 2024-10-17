@@ -42,6 +42,8 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   let formattedZip = destinationZip.length < 5 ? '0' + destinationZip : destinationZip
   formattedZip = formattedZip.slice(0, 5)
 
+  console.log("[getShipmentZone] formattedZip", formattedZip)
+
   // Loop through the zones and find the matching zone
   shipmentZones.forEach((shipmentZone: any) => {
     const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
@@ -70,6 +72,8 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   // console.log("formattedZip", formattedZip)
   // console.log("menuZone", menuZone.handle)
   // console.log("isValidShipment", isValidShipment)
+
+  console.log("[getShipmentZone] menuZone", menuZone?.handle)
 
   menuZone = menuZone?.fields?.reduce((acc: any, value: { key: string, value: string }) => {
     if (value.value) {
