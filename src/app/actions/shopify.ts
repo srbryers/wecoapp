@@ -611,7 +611,7 @@ export const shopify = {
                 }))
               }
             ],
-            notifyCustomer: true,
+            notifyCustomer: false,
             trackingInfo: trackingInfo
           }
         })
@@ -650,7 +650,7 @@ export const shopify = {
           }
         `, {
           fulfillmentId: fulfillment_id,
-          notifyCustomer: true,
+          notifyCustomer: false,
           trackingInfoInput: {
             company: trackingInfo.company || "WECO",
             number: trackingInfo.number || "",
