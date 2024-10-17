@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const json = await request.json()
 
-  console.log("ShipStation Order Updated Webhook", JSON.stringify(json))
+  console.log("[ShipStation] Order Updated Webhook", JSON.stringify(json))
 
   if (!json.resource_url) {
     console.error("Missing resource_url in request", json)
@@ -95,24 +95,23 @@ export async function POST(request: Request) {
   // 1. Update the deliver by date
   // Get the order from shopify by the orderKey
   const shipStationOrder = res.orders[0]
+  console.log("[ShipStation] shipStationOrder.orderNumber", shipStationOrder.orderNumber)
   const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
 
-  console.log("shopifyOrder", shopifyOrder)
-
   if (!shopifyOrder) {
-    console.error("Error getting order from Shopify", json)
+    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting order from Shopify`, json)
     return Response.json({ error: "Error getting order from Shopify" }, { status: 500 })
   }
   // Filter out orders that are not subscriptions
   if (Array.isArray(shopifyOrder.tags) && shopifyOrder.tags?.some((tag) => tag.toLowerCase().includes("subscription")) === false) {
-    console.log("Order is not a subscription", shopifyOrder)
+    console.log(`[ShipStation][${shipStationOrder.orderNumber}] Order is not a subscription`, shopifyOrder)
     return Response.json({ message: "Order is not a subscription, no actions taken." }, { status: 200 })
   }
 
   // Get the delivery date
   const deliveryDateString = shopifyOrder.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
   if (!deliveryDateString) {
-    console.error("Error getting delivery date from Shopify order", shopifyOrder)
+    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting delivery date from Shopify order`, shopifyOrder)
     return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
   }
 
@@ -127,7 +126,7 @@ export async function POST(request: Request) {
   // console.log("menuZone", menuZone)
 
   if (!shipByDate) {
-    console.error("Error calculating ship by date", deliveryDate, shopifyOrder)
+    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`, deliveryDate, shopifyOrder)
     return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
   }
 
@@ -138,10 +137,10 @@ export async function POST(request: Request) {
   // Tagging Logic
   // 1. Get the tags list
   const tags = await shipStation.tags.get()
-  console.log("Tags", tags)
+  console.log(`[ShipStation][${shipStationOrder.orderNumber}] Tags`, JSON.stringify(tags))
   const productionTags = getProductionTag(shipByDate, menuZone) || []
 
-  console.log("productionTags", productionTags)
+  console.log(`[ShipStation][${shipStationOrder.orderNumber}] productionTags`, JSON.stringify(productionTags))
 
   // Update the ShipStation order with the dates and tags
   const updatedOrder = await shipStation.orders.update({
