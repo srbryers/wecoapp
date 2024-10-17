@@ -58,14 +58,14 @@ export async function POST(request: Request) {
     }
     // Filter out orders that are not subscriptions
     if (Array.isArray(shopifyOrder.tags) && shopifyOrder.tags?.some((tag) => tag.toLowerCase().includes("subscription")) === false) {
-      console.log(`[ShipStation][${shipStationOrder.orderNumber}] Order is not a subscription`, shopifyOrder)
+      console.log(`[ShipStation][${shipStationOrder.orderNumber}] Order is not a subscription`, JSON.stringify(shopifyOrder))
       return Response.json({ message: "Order is not a subscription, no actions taken." }, { status: 200 })
     }
 
     // Get the delivery date
     const deliveryDateString = shopifyOrder.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
     if (!deliveryDateString) {
-      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting delivery date from Shopify order`, shopifyOrder)
+      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting delivery date from Shopify order`)
       return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
     }
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
 
     if (!shipByDate) {
-      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`, deliveryDate, shopifyOrder)
+      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`)
       return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
     }
 
