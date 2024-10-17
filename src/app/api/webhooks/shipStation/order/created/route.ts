@@ -2,7 +2,7 @@ import { shipStation } from "@/app/actions/shipStation"
 import { shopify } from "@/app/actions/shopify"
 import { getShipmentZone } from "@/app/utils/carrierServices"
 import { calculateShipByDate } from "@/app/utils/helpers"
-import { MenuZone, Order, ShipStationTags } from "@/app/utils/types"
+import { MenuZone, Order, ShipStationOrder, ShipStationTags } from "@/app/utils/types"
 
 const SHIPSTATION_STORE_ID = 322511
 // const SHIPSTATION_PRODUCTION_TAGS = {
@@ -45,58 +45,64 @@ export async function POST(request: Request) {
 
   // 1. Update the deliver by date
   // Get the order from shopify by the orderKey
-  const shipStationOrder = res.orders[0]
-  console.log("[ShipStation] shipStationOrder.orderNumber", shipStationOrder.orderNumber)
-  const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
+  const shipStationOrders = res.orders
+  let updatedOrders: ShipStationOrder[] = []
 
-  if (!shopifyOrder) {
-    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting order from Shopify`, json)
-    return Response.json({ error: "Error getting order from Shopify" }, { status: 500 })
-  }
-  // Filter out orders that are not subscriptions
-  if (Array.isArray(shopifyOrder.tags) && shopifyOrder.tags?.some((tag) => tag.toLowerCase().includes("subscription")) === false) {
-    console.log(`[ShipStation][${shipStationOrder.orderNumber}] Order is not a subscription`, shopifyOrder)
-    return Response.json({ message: "Order is not a subscription, no actions taken." }, { status: 200 })
-  }
+  for (const shipStationOrder of shipStationOrders) {
+    console.log("[ShipStation] shipStationOrder.orderNumber", shipStationOrder.orderNumber)
+    const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
 
-  // Get the delivery date
-  const deliveryDateString = shopifyOrder.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
-  if (!deliveryDateString) {
-    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting delivery date from Shopify order`, shopifyOrder)
-    return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
-  }
-
-  // Get the ship by date
-  const menuZone = (await getShipmentZone({
-    destinationZip: shopifyOrder?.shippingAddress?.zip || "",
-    lineItems: shopifyOrder?.lineItems?.nodes || []
-  }))?.menuZone
-  const deliveryDate = new Date(deliveryDateString)
-  const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
-
-  if (!shipByDate) {
-    console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`, deliveryDate, shopifyOrder)
-    return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
-  }
-
-  // Tagging Logic
-  // 1. Get the tags list
-  const tags = await shipStation.tags.get()
-  console.log(`[ShipStation][${shipStationOrder.orderNumber}] Tags`, JSON.stringify(tags))
-  const productionTags = shipStation.helpers.getProductionTag(shipByDate, menuZone) || []
-
-  console.log(`[ShipStation][${shipStationOrder.orderNumber}] productionTags`, JSON.stringify(productionTags))
-
-  // Update the ShipStation order with the dates and tags
-  const updatedOrder = await shipStation.orders.update({
-    ...shipStationOrder,
-    shipByDate: shipByDate.toISOString(),
-    tagIds: productionTags?.length > 0 ? productionTags : shipStationOrder.tagIds || null,
-    advancedOptions: {
-      customField1: deliveryDateString,
-      storeId: SHIPSTATION_STORE_ID
+    if (!shopifyOrder) {
+      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting order from Shopify`, json)
+      return Response.json({ error: "Error getting order from Shopify" }, { status: 500 })
     }
-  })
+    // Filter out orders that are not subscriptions
+    if (Array.isArray(shopifyOrder.tags) && shopifyOrder.tags?.some((tag) => tag.toLowerCase().includes("subscription")) === false) {
+      console.log(`[ShipStation][${shipStationOrder.orderNumber}] Order is not a subscription`, shopifyOrder)
+      return Response.json({ message: "Order is not a subscription, no actions taken." }, { status: 200 })
+    }
 
-  return Response.json({ message: updatedOrder }, { status: 200 })
+    // Get the delivery date
+    const deliveryDateString = shopifyOrder.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
+    if (!deliveryDateString) {
+      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting delivery date from Shopify order`, shopifyOrder)
+      return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
+    }
+
+    // Get the ship by date
+    const menuZone = (await getShipmentZone({
+      destinationZip: shopifyOrder?.shippingAddress?.zip || "",
+      lineItems: shopifyOrder?.lineItems?.nodes || []
+    }))?.menuZone
+    const deliveryDate = new Date(deliveryDateString)
+    const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
+
+    if (!shipByDate) {
+      console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`, deliveryDate, shopifyOrder)
+      return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
+    }
+
+    // Tagging Logic
+    // 1. Get the tags list
+    const tags = await shipStation.tags.get()
+    console.log(`[ShipStation][${shipStationOrder.orderNumber}] Tags`, JSON.stringify(tags))
+    const productionTags = shipStation.helpers.getProductionTag(shipByDate, menuZone) || []
+
+    console.log(`[ShipStation][${shipStationOrder.orderNumber}] productionTags`, JSON.stringify(productionTags))
+
+    // Update the ShipStation order with the dates and tags
+    const updatedOrder = await shipStation.orders.update({
+      ...shipStationOrder,
+      shipByDate: shipByDate.toISOString(),
+      tagIds: productionTags?.length > 0 ? productionTags : shipStationOrder.tagIds || null,
+      advancedOptions: {
+        customField1: deliveryDateString,
+        storeId: SHIPSTATION_STORE_ID
+      }
+    })
+
+    updatedOrders.push(updatedOrder)
+  }
+
+  return Response.json({ message: "Orders updated", updatedOrders }, { status: 200 })
 }
