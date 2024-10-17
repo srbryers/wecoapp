@@ -12,55 +12,6 @@ const SHIPSTATION_STORE_ID = 322511
 //   2905: 2, // Tuesday Production
 // }
 
-const getProductionTag = (shipByDate: Date, menuZone: MenuZone) => {
-  const productionDate = new Date(shipByDate)
-  const productionLeadHours = menuZone.production_lead_time || 0
-  const timeZoneOffsetHours = 0
-
-  if (productionLeadHours === 0) {
-    console.error("Could not find production lead time for menu zone", menuZone)
-    return
-  }
-
-  // Subtract the production lead time from the ship by date
-  productionDate.setDate(productionDate.getDate() - ((Number(productionLeadHours) + timeZoneOffsetHours) / 24))
-  const productionDay = productionDate.getDay()
-  let tags: Number[] = []
-
-  // console.log("Production Date", productionDate.toLocaleString())
-  // console.log("shipByDate", shipByDate.toLocaleString())
-
-  // Ship By Tags
-  if (shipByDate.getDay() === 3) {
-    tags.push(3371) // Wednesday
-  }
-
-  // Return the tag based on the menu zone and production date
-  if (productionDay === 0) { // Sunday
-    if (menuZone.handle === "edison-nj") {
-      tags.push(2685, 3365) // Sunday Production (Edison, NJ)
-    } else {
-      tags.push(3226, 3369) // Sunday Production (Salem, NH)
-    }
-  } else if (productionDay === 1) { // Monday
-    if (menuZone.handle === "edison-nj") {
-      tags.push(2686, 3366) // Monday Production (Edison, NJ)
-    } else {
-      tags.push(2686, 3370) // Monday Production (Salem, NH)
-    }
-  } else if (productionDay === 2) { // Tuesday
-    if (menuZone.handle === "edison-nj") {
-      tags.push(2905, 3367) // Tuesday Production
-    } else {
-      tags.push(2905, 3371) // Tuesday Production
-    }
-  } else {
-    console.log("Production Day not found", productionDay)
-  }
-
-  return tags
-}
-
 export async function POST(request: Request) {
 
   /**
@@ -123,22 +74,16 @@ export async function POST(request: Request) {
   const deliveryDate = new Date(deliveryDateString)
   const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
 
-  // console.log("menuZone", menuZone)
-
   if (!shipByDate) {
     console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error calculating ship by date`, deliveryDate, shopifyOrder)
     return Response.json({ error: "Error calculating ship by date" }, { status: 500 })
   }
 
-  // console.log("Delivery Date", deliveryDate)
-  // console.log("Ship By Date", shipByDate)
-
-  // @TODO: Add tagging logic here
   // Tagging Logic
   // 1. Get the tags list
   const tags = await shipStation.tags.get()
   console.log(`[ShipStation][${shipStationOrder.orderNumber}] Tags`, JSON.stringify(tags))
-  const productionTags = getProductionTag(shipByDate, menuZone) || []
+  const productionTags = shipStation.helpers.getProductionTag(shipByDate, menuZone) || []
 
   console.log(`[ShipStation][${shipStationOrder.orderNumber}] productionTags`, JSON.stringify(productionTags))
 

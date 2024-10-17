@@ -1,6 +1,7 @@
 import { cigo } from "@/app/actions/cigo"
 import { shipStation } from "@/app/actions/shipStation"
 import { shopify } from "@/app/actions/shopify"
+import { getShipmentZone } from "@/app/utils/carrierServices"
 import { delay } from "@/app/utils/helpers"
 import { LineItem, Order, ShipStationDimensions, ShipStationOrder, ShipStationOrderItem } from "@/app/utils/types"
 import crypto from "node:crypto"
@@ -116,11 +117,24 @@ export async function POST(req: Request) {
     const deliveryDate = payload.deliveryDate || order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
     const defaultCarrier = DEFAULT_CARRIER_MAP[order.shippingLine?.title ?? ""] || "ups"
     const defaultServiceCode = DEFAULT_SERVICE_CODE_MAP[order.shippingLine?.title ?? ""] || "ups_ground"
-    const shipByDate = getShipByDate(order, deliveryDate)
+
+    // Get the menu zone and ship by date
+    const shipByDate = getShipByDate(order, deliveryDate) 
+    const menuZone = (await getShipmentZone({
+      destinationZip: order?.shippingAddress?.zip || "",
+      lineItems: order?.lineItems?.nodes || []
+    }))?.menuZone 
+    console.log(`[${order.name}] menuZone`, JSON.stringify(menuZone))
+    console.log(`[${order.name}] shipByDate`, shipByDate)
+
+    // Get the production tags
+    const productionTags = shipByDate && menuZone ? shipStation.helpers.getProductionTag(shipByDate, menuZone) || [] : []
+    console.log(`[${order.name}] productionTags`, JSON.stringify(productionTags))
+
     const orderRequest = {
       orderDate: new Date(order.createdAt || "").toISOString().split("T")[0],
       shipByDate: shipByDate?.toISOString().split("T")[0],
-      orderKey: order.name || "",
+      orderKey: order.id?.toString().split("/").pop() || "",
       orderNumber: order.name || "",
       orderStatus: "awaiting_shipment",
       requestedShippingService: order.shippingLine?.title || "Standard Delivery - Northeast",
@@ -177,6 +191,7 @@ export async function POST(req: Request) {
         value: order.lineItems?.nodes?.length && order.lineItems?.nodes?.length > 6 ? BOX_WEIGHTS["large"] : BOX_WEIGHTS["standard"],
         units: "pounds",
       },
+      tagIds: productionTags?.length > 0 ? productionTags : [],
     } as ShipStationOrder
 
     // Now, check if the order is already in ShipStation
