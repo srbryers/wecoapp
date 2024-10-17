@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const json = await request.json()
 
-  // console.log("ShipStation Order Updated Webhook", JSON.stringify(json))
+  console.log("ShipStation Order Updated Webhook", JSON.stringify(json))
 
   if (!json.resource_url) {
     console.error("Missing resource_url in request", json)
@@ -95,7 +95,9 @@ export async function POST(request: Request) {
   // 1. Update the deliver by date
   // Get the order from shopify by the orderKey
   const shipStationOrder = res.orders[0]
-  const shopifyOrder = await shopify.orders.get(shipStationOrder.orderKey) as Order
+  const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
+
+  console.log("shopifyOrder", shopifyOrder)
 
   if (!shopifyOrder) {
     console.error("Error getting order from Shopify", json)
@@ -108,7 +110,7 @@ export async function POST(request: Request) {
   }
 
   // Get the delivery date
-  const deliveryDateString = shopifyOrder.note_attributes?.find((attr) => attr.name === "Delivery Date")?.value
+  const deliveryDateString = shopifyOrder.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
   if (!deliveryDateString) {
     console.error("Error getting delivery date from Shopify order", shopifyOrder)
     return Response.json({ error: "Error getting delivery date from Shopify order" }, { status: 500 })
@@ -116,8 +118,8 @@ export async function POST(request: Request) {
 
   // Get the ship by date
   const menuZone = (await getShipmentZone({
-    destinationZip: shopifyOrder?.shipping_address?.zip || "",
-    lineItems: shopifyOrder?.line_items || []
+    destinationZip: shopifyOrder?.shippingAddress?.zip || "",
+    lineItems: shopifyOrder?.lineItems?.nodes || []
   }))?.menuZone
   const deliveryDate = new Date(deliveryDateString)
   const shipByDate = await calculateShipByDate(deliveryDate, shopifyOrder, menuZone)
