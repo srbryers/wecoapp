@@ -195,8 +195,9 @@ export async function POST(req: Request) {
     } as ShipStationOrder
 
     // Now, check if the order is already in ShipStation
-    const shipStationOrders = (await shipStation.orders.list(`?orderNumber=${order.name}`))?.orders?.filter((order: ShipStationOrder) => {
-      return order.orderStatus === "awaiting_shipment" || order.orderStatus === "shipped"
+    const shipStationOrders = (await shipStation.orders.list(`?orderNumber=${order.name}`))?.orders?.filter((shipStationOrder: ShipStationOrder) => {
+      return (shipStationOrder.orderStatus === "awaiting_shipment" || shipStationOrder.orderStatus === "shipped") 
+            && shipStationOrder.orderKey === order.id?.toString().split("/").pop()
     })
 
     if (shipStationOrders?.length > 0) {
