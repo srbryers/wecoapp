@@ -28,20 +28,26 @@ export async function POST(req: Request) {
   // Get the job
   const job = (await cigo.jobs.get(body.job_id))?.job
   result.job = job
+  const jobStatus = job.status
+  const jobOperator = job.post_staging?.scheduling?.operators?.[0]
   // console.log("CIGO job", job)
 
-  console.log("[CIGO] jobStatus", job.status)
+  console.log("[CIGO] job status:", jobStatus)
 
-  // Check the status
-  if (job.status === "completed" || job.status === "in progress") {
+  // If the job is completed or in progress, or if the job has an operator assigned, create a fulfillment
+  if (jobStatus === "completed" || jobStatus === "in progress" || jobOperator) {
     const res = await shopify.helpers.createFulfillmentsFromJob(job)
     if (!res?.success) {
       result.errors.push(...(res?.errors || []))
     }
     result.fulfillment = res?.fulfillment
     result.order = res?.order
+  } else {
+    console.log("[CIGO] job status is not completed or in progress")
+    return Response.json({ success: false, error: "Job status is not completed or in progress" }, { status: 400 })
   }
 
+  console.log("[CIGO] result", JSON.stringify(result))
 
   return Response.json(result)
 }

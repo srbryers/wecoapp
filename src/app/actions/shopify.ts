@@ -585,7 +585,7 @@ export const shopify = {
         url: string
       }
     }) => {
-      console.log("createFulfillment", lineItems)
+      console.log("[shopify.fulfillments.create] lineItems", JSON.stringify(lineItems))
       try {
         const res = await shopifyAdminApiGql(`
           mutation fulfillmentCreate($fulfillment: FulfillmentInput!) {
@@ -632,8 +632,8 @@ export const shopify = {
         url: string
       }
     }) => {
-      console.log("fulfillment_id", fulfillment_id)
-      console.log("Tracking Info", trackingInfo)
+      console.log("[shopify.fulfillments.updateTrackingInfo] fulfillment_id", fulfillment_id)
+      console.log("[shopify.fulfillments.updateTrackingInfo] Tracking Info", JSON.stringify(trackingInfo))
       try {
         const res = await shopifyAdminApiGql(`
           mutation fulfillmentTrackingInfoUpdate($fulfillmentId: ID!, $trackingInfoInput: FulfillmentTrackingInput!, $notifyCustomer: Boolean!) {
@@ -657,10 +657,10 @@ export const shopify = {
             url: trackingInfo.url || "",
           }
         })
-        console.log("[shopify.fulfillments.updateTrackingInfo] res", res)
+        console.log("[shopify.fulfillments.updateTrackingInfo] res", JSON.stringify(res))
         return res
       } catch (error) {
-        console.error('Error updating fulfillment:', error)
+        console.error('[shopify.fulfillments.updateTrackingInfo] Error updating fulfillment:', error)
         throw error
       }
     }
