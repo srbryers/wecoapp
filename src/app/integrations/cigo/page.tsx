@@ -48,8 +48,8 @@ export default function CigoPage() {
       const orderNames = request.orderNames?.includes(',') ? request.orderNames?.split(',') : request.orderNames?.split('\n')
       const orderNamesQuery = orderNames?.map((name) => `name:'${name}'`).join(' OR ')
 
-      if (!request.orderId && request.orderNames) {
-        orders = (await shopify.orders.list(`query: "${orderNamesQuery}"`))?.orders?.nodes
+      if (!request.orderId && request.orderNames) { 
+        orders = (await shopify.orders.list(`query: "${orderNamesQuery}"`))
       }
 
       console.log("[Create Job] orders", orders)

@@ -13,7 +13,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const fetchData = async () => {
       const orderData = await shopify.orders.list(`query: "id:${params.id}"`)
       console.log("[BagTags] orderData", orderData)
-      const order = orderData?.orders?.nodes?.[0]
+      const order = orderData?.[0]
       const deliveryDates = await cigo.helpers.getDeliveryDates(order)
       setOrder(order)
       setDeliveryDates(deliveryDates)

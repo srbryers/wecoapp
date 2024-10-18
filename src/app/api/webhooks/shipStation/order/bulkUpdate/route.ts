@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const createdAtMax = endDate ? endDate : new Date().toISOString().split('T')[0]
   console.log("Created At Min:", createdAtMin)
   console.log("Created At Max:", createdAtMax)
-  const orders = (await shopify.orders.list('query: "created_at:>=' + createdAtMin + ' AND created_at:<=' + createdAtMax + ' AND tag:Subscription AND status:open"'))?.orders?.nodes
+  const orders = (await shopify.orders.list('query: "created_at:>=' + createdAtMin + ' AND created_at:<=' + createdAtMax + ' AND tag:Subscription AND status:open"'))
 
   console.log("Order Count:", orders.length)
 
@@ -41,9 +41,9 @@ export async function POST(request: Request) {
       })
     })
     if (response.status === 200) {
-      result.updated.push(order.name)
+      result.updated.push(order.name || "")
     } else {
-      result.errors.push(order.name)
+      result.errors.push(order.name || "")
       result.success = false
     }
   }

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
   for (const shipStationOrder of shipStationOrders) {
     console.log("[ShipStation] shipStationOrder orderNumber", shipStationOrder.orderNumber)
-    const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.orders?.nodes?.[0] as Order
+    const shopifyOrder = (await shopify.orders.list(`query:"name:${shipStationOrder.orderNumber}"`))?.[0] as Order
 
     if (!shopifyOrder) {
       console.error(`[ShipStation][${shipStationOrder.orderNumber}] Error getting order from Shopify`, json)

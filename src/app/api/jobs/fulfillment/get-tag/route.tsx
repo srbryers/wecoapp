@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 
   // Get the order from Shopify
   const ordersList = await shopify.orders.list(`query: "name:${orderName}"`);
-  const order = ordersList?.orders?.nodes?.[0] as Order;
+  const order = ordersList?.[0] as Order;
   if (!order) {
     return NextResponse.json({ success: false, error: "Order not found" }, { status: 404 });
   }
