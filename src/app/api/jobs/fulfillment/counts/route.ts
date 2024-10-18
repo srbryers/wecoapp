@@ -16,18 +16,20 @@ export async function GET(request: Request) {
     updated: []
   } as Result
 
-  const deliveryDate = searchParams.get('deliveryDate')
+  const daysAgo = searchParams.get('daysAgo')
   const orderType = searchParams.get('orderType')
   const sheetId = searchParams.get('sheetId')
   const sheetTabName = searchParams.get('sheetTabName')
   const store = searchParams.get('store') || "e97e57-2"
 
-  if (!deliveryDate || !orderType || !sheetId || !sheetTabName) {
+  if (!daysAgo || !orderType || !sheetId || !sheetTabName) {
     return Response.json({ error: 'Date, order type, sheet ID, and sheet tab name are required' }, { status: 400 })
   }
 
   // Get the fulfillment counts for the given date and order type
-  const fulfillmentCounts = await shopify.helpers.getFulfillmentCounts(deliveryDate, orderType, store)
+  const fulfillmentCounts = await shopify.helpers.getFulfillmentCounts(Number(daysAgo || "14"), orderType, store)
+
+  // return Response.json(fulfillmentCounts)
 
   // Add errors to the result
   result.errors = fulfillmentCounts?.errors as { order_number: string; error: string }[] || []

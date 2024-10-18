@@ -265,11 +265,20 @@ export const shopify = {
         throw error
       }
     },
-    list: async (params?: string) => {
-      return await shopifyAdminApiGql(
-        `
+    list: async (params?: string): Promise<Order[]> => {
+      let allOrders: Order[] = []
+      console.log("[shopify.orders.list] starting")
+      async function fetchOrders(params?: string, pageInfo?: any) {
+        const orders = (await shopifyAdminApiGql(
+          `
         query {
-          orders(first: 200 ${params ? `, ${params}` : ''}) {
+          orders(first: 100 ${params ? `, ${params}` : ''} ${pageInfo ? `, after: "${pageInfo.endCursor}"` : ''}) {
+            pageInfo {
+              hasNextPage
+              hasPreviousPage
+              startCursor
+              endCursor
+            }
             nodes {
               id
               name
@@ -388,7 +397,20 @@ export const shopify = {
           }
         }
         `
-      )
+        ))?.orders
+        if (orders.pageInfo?.hasNextPage) {
+          allOrders.push(...orders.nodes)
+          console.log("[shopify.orders.list] get next page after", orders.pageInfo.endCursor)
+          return fetchOrders(params, orders.pageInfo)
+        } else {
+          allOrders.push(...orders.nodes)
+          return allOrders
+        }
+      }
+      
+      await fetchOrders(params)
+      console.log("[shopify.orders.list] allOrders", allOrders.length)
+      return allOrders
     },
     editAddVariants: async ({
       order_id,
@@ -1244,99 +1266,99 @@ export const shopify = {
       // If the order is not already fulfilled, then create a fulfillment
       // if (order?.displayFulfillmentStatus !== "FULFILLED") {
 
-        // If we don't have tracking info and a tracking number, then we can't create a fulfillment
-        if (!trackingNumber || !trackingUrl) {
-          console.error("No tracking info found for order", order?.name)
-          return {
-            success: false,
-            order: order,
-            errors: ["No tracking info found"]
-          }
+      // If we don't have tracking info and a tracking number, then we can't create a fulfillment
+      if (!trackingNumber || !trackingUrl) {
+        console.error("No tracking info found for order", order?.name)
+        return {
+          success: false,
+          order: order,
+          errors: ["No tracking info found"]
         }
+      }
 
-        // Find the first open or in progress fulfillment order
-        const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN" || fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED")
-        // if (!fulfillmentOrder) {
-        //   console.error("No open fulfillment order found for order", order?.name)
-        //   return {
-        //     success: false,
-        //     order: order,
-        //     errors: ["No open fulfillment order found"]
-        //   }
-        // }
+      // Find the first open or in progress fulfillment order
+      const fulfillmentOrder = order?.fulfillmentOrders?.nodes?.find((fulfillmentOrder: any) => fulfillmentOrder.status === "OPEN" || fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED")
+      // if (!fulfillmentOrder) {
+      //   console.error("No open fulfillment order found for order", order?.name)
+      //   return {
+      //     success: false,
+      //     order: order,
+      //     errors: ["No open fulfillment order found"]
+      //   }
+      // }
 
-        // If the fulfillment order is in progress or closed, then update the tracking info
-        if (fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED") {
-          console.info("[createFulfillmentsFromJob] Fulfillment order is in progress or is CLOSED - attempting to update tracking info")
-          // Fin the fulfillments that have a fulfillmentOrderId matching the one we're looking at
-          const fulfillment = order?.fulfillments?.find((fulfillment: any) => fulfillment.fulfillmentOrders?.nodes?.find((node: any) => node.id === fulfillmentOrder.id))
+      // If the fulfillment order is in progress or closed, then update the tracking info
+      if (fulfillmentOrder.status === "IN_PROGRESS" || fulfillmentOrder.status === "CLOSED") {
+        console.info("[createFulfillmentsFromJob] Fulfillment order is in progress or is CLOSED - attempting to update tracking info")
+        // Fin the fulfillments that have a fulfillmentOrderId matching the one we're looking at
+        const fulfillment = order?.fulfillments?.find((fulfillment: any) => fulfillment.fulfillmentOrders?.nodes?.find((node: any) => node.id === fulfillmentOrder.id))
 
-          if (fulfillment?.id) {
-            // If we already have tracking info, return
-            if (fulfillment?.trackingInfo?.length > 0) {
-              console.log("[createFulfillmentsFromJob] Order already has tracking info: ", order?.name)
-              return {
-                success: false,
-                errors: ["Order already has tracking info"],
-                order: order,
-                fulfillment: fulfillment,
-              }
-            }
-            // If fulfillment order is in progress and we don't have tracking info, then update the tracking info 
-            try {
-              console.log("[createFulfillmentsFromJob] Updating tracking info for order:", order?.name)
-              const updateFulfillment = await shopify.fulfillments.updateTrackingInfo({
-                fulfillment_id: fulfillment.id,
-                trackingInfo: {
-                  company: "WECO",
-                  number: trackingNumber,
-                  url: trackingUrl
-                },
-              })
-              result.fulfillment = updateFulfillment
-              result.order = order
-            } catch (error) {
-              console.error("[createFulfillmentsFromJob] Failed to update tracking info", error)
-              return {
-                success: false,
-                errors: [error],
-                order: order,
-                fulfillment: fulfillment
-              }
-            }
-          } else {
-            console.log("[createFulfillmentsFromJob] Could not find existing fulfillment to update, or tracking info has already been added.")
+        if (fulfillment?.id) {
+          // If we already have tracking info, return
+          if (fulfillment?.trackingInfo?.length > 0) {
+            console.log("[createFulfillmentsFromJob] Order already has tracking info: ", order?.name)
             return {
               success: false,
-              errors: ["Could not find existing fulfillment to update, or tracking info has already been added."],
-              order: order
+              errors: ["Order already has tracking info"],
+              order: order,
+              fulfillment: fulfillment,
             }
           }
-        } else {
-          // If the fulfillment order is open, then create a fulfillment
+          // If fulfillment order is in progress and we don't have tracking info, then update the tracking info 
           try {
-            const fulfillment = await shopify.fulfillments.create({
-              fulfillmentOrderId: fulfillmentOrder.id,
-              lineItems: fulfillmentOrder.lineItems.nodes.filter((lineItem: any) => {
-                return lineItem.variantTitle.includes(jobDate)
-              }),
+            console.log("[createFulfillmentsFromJob] Updating tracking info for order:", order?.name)
+            const updateFulfillment = await shopify.fulfillments.updateTrackingInfo({
+              fulfillment_id: fulfillment.id,
               trackingInfo: {
                 company: "WECO",
                 number: trackingNumber,
                 url: trackingUrl
-              }
+              },
             })
-            result.fulfillment = fulfillment
+            result.fulfillment = updateFulfillment
             result.order = order
           } catch (error) {
-            console.error("Error creating fulfillment", error)
+            console.error("[createFulfillmentsFromJob] Failed to update tracking info", error)
             return {
               success: false,
+              errors: [error],
               order: order,
-              errors: [error]
+              fulfillment: fulfillment
             }
           }
+        } else {
+          console.log("[createFulfillmentsFromJob] Could not find existing fulfillment to update, or tracking info has already been added.")
+          return {
+            success: false,
+            errors: ["Could not find existing fulfillment to update, or tracking info has already been added."],
+            order: order
+          }
         }
+      } else {
+        // If the fulfillment order is open, then create a fulfillment
+        try {
+          const fulfillment = await shopify.fulfillments.create({
+            fulfillmentOrderId: fulfillmentOrder.id,
+            lineItems: fulfillmentOrder.lineItems.nodes.filter((lineItem: any) => {
+              return lineItem.variantTitle.includes(jobDate)
+            }),
+            trackingInfo: {
+              company: "WECO",
+              number: trackingNumber,
+              url: trackingUrl
+            }
+          })
+          result.fulfillment = fulfillment
+          result.order = order
+        } catch (error) {
+          console.error("Error creating fulfillment", error)
+          return {
+            success: false,
+            order: order,
+            errors: [error]
+          }
+        }
+      }
 
       // } else {
       //   console.log("[createFulfillmentsFromJob] Order is already fulfilled")
@@ -1359,16 +1381,17 @@ export const shopify = {
       const order = (await shopify.orders.getWithFulfillments(jobReferenceId))?.order
 
     },
-    getFulfillmentCounts: async (deliveryDate: string, orderType: string, store: string) => {
+    getFulfillmentCounts: async (daysAgo: number, orderType: string, store: string) => {
 
-      console.log("[getFulfillmentCounts] orderType", orderType, "deliveryDate", deliveryDate)
+      console.log("[getFulfillmentCounts] orderType", orderType, "daysAgo", daysAgo)
       if (orderType === "Subscription") {
         // Get the subscription orders for the given delivery date
-        const ordersList = await shopify.orders.list(`query: "tag:Subscription AND tag:${deliveryDate}"`)
-        console.log("[getFulfillmentCounts] ordersList", ordersList?.orders?.nodes?.map((order: any) => order.name))
-        if (!ordersList?.orders?.nodes || ordersList?.orders?.nodes?.length === 0) {
+        const startDate = new Date(new Date().getTime() - Number(daysAgo) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        const ordersList = await shopify.orders.list(`query: "tag:Subscription AND created_at:>=${startDate}"`)
+        console.log("[getFulfillmentCounts] ordersList", ordersList?.map((order: any) => order.name))
+        if (!ordersList || ordersList?.length === 0) {
           return {
-            errors: [`No orders found for delivery date ${deliveryDate}`],
+            errors: [`No orders found in the last ${daysAgo} days`],
             countsData: [],
           }
         }
@@ -1378,14 +1401,16 @@ export const shopify = {
         let errors: { order_number: string, error: string }[] = []
         const countsData: any[] = []
 
-        // Get orders for the delivery date from ShipStation from delivery date back to 14 days before today
+        // Get orders for the delivery date from ShipStation from delivery date back to days ago before today
         const now = new Date()
-        const startDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        const endDate = new Date(deliveryDate).toISOString().split('T')[0]
+        // Add one day to the end date to include orders created on the next day
+        const endDate = (new Date(new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])).toISOString().split('T')[0]
+        console.log("[getFulfillmentCounts] startDate", startDate)
+        console.log("[getFulfillmentCounts] endDate", endDate)
         const shipStationOrders = await shipStation.orders.listAll(`?createDateStart=${startDate}&createDateEnd=${endDate}`)
         console.log("[getFulfillmentCounts] shipStationOrders length", shipStationOrders?.length)
 
-        for (let order of ordersList?.orders?.nodes || []) {
+        for (let order of ordersList || []) {
 
           let errorsForOrder: { order_number: string, error: string }[] = []
 
@@ -1393,8 +1418,8 @@ export const shopify = {
           if (!order.shippingAddress?.zip) {
             if (order.displayFinancialStatus !== "REFUNDED") {
               errorsForOrder.push({
-                order_number: order.name,
-                error: `No zip code found for order ${order.name}`
+                order_number: order.name || "",
+                error: `No zip code found for order ${order.name || ""}`
               })
             }
           }
@@ -1410,24 +1435,33 @@ export const shopify = {
           if (!shipmentZones) {
             if (order.displayFinancialStatus !== "REFUNDED") {
               errorsForOrder.push({
-                order_number: order.name,
-                error: `No menu zone found for order ${order.name}`
+                order_number: order.name || "",
+                error: `No menu zone found for order ${order.name || ""}`
               })
             }
           }
 
 
           // Get the menu zone and calculate the ship by date
+          const deliveryDate = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
+
+          if (!deliveryDate) {
+            console.log(`[getFulfillmentCounts] No delivery date found for order ${order.name}`)
+            continue
+          } else {
+            console.log(`[getFulfillmentCounts][${order.name}] Delivery date found:`, deliveryDate)
+          }
+
           const menuZone: MenuZone = shipmentZones.menuZone
           const leadTime = menuZone?.shipping_lead_time ? Number(menuZone.shipping_lead_time) : 24
-          const shipByDate = new Date(new Date(deliveryDate).getTime() - leadTime * 60 * 60 * 1000)
-          const createdAt = new Date(order.createdAt)
+          const shipByDate = new Date(new Date(deliveryDate || "").getTime() - leadTime * 60 * 60 * 1000)
+          const createdAt = new Date(order.createdAt || "")
           const shipStationOrder = shipStationOrders?.find((shipStationOrder: any) => shipStationOrder.orderNumber === order.name)
           const shipStationOrderId = shipStationOrder?.orderId
 
           if (!shipStationOrderId) {
             errorsForOrder.push({
-              order_number: order.name,
+              order_number: order.name || "",
               error: `No ShipStation order found for order ${order.name}`
             })
           }
@@ -1436,7 +1470,7 @@ export const shopify = {
           const deliveryDateNote = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")
           if (!deliveryDateNote) {
             errorsForOrder.push({
-              order_number: order.name,
+              order_number: order.name || "",
               error: `No delivery date note found for order ${order.name}`
             })
           }
@@ -1444,7 +1478,7 @@ export const shopify = {
           // Check if the line item sku is ending with a YYYY-MM-DD date pattern, if it does, return an error
           if (order.lineItems?.nodes?.some((lineItem: any) => lineItem?.sku?.match(/\d{4}-\d{2}-\d{2}$/))) {
             errorsForOrder.push({
-              order_number: order.name,
+              order_number: order.name || "",
               error: `Order has local delivery skus`
             })
           }
@@ -1460,15 +1494,15 @@ export const shopify = {
           // For each line item, return a line
           for (let lineItem of order.lineItems?.nodes || []) {
             countsData.push({
-              order_number: order.name,
-              shopify_id: `=HYPERLINK("https://admin.shopify.com/store/${store}/orders/${order.id.split("/").pop()}", "${order.id.split("/").pop()}")`,
+              order_number: order.name || "",
+              shopify_id: `=HYPERLINK("https://admin.shopify.com/store/${store}/orders/${order.id?.toString().split("/").pop()}", "${order.id?.toString().split("/").pop()}")`,
               shipstation_id: shipStationOrderId ? `=HYPERLINK("https://ship14.shipstation.com/orders/all-orders-search-result?quickSearch=${order.name}", ${shipStationOrderId || "MISSING"})` : "MISSING",
               financial_status: order.displayFinancialStatus,
               fulfillment_status: order.displayFulfillmentStatus,
               menu_zone: menuZone?.title || "MISSING",
               zip: `'${order.shippingAddress?.zip}` || "MISSING",
               order_date: createdAt.toISOString().split('T')[0],
-              delivery_date: deliveryDate,
+              delivery_date: deliveryDate || "MISSING",
               ship_by_date: shipByDate.toISOString().split('T')[0],
               line_item_title: lineItem.title,
               line_item_sku: lineItem.sku,
