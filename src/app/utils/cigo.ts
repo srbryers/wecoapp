@@ -37,8 +37,8 @@ export async function cigoApi(request: KlaviyoRequest) {
         return { status: response.status, message: response.statusText }
       } else {
         const json = await response.json()
-        console.error(`Error fetching CIGO data`,{ error: response.statusText, status: response.status, body: json })
-        return { status: response.status, errors: json }
+        console.error(`[cigoApi] Error fetching CIGO data`,{ error: json.error })
+        return { status: response.status, error: json.error }
       }
     })
     .then((data) => {

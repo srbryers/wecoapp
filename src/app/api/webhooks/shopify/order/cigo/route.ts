@@ -62,50 +62,33 @@ const getShipByDate = (order: Order, storedDeliveryDate: string) => {
   }
 }
 
-export async function POST(req: Request) {
-  const body = await req.text()
+const handleOrder = async (order: Order, payload: any) => {
 
-
-  // Validate shopify hmac
-  const hmac = req.headers.get("X-Shopify-Hmac-Sha256")
-  if (!hmac) {
-    return Response.json({ success: false, error: "Shopify HMAC not set" }, { status: 401 })
-  }
-  const shopifyWebhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET_ORDERS_UPDATED
-  if (!shopifyWebhookSecret) {
-    return Response.json({ success: false, error: "Shopify webhook secret not set" }, { status: 500 })
-  }
-  // Generate HMAC from secret and request body
-  const generatedHmac = crypto.createHmac('sha256', shopifyWebhookSecret).update(body).digest('base64')
-
-  // Compare hmacs
-  const result = crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(generatedHmac))
-  const payload = JSON.parse(body)
-  console.log(`[${payload.name}] HMAC comparison result:`, result)
-
-  // console.log("payload", JSON.stringify(payload))
-
-  // Return if HMAC is invalid
-  if (!result) {
-    return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+  let res: {
+    success: boolean,
+    message: string,
+    data: any
+  } = {
+    success: true,
+    message: "",
+    data: null
   }
 
-  // Get the order from Shopify
-  let res: any[] = []
-  await delay(2000) // Wait for 2 seconds to make sure the order is updated
-  const order = (await shopify.orders.list(`query: "id:${payload.id}"`))?.[0] as Order
-  // console.log("[CIGO] order", JSON.stringify(order))
   const now = new Date()
   const orderLastUpdated = new Date(order.updatedAt || "")
   const orderCreated = new Date(order.createdAt || "")
   const orderFulfillmentStatus = order.displayFulfillmentStatus
-  const orderStatus = order.status
+  const orderStatus = order.displayFinancialStatus
   const isPickup = (order.tags?.includes("pickup") || !order.shippingAddress) ?? false
   const isSubscription = order?.lineItems?.nodes?.some((lineItem: any) => lineItem?.sellingPlan?.sellingPlanId) || order?.tags?.includes("Subscription")
   const isCancelled = payload.cancelledAt || order.cancelledAt ? true : false
 
   // console.log("[CIGO] order", JSON.stringify(order))
   console.log(`[${order.name}] Order is a subscription order: `, isSubscription)
+  console.log(`[${order.name}] Order is cancelled: `, isCancelled)
+  console.log(`[${order.name}] Order is pickup: `, isPickup)
+  console.log(`[${order.name}] Order status: `, orderStatus)
+  console.log(`[${order.name}] Order fulfillment status: `, orderFulfillmentStatus)
 
   if (isSubscription) {
     /**
@@ -119,11 +102,11 @@ export async function POST(req: Request) {
     const defaultServiceCode = DEFAULT_SERVICE_CODE_MAP[order.shippingLine?.title ?? ""] || "ups_ground"
 
     // Get the menu zone and ship by date
-    const shipByDate = getShipByDate(order, deliveryDate) 
+    const shipByDate = getShipByDate(order, deliveryDate)
     const menuZone = (await getShipmentZone({
       destinationZip: order?.shippingAddress?.zip || "",
       lineItems: order?.lineItems?.nodes || []
-    }))?.menuZone 
+    }))?.menuZone
     console.log(`[${order.name}] menuZone:`, menuZone?.handle)
     console.log(`[${order.name}] shipByDate:`, shipByDate)
 
@@ -197,8 +180,8 @@ export async function POST(req: Request) {
 
     // Now, check if the order is already in ShipStation
     const shipStationOrders = (await shipStation.orders.list(`?orderNumber=${order.name}`))?.orders?.filter((shipStationOrder: ShipStationOrder) => {
-      return (shipStationOrder.orderStatus === "awaiting_shipment" || shipStationOrder.orderStatus === "shipped") 
-            && shipStationOrder.orderKey?.includes(order.id?.toString().split("/").pop() || "")
+      return (shipStationOrder.orderStatus === "awaiting_shipment" || shipStationOrder.orderStatus === "shipped")
+        && shipStationOrder.orderKey?.includes(order.id?.toString().split("/").pop() || "")
     }) || []
 
     console.log(`[${order.name}] shipStationOrders:`, JSON.stringify(shipStationOrders))
@@ -209,7 +192,12 @@ export async function POST(req: Request) {
         // Cancel the order in ShipStation
         const cancelOrderResponse = await shipStation.orders.delete(shipStationOrders[0].orderId)
         console.log(`[${order.name}] cancelOrderResponse`, cancelOrderResponse)
-        return Response.json({ success: true, message: "Order cancelled in ShipStation", data: shipStationOrders[0] })
+        return {
+          success: true,
+          message: "Order cancelled in ShipStation",
+          orderNumber: order.name,
+          data: shipStationOrders[0]
+        }
       } else {
         // If the order is not cancelled, then compare the createRequeset to the existing order in ShipStation
         const orderRequestKeys = Object.keys(orderRequest)
@@ -229,24 +217,44 @@ export async function POST(req: Request) {
         console.log(`[${order.name}] orders are the same?`, JSON.stringify(orderRequest) === JSON.stringify(existingOrder))
         if (JSON.stringify(orderRequest) === JSON.stringify(existingOrder)) {
           console.log(`[${order.name}] orders are the same, skipping`)
-          return Response.json({ success: true, message: "Order already in ShipStation", data: { orderRequest, existingOrder } })
+          return {
+            success: true,
+            message: "Order already in ShipStation",
+            orderNumber: order.name,
+            data: { orderRequest, existingOrder }
+          }
         } else {
           console.log(`[${order.name}] orders are different, updating order in ShipStation`)
           const updateOrderResponse = await shipStation.orders.update(orderRequest)
-          return Response.json({ success: true, message: "Order updated in ShipStation", data: { orderRequest, existingOrder, updateOrderResponse } })
+          return {
+            success: true,
+            message: "Order updated in ShipStation",
+            orderNumber: order.name,
+            data: { orderRequest, existingOrder, updateOrderResponse }
+          }
         }
       }
     } else {
       // If the order is cancelled, but not in ShipStation, return an error
       if (isCancelled) {
         console.log(`[${order.name}] order is cancelled, but not in ShipStation, skipping`)
-        return Response.json({ success: false, message: "Order is cancelled, but not in ShipStation", data: order })
+        return {
+          success: false,
+          message: "Order is cancelled, but not in ShipStation",
+          orderNumber: order.name,
+          data: order
+        }
       }
-      
+
       // Check required fields
       if (!order.billingAddress || !order.shippingAddress || !order.lineItems?.nodes) {
         console.log(`[${order.name}] order is missing required fields, skipping`)
-        return Response.json({ success: false, message: "Order is missing required fields", data: { fields: [ "billingAddress", "shippingAddress", "lineItems" ]} })
+        return {
+          success: false,
+          message: "Order is missing required fields",
+          orderNumber: order.name,
+          data: { fields: ["billingAddress", "shippingAddress", "lineItems"] }
+        }
       }
 
       // Create the order in ShipStation
@@ -263,7 +271,12 @@ export async function POST(req: Request) {
       // }
 
       console.log(`[${order.name}] created order in ShipStation`)
-      return Response.json({ success: true, message: "Order created in ShipStation", data: createOrderResponse })
+      return {
+        success: true,
+        message: "Order created in ShipStation",
+        orderNumber: order.name,
+        data: createOrderResponse
+      }
     }
 
   } else if (isPickup) {
@@ -271,13 +284,18 @@ export async function POST(req: Request) {
      * Handle Pickup Orders
      */
     console.log(`[${order.name}] Order is a pickup order`)
-    return Response.json({ success: true, message: "Order is a pickup order", data: order })
+    return {
+      success: true,
+      message: "Order is a pickup order",
+      orderNumber: order.name,
+      data: order
+    }
 
-  } else if (orderLastUpdated.getTime() > (now.getTime() - (24 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "fulfilled" && orderStatus !== "refunded") {
+  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "FULFILLED" && orderStatus !== "REFUNDED") {
     /**
      * Handle Local Delivery/CIGO Orders
      */
-    console.log(`[${order.name}] Order has been updated in the last 24hrs and is not fulfilled and paid`)
+    console.log(`[${order.name}] Creating jobs for order`)
     // Add/update the job in CIGO
     // Check if the order has been sent to CIGO
     let existingJobs = []
@@ -303,8 +321,24 @@ export async function POST(req: Request) {
           console.log(`[CIGO][${order.name}] job does not exist for order name: `, order.name, " with date: ", date)
           const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
           console.log(`[CIGO][${order.name}] creating job for order name: `, order.name, " with date: ", date)
-          const job = await cigo.jobs.create(data)
-          res.push({ created: job })
+
+          try {
+            const job = await cigo.jobs.create(data)
+            return {
+              success: true,
+              message: "Job created",
+              orderNumber: order.name,
+              data: job
+            }
+          } catch (error) {
+            console.error(`[CIGO][${order.name}] error creating job`)
+            return {
+              success: false,
+              message: "Error creating job",
+              orderNumber: order.name,
+              data: error
+            }
+          }
         } else {
           console.log(`[CIGO][${order.name}] job is cancelled, skipping creation`)
         }
@@ -357,22 +391,145 @@ export async function POST(req: Request) {
           // Then delete the job
           await cigo.jobs.delete(jobId)
           console.log(`[CIGO][${order.name}] job deleted for order name: `, order.name, " with date: ", date)
-          res.push({ deleted: jobId })
+          return {
+            success: true,
+            message: "Job deleted",
+            orderNumber: order.name,
+            data: jobId
+          }
 
         } else if (JSON.stringify(existingJobData) !== JSON.stringify(updateJobRequest)) {
           console.log(`[CIGO][${order.name}] job data has changed, updating job`)
           const updatedJob = await cigo.jobs.update(jobId, updateJobRequest)
           console.log(`[CIGO][${order.name}] updated job for order name: `, order.name, " with date: ", date)
-          res.push({ updated: true, job: updatedJob })
+          return {
+            success: true,
+            message: "Job updated",
+            orderNumber: order.name,
+            data: updatedJob
+          }
         } else {
           console.log(`[CIGO][${order.name}] job data has not changed, skipping update`)
         }
 
       }
     }
-    return Response.json({ success: true, message: "Order has been updated in the last 24hrs and is not fulfilled and paid", data: order })
+    return {
+      success: true,
+      message: "Order has been updated in the last 24hrs and is not fulfilled and paid",
+      orderNumber: order.name,
+      data: order
+    }
   } else {
     console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs or is fulfilled already`)
-    return Response.json({ success: true, message: "Order has not been updated in the last 24hrs or is fulfilled already", data: order })
+    return {
+      success: true,
+      message: "Order has not been updated in the last 24hrs or is fulfilled already",
+      orderNumber: order.name,
+      data: order
+    }
   }
+}
+
+export async function POST(req: Request) {
+  
+  const body = await req.text()
+  const payload = JSON.parse(body)
+
+  // Lookback days
+  let res: {
+    success: boolean,
+    message: string,
+    data: any[]
+  } = {
+    success: true,
+    message: "",
+    data: []
+  }
+  const daysAgo = payload.daysAgo || 7
+  const payloadDate = payload.date
+  const payloadOrderId = payload.id
+
+  // console.log("[CIGO] order", JSON.stringify(order))
+
+  if (payloadOrderId) {
+    
+    /**
+     * If there is an order ID, then this is a single order webhook
+     */
+    console.log(`[${payload.name}] Order ID: ${payloadOrderId}`)
+
+    // Validate shopify hmac
+    const hmac = req.headers.get("X-Shopify-Hmac-Sha256")
+    if (!hmac) {
+      return Response.json({ success: false, error: "Shopify HMAC not set" }, { status: 401 })
+    }
+    const shopifyWebhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET_ORDERS_UPDATED
+    if (!shopifyWebhookSecret) {
+      return Response.json({ success: false, error: "Shopify webhook secret not set" }, { status: 500 })
+    }
+    // Generate HMAC from secret and request body
+    const generatedHmac = crypto.createHmac('sha256', shopifyWebhookSecret).update(body).digest('base64')
+
+    // Compare hmacs
+    const result = crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(generatedHmac))
+    
+    console.log(`[${payload.name}] HMAC comparison result:`, result)
+
+    // console.log("payload", JSON.stringify(payload))
+
+    // Return if HMAC is invalid
+    // if (!result) {
+    //   return Response.json({ success: false, error: "Invalid HMAC" }, { status: 401 })
+    // }
+    await delay(2000) // Wait for 2 seconds to make sure the order is updated
+    const order = (await shopify.orders.list(`query: "id:${payload.id}"`))?.[0] as Order
+    console.log(`[${payload.name}] Order:`, JSON.stringify(order))
+
+    try {
+      const result = await handleOrder(order, payload)
+      res = {
+        success: true,
+        message: "Order processed",
+        data: [...res.data, result]
+      }
+    } catch (error) {
+      console.error(`[${payload.name}] Error processing order:`, error)
+      res = {
+        success: false,
+        message: "Error processing order",
+        data: [...res.data, error]
+      }
+    }
+
+  } else if (daysAgo || payloadDate) {
+
+    /**
+     * If there is no order ID, then this is a lookback webhook
+     */
+    if (payloadDate) {
+      console.log(`[${payload.name}] Looking back at orders from ${payloadDate}`)
+    } else {
+      console.log(`[${payload.name}] Looking back at last ${daysAgo} days of orders`)
+    }
+    const query = payloadDate ? `created_at:${payloadDate}` : `created_at:>${new Date(Date.now() - (daysAgo * 24 * 60 * 60 * 1000)).toISOString()}`
+    const orders = await shopify.orders.list(`query: "${query}"`)
+    // console.log(`[${payload.name}] Orders:`, JSON.stringify(orders))
+    for (const order of orders) {
+      try {
+        const result = await handleOrder(order, payload)
+        res = {
+          success: true,
+          message: "Orders processed",
+          data: [...res.data, result]
+        }
+      } catch (error) {
+        console.error(`[${payload.name}] Error processing order:`, error)
+      }
+    }
+
+  }
+
+  return Response.json(res)
+
 }

@@ -286,6 +286,7 @@ export const shopify = {
               email
               createdAt
               cancelledAt
+              updatedAt
               displayFinancialStatus
               displayFulfillmentStatus
               channelInformation {
