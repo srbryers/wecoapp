@@ -408,7 +408,7 @@ export const shopify = {
           return allOrders
         }
       }
-      
+
       await fetchOrders(params)
       console.log("[shopify.orders.list] allOrders", allOrders.length)
       return allOrders
@@ -1384,150 +1384,156 @@ export const shopify = {
     },
     getFulfillmentCounts: async (daysAgo: number, orderType: string, store: string) => {
 
+      let ordersList: any[] = []
+      const startDate = new Date(new Date().getTime() - Number(daysAgo) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
       console.log("[getFulfillmentCounts] orderType", orderType, "daysAgo", daysAgo)
       if (orderType === "Subscription") {
         // Get the subscription orders for the given delivery date
-        const startDate = new Date(new Date().getTime() - Number(daysAgo) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        const ordersList = await shopify.orders.list(`query: "tag:Subscription AND created_at:>=${startDate}"`)
-        console.log("[getFulfillmentCounts] ordersList", ordersList?.map((order: any) => order.name))
-        if (!ordersList || ordersList?.length === 0) {
-          return {
-            errors: [`No orders found in the last ${daysAgo} days`],
-            countsData: [],
-          }
-        }
-
-        // Get all menu zones
-        const menuZones = await shopify.metaobjects.get('menu_zone')
-        let errors: { order_number: string, error: string }[] = []
-        const countsData: any[] = []
-
-        // Get orders for the delivery date from ShipStation from delivery date back to days ago before today
-        const now = new Date()
-        // Add one day to the end date to include orders created on the next day
-        const endDate = (new Date(new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])).toISOString().split('T')[0]
-        console.log("[getFulfillmentCounts] startDate", startDate)
-        console.log("[getFulfillmentCounts] endDate", endDate)
-        const shipStationOrders = await shipStation.orders.listAll(`?createDateStart=${startDate}&createDateEnd=${endDate}`)
-        console.log("[getFulfillmentCounts] shipStationOrders length", shipStationOrders?.length)
-
-        for (let order of ordersList || []) {
-
-          let errorsForOrder: { order_number: string, error: string }[] = []
-
-          // Push an error if no zip code and the order is not refunded yet
-          if (!order.shippingAddress?.zip) {
-            if (order.displayFinancialStatus !== "REFUNDED") {
-              errorsForOrder.push({
-                order_number: order.name || "",
-                error: `No zip code found for order ${order.name || ""}`
-              })
-            }
-          }
-
-          // Get shipment zone for the order
-          const shipmentZones = await getShipmentZone({
-            destinationZip: order.shippingAddress?.zip || "",
-            lineItems: order.lineItems?.nodes || [],
-            menuZones: menuZones as MenuZone[]
-          })
-
-          // Push an error if no menu zone and the order is not refunded yet
-          if (!shipmentZones) {
-            if (order.displayFinancialStatus !== "REFUNDED") {
-              errorsForOrder.push({
-                order_number: order.name || "",
-                error: `No menu zone found for order ${order.name || ""}`
-              })
-            }
-          }
-
-
-          // Get the menu zone and calculate the ship by date
-          const deliveryDate = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
-
-          if (!deliveryDate) {
-            console.log(`[getFulfillmentCounts] No delivery date found for order ${order.name}`)
-            continue
-          } else {
-            console.log(`[getFulfillmentCounts][${order.name}] Delivery date found:`, deliveryDate)
-          }
-
-          const menuZone: MenuZone = shipmentZones.menuZone
-          const leadTime = menuZone?.shipping_lead_time ? Number(menuZone.shipping_lead_time) : 24
-          const shipByDate = new Date(new Date(deliveryDate || "").getTime() - leadTime * 60 * 60 * 1000)
-          const createdAt = new Date(order.createdAt || "")
-          const shipStationOrder = shipStationOrders?.find((shipStationOrder: any) => shipStationOrder.orderNumber === order.name)
-          const shipStationOrderId = shipStationOrder?.orderId
-
-          if (!shipStationOrderId) {
-            errorsForOrder.push({
-              order_number: order.name || "",
-              error: `No ShipStation order found for order ${order.name}`
-            })
-          }
-
-          // Check that the order has a delivery date note attribute
-          const deliveryDateNote = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")
-          if (!deliveryDateNote) {
-            errorsForOrder.push({
-              order_number: order.name || "",
-              error: `No delivery date note found for order ${order.name}`
-            })
-          }
-
-          // Check if the line item sku is ending with a YYYY-MM-DD date pattern, if it does, return an error
-          if (order.lineItems?.nodes?.some((lineItem: any) => lineItem?.sku?.match(/\d{4}-\d{2}-\d{2}$/))) {
-            errorsForOrder.push({
-              order_number: order.name || "",
-              error: `Order has local delivery skus`
-            })
-          }
-
-          // console.log("================================================")
-          // console.log(`[${order.name}] Menu Zone:`, menuZone?.title)
-          // console.log(`[${order.name}] Delivery Date`, deliveryDate)
-          // console.log(`[${order.name}] Shipping Lead Time:`, leadTime)
-          // console.log(`[${order.name}] Ship By Date:`, shipByDate.toISOString().split('T')[0])
-
-          // return { test: true }
-
-          // For each line item, return a line
-          for (let lineItem of order.lineItems?.nodes || []) {
-            countsData.push({
-              order_number: order.name || "",
-              shopify_id: `=HYPERLINK("https://admin.shopify.com/store/${store}/orders/${order.id?.toString().split("/").pop()}", "${order.id?.toString().split("/").pop()}")`,
-              shipstation_id: shipStationOrderId ? `=HYPERLINK("https://ship14.shipstation.com/orders/all-orders-search-result?quickSearch=${order.name}", ${shipStationOrderId || "MISSING"})` : "MISSING",
-              financial_status: order.displayFinancialStatus,
-              fulfillment_status: order.displayFulfillmentStatus,
-              menu_zone: menuZone?.title || "MISSING",
-              zip: `'${order.shippingAddress?.zip}` || "MISSING",
-              order_date: createdAt.toISOString().split('T')[0],
-              delivery_date: deliveryDate || "MISSING",
-              ship_by_date: shipByDate.toISOString().split('T')[0],
-              line_item_title: lineItem.title,
-              line_item_sku: lineItem.sku,
-              line_item_servings: lineItem.name.split(" - ")[1] || "2",
-              line_item_quantity: lineItem.quantity,
-              recipient_name: `${order.shippingAddress?.firstName} ${order.shippingAddress?.lastName}`,
-              recipient_email: order.email,
-              recipient_phone: order.shippingAddress?.phone,
-              tags: order.tags,
-              errors: errorsForOrder.map((error) => error.error).join(", "),
-            })
-          }
-
-          errors = errors.concat(errorsForOrder)
-        }
-
-        // return ordersList
-
-        // console.log("countsData", countsData)
-
+        ordersList = await shopify.orders.list(`query: "tag:Subscription AND created_at:>=${startDate}"`)
+      } else if (orderType === "delivery") {
+        ordersList = await shopify.orders.list(`query: "tag:delivery AND created_at:>=${startDate}"`)
+      } else if (orderType === "pickup") {
+        ordersList = await shopify.orders.list(`query: "tag:pickup AND created_at:>=${startDate}"`)
+      }
+      console.log("[getFulfillmentCounts] ordersList", ordersList?.map((order: any) => order.name))
+      if (!ordersList || ordersList?.length === 0) {
         return {
-          errors,
-          countsData,
+          errors: [`No orders found in the last ${daysAgo} days`],
+          countsData: [],
         }
+      }
+
+      // Get all menu zones
+      const menuZones = await shopify.metaobjects.get('menu_zone')
+      let errors: { order_number: string, error: string }[] = []
+      const countsData: any[] = []
+
+      // Get orders for the delivery date from ShipStation from delivery date back to days ago before today
+      const now = new Date()
+      // Add one day to the end date to include orders created on the next day
+      const endDate = (new Date(new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])).toISOString().split('T')[0]
+      console.log("[getFulfillmentCounts] startDate", startDate)
+      console.log("[getFulfillmentCounts] endDate", endDate)
+      const shipStationOrders = await shipStation.orders.listAll(`?createDateStart=${startDate}&createDateEnd=${endDate}`)
+      console.log("[getFulfillmentCounts] shipStationOrders length", shipStationOrders?.length)
+
+      for (let order of ordersList || []) {
+
+        let errorsForOrder: { order_number: string, error: string }[] = []
+
+        // Push an error if no zip code and the order is not refunded yet
+        if (!order.shippingAddress?.zip) {
+          if (order.displayFinancialStatus !== "REFUNDED") {
+            errorsForOrder.push({
+              order_number: order.name || "",
+              error: `No zip code found for order ${order.name || ""}`
+            })
+          }
+        }
+
+        // Get shipment zone for the order
+        const shipmentZones = await getShipmentZone({
+          destinationZip: order.shippingAddress?.zip || "",
+          lineItems: order.lineItems?.nodes || [],
+          menuZones: menuZones as MenuZone[]
+        })
+
+        // Push an error if no menu zone and the order is not refunded yet
+        if (!shipmentZones) {
+          if (order.displayFinancialStatus !== "REFUNDED") {
+            errorsForOrder.push({
+              order_number: order.name || "",
+              error: `No menu zone found for order ${order.name || ""}`
+            })
+          }
+        }
+
+
+        // Get the menu zone and calculate the ship by date
+        const deliveryDate = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")?.value
+
+        if (!deliveryDate && orderType === "Subscription") {
+          console.log(`[getFulfillmentCounts] No delivery date found for order ${order.name}`)
+          continue
+        } else {
+          console.log(`[getFulfillmentCounts][${order.name}] Delivery date found:`, deliveryDate)
+        }
+
+        const menuZone: MenuZone = shipmentZones.menuZone
+        const leadTime = menuZone?.shipping_lead_time ? Number(menuZone.shipping_lead_time) : 24
+        const shipByDate = deliveryDate && new Date(new Date(deliveryDate || "").getTime() - leadTime * 60 * 60 * 1000)
+        const createdAt = new Date(order.createdAt || "")
+        const shipStationOrder = shipStationOrders?.find((shipStationOrder: any) => shipStationOrder.orderNumber === order.name)
+        const shipStationOrderId = shipStationOrder?.orderId
+
+        if (!shipStationOrderId) {
+          errorsForOrder.push({
+            order_number: order.name || "",
+            error: `No ShipStation order found for order ${order.name}`
+          })
+        }
+
+        // Check that the order has a delivery date note attribute
+        const deliveryDateNote = order.customAttributes?.find((attr: any) => attr.key === "Delivery Date")
+        if (!deliveryDateNote) {
+          errorsForOrder.push({
+            order_number: order.name || "",
+            error: `No delivery date note found for order ${order.name}`
+          })
+        }
+
+        // Check if the line item sku is ending with a YYYY-MM-DD date pattern, if it does, return an error
+        if (order.lineItems?.nodes?.some((lineItem: any) => lineItem?.sku?.match(/\d{4}-\d{2}-\d{2}$/))) {
+          errorsForOrder.push({
+            order_number: order.name || "",
+            error: `Order has local delivery skus`
+          })
+        }
+
+        // console.log("================================================")
+        // console.log(`[${order.name}] Menu Zone:`, menuZone?.title)
+        // console.log(`[${order.name}] Delivery Date`, deliveryDate)
+        // console.log(`[${order.name}] Shipping Lead Time:`, leadTime)
+        // console.log(`[${order.name}] Ship By Date:`, shipByDate.toISOString().split('T')[0])
+
+        // return { test: true }
+
+        // For each line item, return a line
+        for (let lineItem of order.lineItems?.nodes || []) {
+          countsData.push({
+            order_number: order.name || "",
+            shopify_id: `=HYPERLINK("https://admin.shopify.com/store/${store}/orders/${order.id?.toString().split("/").pop()}", "${order.id?.toString().split("/").pop()}")`,
+            shipstation_id: shipStationOrderId ? `=HYPERLINK("https://ship14.shipstation.com/orders/all-orders-search-result?quickSearch=${order.name}", ${shipStationOrderId || "MISSING"})` : "MISSING",
+            financial_status: order.displayFinancialStatus,
+            fulfillment_status: order.displayFulfillmentStatus,
+            menu_zone: menuZone?.title || "MISSING",
+            zip: `'${order.shippingAddress?.zip}` || "MISSING",
+            order_date: createdAt.toISOString().split('T')[0],
+            delivery_date: deliveryDate || "MISSING",
+            ship_by_date: shipByDate ? shipByDate.toISOString().split('T')[0] : "",
+            line_item_title: lineItem.title,
+            line_item_sku: lineItem.sku,
+            line_item_servings: lineItem.name.split(" - ")[1] || "2",
+            line_item_quantity: lineItem.quantity,
+            recipient_name: `${order.shippingAddress?.firstName} ${order.shippingAddress?.lastName}`,
+            recipient_email: order.email,
+            recipient_phone: order.shippingAddress?.phone,
+            tags: order.tags,
+            errors: errorsForOrder.map((error) => error.error).join(", "),
+          })
+        }
+
+        errors = errors.concat(errorsForOrder)
+      }
+
+      // return ordersList
+
+      // console.log("countsData", countsData)
+
+      return {
+        errors,
+        countsData,
       }
     }
   }
