@@ -81,9 +81,18 @@ const handleOrder = async (order: Order, payload: any) => {
   const orderStatus = order.displayFinancialStatus
   const isPickup = (order.tags?.includes("pickup") || !order.shippingAddress) ?? false
   const isSubscription = order?.lineItems?.nodes?.some((lineItem: any) => lineItem?.sellingPlan?.sellingPlanId) || order?.tags?.includes("Subscription")
-  const isCancelled = payload.cancelledAt || order.cancelledAt ? true : false
+  const isCancelled = Boolean(payload.cancelledAt || order.cancelledAt)
+  // Look back 14 days and forward 14 days
+  const startDate = new Date(new Date(orderCreated).setDate(new Date(orderCreated).getDate() - 14)).toISOString().split("T")[0]
+  const endDate = new Date(new Date(orderCreated).setDate(new Date(orderCreated).getDate() + 14)).toISOString().split("T")[0]
+  const existingJobs = (await cigo.jobs.search({
+    start_date: startDate,
+    end_date: endDate,
+    invoice_number: `${order?.id?.toString().split("/").pop()}`
+  }))?.post_staging?.ids
 
   // console.log("[CIGO] order", JSON.stringify(order))
+  console.log(`[${order.name}] existingJobs`, existingJobs)
   console.log(`[${order.name}] Order is a subscription order: `, isSubscription)
   console.log(`[${order.name}] Order is cancelled: `, isCancelled)
   console.log(`[${order.name}] Order is pickup: `, isPickup)
@@ -291,7 +300,7 @@ const handleOrder = async (order: Order, payload: any) => {
       data: order
     }
 
-  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) && orderFulfillmentStatus !== "FULFILLED" && orderStatus !== "REFUNDED") {
+  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) && !existingJobs?.length && orderStatus !== "REFUNDED") {
     /**
      * Handle Local Delivery/CIGO Orders
      */
@@ -421,10 +430,11 @@ const handleOrder = async (order: Order, payload: any) => {
       data: order
     }
   } else {
-    console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs or is fulfilled already`)
+    console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs and has an existing job`)
     return {
       success: true,
-      message: "Order has not been updated in the last 24hrs or is fulfilled already",
+      message: "Order has not been updated in the last 24hrs and has an existing job",
+      existingJobs: existingJobs,
       orderNumber: order.name,
       data: order
     }
