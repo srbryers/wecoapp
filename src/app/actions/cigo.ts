@@ -1,4 +1,5 @@
 import { cigoApi } from "../utils/cigo"
+import { delay } from "../utils/helpers"
 import { Order } from "../utils/types"
 
 export interface CigoJobCreate {
@@ -79,7 +80,13 @@ export const cigo = {
       const jobIds = jobs?.post_staging?.ids
       // Loop through the jobs and get the details based on the ids
       const jobsWithDetails = await Promise.all(jobIds.map(async (jobId: string) => {
+        // console.log("[CIGO] getting job details for", jobId)
         const jobDetails = await cigo.jobs.get(jobId)
+        await delay(50)
+        // Every 500 jobs, wait 2 seconds
+        if (jobIds.indexOf(jobId) % 500 === 0) {
+          await delay(2000)
+        }
         return jobDetails
       }))
       return jobsWithDetails

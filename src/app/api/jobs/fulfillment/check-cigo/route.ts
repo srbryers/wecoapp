@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const deliveryDate = searchParams.get("deliveryDate")
 
   // Get the next 14 days of delivery dates
-  let deliveryDates = Array.from({ length: 14 }, (_, i) => {
+  let deliveryDates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date()
     date.setDate(date.getDate() + i)
     return date.toISOString().split("T")[0]
