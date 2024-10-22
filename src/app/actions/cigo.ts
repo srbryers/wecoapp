@@ -69,11 +69,11 @@ export const cigo = {
         path: `jobs/id/${id}`
       })
     },
-    getAll: async (date: string, additionalParams?: any) => {
+    getAll: async (date: string, additionalParams?: any, endDate?: string) => {
       // Get the jobs for a given date
       const jobs = await cigo.jobs.search({
         start_date: date,
-        end_date: date,
+        end_date: endDate || date,
         ...additionalParams
       })
       const jobIds = jobs?.post_staging?.ids
@@ -160,11 +160,21 @@ export const cigo = {
         apartment: (address?.address2) ?? "",
         postal_code: (address?.zip)?.slice(0, 5) ?? "",
         skip_staging: skip_staging ?? false,
+        comment: order.note + "\n" + dropoffNotes?.map((note, index) => {
+          if (index === 0) {
+            return `C:${note.value}`
+          } else if (index === 1) {
+            return `DB:${note.value}`
+          } else {
+            return note.value
+          }
+        }).join(', ') || "C:N, DB:N",
         invoices: [
           `${shortOrderId ?? ""}-${date}`,
         ],
         reference_id: `${shortOrderId}-${date}`,
         quick_desc: quickDesc,
+
         actions: [
           {
             id: `${shortOrderId ?? ""}-${date}`,

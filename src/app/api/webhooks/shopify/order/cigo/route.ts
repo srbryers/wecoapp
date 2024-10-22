@@ -327,10 +327,12 @@ const handleOrder = async (order: Order, payload: any) => {
     console.log("[CIGO] delivery dates", deliveryDates)
 
     for (const date of deliveryDates ?? []) {
-      // Check if delivery date is before today, if so, we don't want to create a new job
+      // Check if delivery date is before tomorrow, if so, we don't want to create a new job
       const deliveryDate = new Date(date)
-      if (deliveryDate < now) {
-        console.log(`[CIGO][${order.name}] delivery date of `, date, " is before today, skipping")
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      if (deliveryDate > tomorrow) {
+        console.log(`[CIGO][${order.name}] delivery date of `, date, " is before tomorrow, skipping")
         continue
       }
       const existingJob = await cigo.jobs.search({
