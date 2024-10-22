@@ -82,14 +82,26 @@ const handleOrder = async (order: Order, payload: any) => {
   const isPickup = (order.tags?.includes("pickup") || !order.shippingAddress) ?? false
   const isSubscription = order?.lineItems?.nodes?.some((lineItem: any) => lineItem?.sellingPlan?.sellingPlanId) || order?.tags?.includes("Subscription")
   const isCancelled = Boolean(payload.cancelledAt || order.cancelledAt)
-  // Look back 14 days and forward 14 days
-  const startDate = new Date(new Date(orderCreated).setDate(new Date(orderCreated).getDate() - 14)).toISOString().split("T")[0]
-  const endDate = new Date(new Date(orderCreated).setDate(new Date(orderCreated).getDate() + 14)).toISOString().split("T")[0]
-  const existingJobs = (await cigo.jobs.search({
-    start_date: startDate,
-    end_date: endDate,
-    invoice_number: `${order?.id?.toString().split("/").pop()}`
-  }))?.post_staging?.ids
+  // Get unique variant dates
+  const variantDates = order?.lineItems?.nodes?.map((lineItem: any) => lineItem?.name?.split(" - ")[1])
+  const uniqueVariantDates = Array.from(new Set(variantDates))
+  console.log(`[${order.name}] variantDates`, variantDates)
+  let missingJobs = false
+  const existingJobs = []
+
+  for (const date of uniqueVariantDates) {
+    const existingJob = await cigo.jobs.search({
+      start_date: date,
+      end_date: date,
+      invoice_number: `${order?.id?.toString().split("/").pop()}-${date}`
+    })
+    console.log(`[${order.name}] existingJob`, existingJob)
+    if (!existingJob?.post_staging?.ids?.length) {
+      missingJobs = true
+    } else {
+      existingJobs.push(...existingJob?.post_staging?.ids)
+    }
+  }
 
   // console.log("[CIGO] order", JSON.stringify(order))
   console.log(`[${order.name}] existingJobs`, existingJobs)
@@ -300,7 +312,10 @@ const handleOrder = async (order: Order, payload: any) => {
       data: order
     }
 
-  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) && !existingJobs?.length && orderStatus !== "REFUNDED") {
+  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) 
+    && missingJobs 
+    && variantDates && variantDates?.length > 0 
+    && orderStatus !== "REFUNDED") {
     /**
      * Handle Local Delivery/CIGO Orders
      */
@@ -309,7 +324,7 @@ const handleOrder = async (order: Order, payload: any) => {
     // Check if the order has been sent to CIGO
     let existingJobs = []
     const deliveryDates = await cigo.helpers.getDeliveryDates(order)
-    // console.log("[CIGO] delivery dates", deliveryDates)
+    console.log("[CIGO] delivery dates", deliveryDates)
 
     for (const date of deliveryDates ?? []) {
       // Check if delivery date is before today, if so, we don't want to create a new job
@@ -320,8 +335,9 @@ const handleOrder = async (order: Order, payload: any) => {
       }
       const existingJob = await cigo.jobs.search({
         start_date: date,
-        invoice_number: `${order.id}-${date}`
+        invoice_number: `${order.id?.toString().split("/").pop()}-${date}`
       })
+      console.log(`[CIGO][${order.name}] existingJob`, existingJob)
       if (existingJob?.post_staging?.count > 0) {
         console.log(`[CIGO][${order.name}] job already exists for order name: `, order.name, " with date: ", date)
         existingJobs.push(existingJob?.post_staging?.ids)
