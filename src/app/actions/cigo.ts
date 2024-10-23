@@ -173,7 +173,7 @@ export const cigo = {
           } else if (index === 1) {
             return `Doorbell: ${note.value.slice(0, 1)}\n`
           } else {
-            return ''
+            return note.value
           }
         }).join(' ').trim() || ""),
         invoices: [
@@ -226,7 +226,7 @@ export const cigo = {
         }).catch((error) => {
           console.error(`[CIGO][${order.name}] error updating order metafields`, error)
         })
-        
+
         return {
           success: true,
           message: "Job created",
