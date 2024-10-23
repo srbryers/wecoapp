@@ -84,7 +84,7 @@ export const cigo = {
       console.log("[CIGO] jobsWithDetails", jobIds.length)
       
       for (const jobId of jobIds) {
-        console.log("[CIGO] getting job details for", jobId)
+        console.log(`[CIGO] getting job ${jobIds.findIndex((id: string) => id === jobId) + 1} of ${jobIds.length}`, jobId)
         const jobDetails = await cigo.jobs.get(jobId)
         jobsWithDetails.push(jobDetails)
       }

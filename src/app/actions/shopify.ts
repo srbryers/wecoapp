@@ -315,12 +315,21 @@ export const shopify = {
                 shippingRateHandle
                 code
                 source
-                
                 originalPriceSet {
                     presentmentMoney {
                         amount
                     }
                 }
+              }
+              metafields(first: 5) {
+                  edges {
+                      node {
+                          __typename
+                          key
+                          namespace
+                          value
+                      }
+                  }
               }
               channelInformation {
                   channelDefinition {

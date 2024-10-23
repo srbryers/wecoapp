@@ -324,6 +324,7 @@ const handleOrder = async (order: Order, payload: any) => {
     // Check if the order has been sent to CIGO
     let existingJobs = []
     const deliveryDates = await cigo.helpers.getDeliveryDates(order)
+    const results = []
     console.log("[CIGO] delivery dates", deliveryDates)
 
     for (const date of deliveryDates ?? []) {
@@ -331,7 +332,9 @@ const handleOrder = async (order: Order, payload: any) => {
       const deliveryDate = new Date(date)
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      if (deliveryDate > tomorrow) {
+      console.log(`[CIGO][${order.name}] deliveryDate`, deliveryDate)
+      console.log(`[CIGO][${order.name}] tomorrow`, tomorrow)
+      if (deliveryDate < tomorrow) {
         console.log(`[CIGO][${order.name}] delivery date of `, date, " is before tomorrow, skipping")
         continue
       }
@@ -368,22 +371,22 @@ const handleOrder = async (order: Order, payload: any) => {
               ]
             })
             console.log(`[CIGO][${order.name}] metafieldsResponse`, metafieldsResponse)
-            return {
+            results.push({
               success: true,
               message: "Job created",
               orderNumber: order.name,
               jobIds: jobIds,
               metafieldsResponse: metafieldsResponse,
               data: job
-            }
+            })
           } catch (error) {
             console.error(`[CIGO][${order.name}] error creating job`)
-            return {
+            results.push({
               success: false,
               message: "Error creating job",
               orderNumber: order.name,
               data: error
-            }
+            })
           }
         } else {
           console.log(`[CIGO][${order.name}] job is cancelled, skipping creation`)
@@ -437,23 +440,23 @@ const handleOrder = async (order: Order, payload: any) => {
           // Then delete the job
           await cigo.jobs.delete(jobId)
           console.log(`[CIGO][${order.name}] job deleted for order name: `, order.name, " with date: ", date)
-          return {
+          results.push({
             success: true,
             message: "Job deleted",
             orderNumber: order.name,
             data: jobId
-          }
+          })
 
         } else if (JSON.stringify(existingJobData) !== JSON.stringify(updateJobRequest)) {
           console.log(`[CIGO][${order.name}] job data has changed, updating job`)
           const updatedJob = await cigo.jobs.update(jobId, updateJobRequest)
           console.log(`[CIGO][${order.name}] updated job for order name: `, order.name, " with date: ", date)
-          return {
+          results.push({
             success: true,
             message: "Job updated",
             orderNumber: order.name,
             data: updatedJob
-          }
+          })
         } else {
           console.log(`[CIGO][${order.name}] job data has not changed, skipping update`)
         }
@@ -464,7 +467,7 @@ const handleOrder = async (order: Order, payload: any) => {
       success: true,
       message: "Order has been updated in the last 24hrs and is not fulfilled and paid",
       orderNumber: order.name,
-      data: order
+      data: results
     }
   } else {
     console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs and has an existing job`)

@@ -66,7 +66,7 @@ export async function shopifyAdminApiGql(request: any, variables?: any) {
 
   const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
     .then((response) => {
-      console.log("[shopifyApi.graphQl] response", response.status, response.statusText)
+      // console.log("[shopifyApi.graphQl] response", response.status, response.statusText)
       if (response.status === 200) {
         return response.json()
       } else {

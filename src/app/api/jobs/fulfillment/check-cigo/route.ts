@@ -5,6 +5,7 @@
 import { cigo } from "@/app/actions/cigo"
 import { shopify } from "@/app/actions/shopify"
 import { slack } from "@/app/actions/slack"
+import { delay } from "@/app/utils/helpers"
 
 const slackWebhookUrls = JSON.parse(process.env.SLACK_WEBHOOK_URLS ?? "{}")
 
@@ -26,14 +27,14 @@ export async function GET(req: Request) {
   console.log("[Check CIGO] deliveryDates", deliveryDates)
 
   // Get all orders for all delivery dates
-  const orders = await shopify.orders.bulkList(`query: "tag:${deliveryDates.join(" OR tag:")} AND tag:delivery AND NOT tag:Subscription AND NOT financial_status:refunded"`)
+  const orders = await shopify.orders.list(`query: "tag:${deliveryDates.join(" OR tag:")} AND tag:delivery AND NOT tag:Subscription AND NOT financial_status:refunded"`)
 
   // return Response.json(orders)
   console.log("[Check CIGO] Shopify orders", orders.length)
 
   // Get all jobs from CIGO for the given date
   const startDate = new Date(deliveryDates[0])
-  startDate.setDate(startDate.getDate() - 5)
+  startDate.setDate(startDate.getDate() - 1)
   const endDate = deliveryDates[deliveryDates.length - 1]
   const jobs = (await cigo.jobs.getAll(startDate.toISOString().split("T")[0], undefined, endDate))?.map((item: any) => item?.job)
 
@@ -41,15 +42,34 @@ export async function GET(req: Request) {
 
   // Find orders that are not in CIGO
   const ordersMessages = []
-  const ordersNotInCigo = orders.filter((order: any) => !jobs.some((job: any) => {
+  const ordersWithJobs = []
+  const ordersNotInCigo: any[] = []
+
+  for (const order of orders) {
     for (const deliveryDate of deliveryDates) {
-      const invoiceId = order.id.toString().split("/").pop() + "-" + deliveryDate
-      if (job.invoices.includes(invoiceId)) {
-        return true
+      const invoiceId = order.id?.toString().split("/").pop() + "-" + deliveryDate
+      const job = jobs.find((job: any) => job.invoices.includes(invoiceId))
+      if (job) {
+        ordersWithJobs.push(order)
+        console.log(`[Check CIGO] order with job ${ordersWithJobs.findIndex((o: any) => o.id === order.id) + 1} of ${ordersWithJobs.length}`, order.id)
+        // Get existing metafield
+        const metafields = order.metafields as any
+        const existingMetafield = metafields?.edges?.find((metafield: any) => metafield.node.namespace === "cigo" && metafield.node.key === "job_ids")
+        const jobIds = JSON.parse(existingMetafield?.node?.value || "[]")
+
+        // Update the order metafield with the job id
+        if (!jobIds.includes(job.job_id)) {
+          await shopify.orders.updateMetafields({
+          id: order.id,
+            metafields: [{ namespace: "cigo", key: "job_ids", value: JSON.stringify([...jobIds, job.job_id]) }]
+          })
+          await delay(100)
+        }
+      } else {
+        ordersNotInCigo.push(order)
       }
     }
-    return false
-  }))
+  }
 
   if (ordersNotInCigo.length > 0) {
     // console.log("[Check CIGO] ordersNotInCigo", ordersNotInCigo)
@@ -75,5 +95,10 @@ export async function GET(req: Request) {
     // }, slackWebhookUrls.lastMile)
   }
 
-  return Response.json({ missingJobs: ordersNotInCigo.length, totalJobs: jobs.length, dates: deliveryDates, data: ordersNotInCigo })
+  return Response.json({ 
+    missingJobs: ordersNotInCigo.length,
+    totalJobs: jobs.length,
+    dates: deliveryDates,
+    data: ordersNotInCigo
+  })
 }
