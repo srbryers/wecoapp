@@ -80,16 +80,21 @@ export const cigo = {
       })
       const jobIds = jobs?.post_staging?.ids
       // Loop through the jobs and get the details based on the ids
-      const jobsWithDetails: any[] = []
+
+      const fetchJobsDetails = async (jobIds: string[]) => {
+        const jobsWithDetails: any[] = []
+        for (const jobId of jobIds) {
+          console.log(`[CIGO] getting job ${jobIds.findIndex((id: string) => id === jobId) + 1} of ${jobIds.length}`, jobId)
+          const jobDetails = await cigo.jobs.get(jobId)
+          jobsWithDetails.push(jobDetails)
+        }
+        return jobsWithDetails
+      }
 
       console.log("[CIGO] jobsWithDetails", jobIds.length)
 
-      for (const jobId of jobIds) {
-        console.log(`[CIGO] getting job ${jobIds.findIndex((id: string) => id === jobId) + 1} of ${jobIds.length}`, jobId)
-        const jobDetails = await cigo.jobs.get(jobId)
-        jobsWithDetails.push(jobDetails)
-      }
-      return jobsWithDetails
+      const result = await fetchJobsDetails(jobIds)
+      return result
     }
   },
   itineraries: {

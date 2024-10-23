@@ -37,17 +37,18 @@ export async function GET(req: Request) {
   const startDate = new Date(deliveryDates[0])
   startDate.setDate(startDate.getDate() - 1)
   const endDate = deliveryDates[deliveryDates.length - 1]
-  const jobs = (await cigo.jobs.getAll(startDate.toISOString().split("T")[0], undefined, endDate))?.map((item: any) => item?.job)
+  const jobsData = await cigo.jobs.getAll(startDate.toISOString().split("T")[0], undefined, endDate)
+  const jobs = jobsData?.map((item: any) => item?.job)
 
   console.log("[Check CIGO] CIGO jobs", jobs.length)
 
   // Find orders that are not in CIGO
   const ordersMessages = []
-  const ordersWithJobs = []
+  const ordersWithJobs: any[] = []
   const ordersNotInCigo: any[] = []
-  const createdJobs = []
+  const createdJobs: any[] = []
 
-  for (const order of orders) {
+  await Promise.all(orders.map(async (order: any) => {
     for (const deliveryDate of deliveryDates) {
       const invoiceId = order.id?.toString().split("/").pop() + "-" + deliveryDate
       const job = jobs.find((job: any) => job.invoices.includes(invoiceId))
@@ -71,13 +72,12 @@ export async function GET(req: Request) {
         ordersNotInCigo.push(order)
       }
     }
-  }
+  }))
 
-  if (ordersNotInCigo.length > 0) {
+  await Promise.all(ordersNotInCigo.map(async (order: any) => {
     // console.log("[Check CIGO] ordersNotInCigo", ordersNotInCigo)
     // Send slack notification
     
-    for (const order of ordersNotInCigo) {
       const deliveryDates = await cigo.helpers.getDeliveryDates(order)
       const orderId = order.id?.toString().split("/").pop()
       const orderNumber = order.name
@@ -104,13 +104,12 @@ export async function GET(req: Request) {
           }
         }
       }
-    }
     // await slack.sendMessage({
     //   text: `
     //     [Check CIGO] ${ordersNotInCigo.length} orders not in CIGO for dates: ${deliveryDates.join(", ")}.
     //     \n\n${ordersMessages.join("\n\n")}`,
     // }, slackWebhookUrls.lastMile)
-  }
+  }))
 
   return Response.json({ 
     missingJobs: ordersNotInCigo.length,
