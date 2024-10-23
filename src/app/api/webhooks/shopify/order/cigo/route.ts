@@ -348,46 +348,8 @@ const handleOrder = async (order: Order, payload: any) => {
         existingJobs.push(existingJob?.post_staging?.ids)
       } else {
         if (!isCancelled) {
-          console.log(`[CIGO][${order.name}] job does not exist for order name: `, order.name, " with date: ", date)
-          const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
-          console.log(`[CIGO][${order.name}] creating job for order name: `, order.name, " with date: ", date)
-
-          console.log(`[CIGO][${order.name}] data`, JSON.stringify(data))
-
-          try {
-            const job = await cigo.jobs.create(data)
-            console.log(`[CIGO][${order.name}] job created`, job)
-            // Add the job data to the Shopify Order Metafields
-            const orderMetafields = await shopify.orders.getMetafields(order.id?.toString().split("/").pop() || "")
-            const jobIds = JSON.parse(orderMetafields?.metafields?.find((metafield: any) => metafield.namespace === "cigo" && metafield.key === "job_ids")?.value || "[]")
-            const metafieldsResponse = await shopify.orders.updateMetafields({
-              id: order.id,
-              metafields: [
-                {
-                  namespace: "cigo",
-                  key: "job_ids",
-                  value: JSON.stringify(jobIds?.length > 0 ? [...jobIds, job.job_id] : [job.job_id])
-                }
-              ]
-            })
-            console.log(`[CIGO][${order.name}] metafieldsResponse`, metafieldsResponse)
-            results.push({
-              success: true,
-              message: "Job created",
-              orderNumber: order.name,
-              jobIds: jobIds,
-              metafieldsResponse: metafieldsResponse,
-              data: job
-            })
-          } catch (error) {
-            console.error(`[CIGO][${order.name}] error creating job`)
-            results.push({
-              success: false,
-              message: "Error creating job",
-              orderNumber: order.name,
-              data: error
-            })
-          }
+          const res = await cigo.helpers.createJob(order, date)
+          results.push(res)
         } else {
           console.log(`[CIGO][${order.name}] job is cancelled, skipping creation`)
         }

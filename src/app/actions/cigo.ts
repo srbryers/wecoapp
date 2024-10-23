@@ -1,6 +1,7 @@
 import { cigoApi } from "../utils/cigo"
 import { delay } from "../utils/helpers"
 import { Order } from "../utils/types"
+import { shopify } from "./shopify"
 
 export interface CigoJobCreate {
   date: string
@@ -82,7 +83,7 @@ export const cigo = {
       const jobsWithDetails: any[] = []
 
       console.log("[CIGO] jobsWithDetails", jobIds.length)
-      
+
       for (const jobId of jobIds) {
         console.log(`[CIGO] getting job ${jobIds.findIndex((id: string) => id === jobId) + 1} of ${jobIds.length}`, jobId)
         const jobDetails = await cigo.jobs.get(jobId)
@@ -201,6 +202,47 @@ export const cigo = {
       } as CigoJobCreate
 
       return data
+    },
+    createJob: async (order: Order, date: string) => {
+
+      const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
+      console.log(`[CIGO][${order.name}] creating job for order name: `, order.name, " with date: ", date)
+
+      try {
+        const job = await cigo.jobs.create(data)
+        console.log(`[CIGO][${order.name}] job created`, job.job_id)
+        // Add the job data to the Shopify Order Metafields
+        const orderMetafields = await shopify.orders.getMetafields(order.id?.toString().split("/").pop() || "")
+        const jobIds = JSON.parse(orderMetafields?.metafields?.find((metafield: any) => metafield.namespace === "cigo" && metafield.key === "job_ids")?.value || "[]")
+        await shopify.orders.updateMetafields({
+          id: order.id,
+          metafields: [
+            {
+              namespace: "cigo",
+              key: "job_ids",
+              value: JSON.stringify(jobIds?.length > 0 ? [...jobIds, job.job_id] : [job.job_id])
+            }
+          ]
+        }).catch((error) => {
+          console.error(`[CIGO][${order.name}] error updating order metafields`, error)
+        })
+        
+        return {
+          success: true,
+          message: "Job created",
+          orderNumber: order.name,
+          jobIds: jobIds,
+          data: job
+        }
+      } catch (error) {
+        console.error(`[CIGO][${order.name}] error creating job`)
+        return {
+          success: false,
+          message: "Error creating job",
+          orderNumber: order.name,
+          data: error
+        }
+      }
     }
   }
 }

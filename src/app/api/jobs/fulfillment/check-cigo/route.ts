@@ -44,6 +44,7 @@ export async function GET(req: Request) {
   const ordersMessages = []
   const ordersWithJobs = []
   const ordersNotInCigo: any[] = []
+  const createdJobs = []
 
   for (const order of orders) {
     for (const deliveryDate of deliveryDates) {
@@ -83,8 +84,23 @@ export async function GET(req: Request) {
       for (const deliveryDate of deliveryDates ?? []) {
         const invoiceId = `${orderId}-${deliveryDate}`
         const existingJob = jobs.find((job: any) => job.invoices.find((invoice: any) => invoice.id === invoiceId))
+        
         if (!existingJob) {
-          ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
+          // Create the job
+          try {
+            console.log(`[Check CIGO] creating job for order ${ordersNotInCigo.findIndex((o: any) => o.id === order.id) + 1} of ${ordersNotInCigo.length}`)
+            const res = await cigo.helpers.createJob(order, deliveryDate)
+            if (!res.success) {
+              console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`)
+              ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
+            } else {
+              console.log(`[Check CIGO] job created for order ${orderNumber} with date ${deliveryDate}`)
+              createdJobs.push(res.data)
+            }
+          } catch (error) {
+            console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`, error)
+            ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
+          }
         }
       }
     }
@@ -97,8 +113,10 @@ export async function GET(req: Request) {
 
   return Response.json({ 
     missingJobs: ordersNotInCigo.length,
+    createdJobs: createdJobs.length,
     totalJobs: jobs.length,
     dates: deliveryDates,
-    data: ordersNotInCigo
+    missingJobsData: ordersNotInCigo,
+    createdJobsData: createdJobs
   })
 }
