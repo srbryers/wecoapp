@@ -12,9 +12,10 @@ const slackWebhookUrls = JSON.parse(process.env.SLACK_WEBHOOK_URLS ?? "{}")
 export async function GET(req: Request) {
   const searchParams = new URL(req.url).searchParams
   const deliveryDate = searchParams.get("deliveryDate")
+  const days = searchParams.get("days")
 
   // Get the next 14 days of delivery dates
-  let deliveryDates = Array.from({ length: 7 }, (_, i) => {
+  let deliveryDates = Array.from({ length: days ? parseInt(days) : 7 }, (_, i) => {
     const date = new Date()
     date.setDate(date.getDate() + i)
     return date.toISOString().split("T")[0]
