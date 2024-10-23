@@ -14,10 +14,10 @@ export async function GET(req: Request) {
   const deliveryDate = searchParams.get("deliveryDate")
   const days = searchParams.get("days")
 
-  // Get the next 14 days of delivery dates
+  // Get the next x days of delivery dates
   let deliveryDates = Array.from({ length: days ? parseInt(days) : 7 }, (_, i) => {
     const date = new Date()
-    date.setDate(date.getDate() + i)
+    date.setDate(date.getDate() + i + 1)
     return date.toISOString().split("T")[0]
   })
 
@@ -32,15 +32,11 @@ export async function GET(req: Request) {
 
   // return Response.json(orders)
   console.log("[Check CIGO] Shopify orders", orders.length)
+  // Log order tags and order ids
 
   // Get all jobs from CIGO for the given date
   const startDate = new Date(deliveryDates[0])
   startDate.setDate(startDate.getDate() - 1)
-  const endDate = deliveryDates[deliveryDates.length - 1]
-  const jobsData = await cigo.jobs.getAll(startDate.toISOString().split("T")[0], undefined, endDate)
-  const jobs = jobsData?.map((item: any) => item?.job)
-
-  console.log("[Check CIGO] CIGO jobs", jobs.length)
 
   // Find orders that are not in CIGO
   const ordersMessages = []
@@ -48,75 +44,102 @@ export async function GET(req: Request) {
   const ordersNotInCigo: any[] = []
   const createdJobs: any[] = []
 
-  await Promise.all(orders.map(async (order: any) => {
-    for (const deliveryDate of deliveryDates) {
+  for (const order of orders) {
+    const orderDeliveryDates = await cigo.helpers.getDeliveryDates(order)
+    // Filter out delivery dates that are not in the list that we are checking for
+    const filteredDeliveryDates = orderDeliveryDates?.filter((date: string) => {
+      return deliveryDates.includes(date)
+    })
+
+    for (const deliveryDate of filteredDeliveryDates) {
       const invoiceId = order.id?.toString().split("/").pop() + "-" + deliveryDate
-      const job = jobs.find((job: any) => job.invoices.includes(invoiceId))
-      if (job) {
+      const searchParams = {
+        start_date: deliveryDate,
+        end_date: deliveryDate,
+        invoice_number: invoiceId
+      }
+      console.log("[Check CIGO] searching for invoiceId", invoiceId)
+      const jobSearchResults = await cigo.jobs.search(searchParams)
+      // console.log("[Check CIGO] jobSearchResults", jobSearchResults)
+      const job_id = jobSearchResults?.post_staging?.ids?.[0] || jobSearchResults?.in_staging?.ids?.[0]
+      if (job_id) {
         ordersWithJobs.push(order)
-        console.log(`[Check CIGO] order with job ${ordersWithJobs.findIndex((o: any) => o.id === order.id) + 1} of ${ordersWithJobs.length}`, order.id)
+        console.log(`[Check CIGO] order ${orders.findIndex((o: any) => o.id === order.id) + 1} of ${orders.length} - invoice:`, invoiceId)
         // Get existing metafield
         const metafields = order.metafields as any
         const existingMetafield = metafields?.edges?.find((metafield: any) => metafield.node.namespace === "cigo" && metafield.node.key === "job_ids")
         const jobIds = JSON.parse(existingMetafield?.node?.value || "[]")
 
         // Update the order metafield with the job id
-        if (!jobIds.includes(job.job_id)) {
+        if (!jobIds.includes(job_id)) {
           await shopify.orders.updateMetafields({
-          id: order.id,
-            metafields: [{ namespace: "cigo", key: "job_ids", value: JSON.stringify([...jobIds, job.job_id]) }]
+            id: order.id,
+            metafields: [{ namespace: "cigo", key: "job_ids", value: JSON.stringify([...jobIds, job_id]) }]
           })
           await delay(100)
         }
       } else {
-        ordersNotInCigo.push(order)
-      }
-    }
-  }))
-
-  await Promise.all(ordersNotInCigo.map(async (order: any) => {
-    // console.log("[Check CIGO] ordersNotInCigo", ordersNotInCigo)
-    // Send slack notification
-    
-      const deliveryDates = await cigo.helpers.getDeliveryDates(order)
-      const orderId = order.id?.toString().split("/").pop()
-      const orderNumber = order.name
-      const orderUrl = `https://admin.shopify.com/store/e97e57-2/orders/${orderId}`
-      for (const deliveryDate of deliveryDates ?? []) {
-        const invoiceId = `${orderId}-${deliveryDate}`
-        const existingJob = jobs.find((job: any) => job.invoices.find((invoice: any) => invoice.id === invoiceId))
-        
-        if (!existingJob) {
-          // Create the job
-          try {
-            console.log(`[Check CIGO] creating job for order ${ordersNotInCigo.findIndex((o: any) => o.id === order.id) + 1} of ${ordersNotInCigo.length}`)
-            const res = await cigo.helpers.createJob(order, deliveryDate)
-            if (!res.success) {
-              console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`)
-              ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
-            } else {
-              console.log(`[Check CIGO] job created for order ${orderNumber} with date ${deliveryDate}`)
-              createdJobs.push(res.data)
-            }
-          } catch (error) {
-            console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`, error)
-            ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
-          }
+        console.log("[Check CIGO] no job found for order", invoiceId)
+        if (ordersNotInCigo.findIndex((o: any) => o.id === order.id) === -1) {
+          ordersNotInCigo.push(order)
         }
       }
-    // await slack.sendMessage({
-    //   text: `
-    //     [Check CIGO] ${ordersNotInCigo.length} orders not in CIGO for dates: ${deliveryDates.join(", ")}.
-    //     \n\n${ordersMessages.join("\n\n")}`,
-    // }, slackWebhookUrls.lastMile)
-  }))
+    }
+  }
 
-  return Response.json({ 
-    missingJobs: ordersNotInCigo.length,
-    createdJobs: createdJobs.length,
-    totalJobs: jobs.length,
+  /**
+   * Create jobs for orders that are not in CIGO
+   */
+  for (const order of ordersNotInCigo) {
+    const orderDeliveryDates = await cigo.helpers.getDeliveryDates(order)
+    const orderId = order.id?.toString().split("/").pop()
+    const orderNumber = order.name
+    const orderUrl = `https://admin.shopify.com/store/e97e57-2/orders/${orderId}`
+
+    console.log("[Check CIGO] missing job for order", orderNumber, orderId)
+
+    for (const deliveryDate of orderDeliveryDates ?? []) {
+      const invoiceId = `${orderId}-${deliveryDate}`
+      // Create the job
+      try {
+        console.log(`[Check CIGO] creating job for order ${ordersNotInCigo.findIndex((o: any) => o.id === order.id) + 1} of ${ordersNotInCigo.length}`)
+        const res = await cigo.helpers.createJob(order, deliveryDate)
+        if (!res.success) {
+          console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`)
+          ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
+        } else {
+          console.log(`[Check CIGO] job created for order ${orderNumber} with date ${deliveryDate}`)
+          createdJobs.push({
+            orderNumber,
+            invoiceId,
+            deliveryDate,
+            jobId: res.data.id
+          })
+        }
+      } catch (error) {
+        console.error(`[Check CIGO] error creating job for order ${orderNumber} with date ${deliveryDate}`, error)
+        ordersMessages.push(`>*Order ID:* ${invoiceId}\n>*Order Number:* <${orderUrl}|${orderNumber}>\n>*Delivery Date:* ${deliveryDate}`)
+      }
+    }
+    // If there are order messages about failling to create jobs, send them to slack
+    if (ordersMessages.length > 0) {
+      await slack.sendMessage({
+        text: `
+        [Check CIGO] Failed to create ${ordersNotInCigo.length} orders missing in CIGO for dates: ${deliveryDates.join(", ")}.
+        \n\n${ordersMessages.join("\n\n")}`,
+      },
+        slackWebhookUrls.lastMile
+      )
+    }
+  }
+
+  return Response.json({
     dates: deliveryDates,
-    missingJobsData: ordersNotInCigo,
-    createdJobsData: createdJobs
+    missingOrders: ordersNotInCigo.length,
+    createdJobs: createdJobs.length,
+    existingJobs: ordersWithJobs.length,
+    missingOrdersData: ordersNotInCigo,
+    createdJobsData: createdJobs,
+    existingJobsData: ordersWithJobs,
   })
 }

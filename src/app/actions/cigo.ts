@@ -248,6 +248,33 @@ export const cigo = {
           data: error
         }
       }
+    },
+    getExistingJobs: async (order: Order) => {
+      const deliveryDates = await cigo.helpers.getDeliveryDates(order)
+      const existingJobs = []
+
+      for (const date of deliveryDates ?? []) {
+        // Check if delivery date is before tomorrow, if so, we don't want to create a new job
+        const deliveryDate = new Date(date)
+        const endDate = new Date(date)
+        endDate.setDate(endDate.getDate() + 7)
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        if (deliveryDate < tomorrow) {
+          console.log(`[CIGO][${order.name}] delivery date of `, date, " is before tomorrow, skipping")
+          continue
+        }
+        const existingJob = await cigo.jobs.search({
+          start_date: date,
+          end_date: endDate.toISOString().split("T")[0],
+          invoice_number: `${order.id?.toString().split("/").pop()}`
+        })
+        if (existingJob?.post_staging?.count > 0) {
+          console.log(`[CIGO][${order.name}] job already exists for order name: `, order.name, " with date: ", date)
+          existingJobs.push(existingJob?.post_staging?.ids)
+        }
+      }
+      return existingJobs.flat()
     }
   }
 }

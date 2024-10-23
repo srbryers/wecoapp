@@ -322,42 +322,10 @@ const handleOrder = async (order: Order, payload: any) => {
     console.log(`[${order.name}] Creating jobs for order`)
     // Add/update the job in CIGO
     // Check if the order has been sent to CIGO
-    let existingJobs = []
     const deliveryDates = await cigo.helpers.getDeliveryDates(order)
+    const existingJobs = await cigo.helpers.getExistingJobs(order)
     const results = []
-    console.log("[CIGO] delivery dates", deliveryDates)
 
-    for (const date of deliveryDates ?? []) {
-      // Check if delivery date is before tomorrow, if so, we don't want to create a new job
-      const deliveryDate = new Date(date)
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      console.log(`[CIGO][${order.name}] deliveryDate`, deliveryDate)
-      console.log(`[CIGO][${order.name}] tomorrow`, tomorrow)
-      if (deliveryDate < tomorrow) {
-        console.log(`[CIGO][${order.name}] delivery date of `, date, " is before tomorrow, skipping")
-        continue
-      }
-      const existingJob = await cigo.jobs.search({
-        start_date: date,
-        invoice_number: `${order.id?.toString().split("/").pop()}-${date}`
-      })
-      console.log(`[CIGO][${order.name}] existingJob`, existingJob)
-      if (existingJob?.post_staging?.count > 0) {
-        console.log(`[CIGO][${order.name}] job already exists for order name: `, order.name, " with date: ", date)
-        existingJobs.push(existingJob?.post_staging?.ids)
-      } else {
-        if (!isCancelled) {
-          const res = await cigo.helpers.createJob(order, date)
-          results.push(res)
-        } else {
-          console.log(`[CIGO][${order.name}] job is cancelled, skipping creation`)
-        }
-      }
-    }
-
-
-    existingJobs = existingJobs.flat()
     console.log(`[CIGO][${order.name}] existing jobs`, existingJobs)
     console.log(`[CIGO][${order.name}] is job cancelled?`, isCancelled)
     // Now update existing jobs with any new job details
@@ -366,6 +334,7 @@ const handleOrder = async (order: Order, payload: any) => {
       const jobData = (await cigo.jobs.get(jobId))?.job
       if (jobData) {
         const date = jobData.date
+        const validDate = deliveryDates.includes(date)
         const jobOrderData = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
         const existingJobData = {
           quick_desc: jobData.quick_desc || "",
@@ -389,6 +358,7 @@ const handleOrder = async (order: Order, payload: any) => {
           apartment: jobOrderData.apartment,
         }
 
+        // If the order is cancelled or the delivery date is not valid, then we need to remove the job from the itinerary and delete the job
         if (isCancelled) {
           // Make sure the job is removed from the itinerary
           const itineraries = (await cigo.itineraries.retrieveByDate(date))?.itineraries
@@ -432,13 +402,39 @@ const handleOrder = async (order: Order, payload: any) => {
       data: results
     }
   } else {
-    console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs and has an existing job`)
+    console.log(`[CIGO][${order.name}] Order has not been updated in the last 24hrs... checking for existing jobs`)
+
+    // If a job exists but is not valid, then we need to delete the job
+    const deliveryDates = await cigo.helpers.getDeliveryDates(order)
+    const existingJobs = await cigo.helpers.getExistingJobs(order)
+    const results = []
+
+    for (const jobId of existingJobs) {
+      // Get the job from CIGO
+      const jobData = (await cigo.jobs.get(jobId))?.job
+      if (jobData) {
+        const date = jobData.date
+        const validDate = deliveryDates.includes(date)
+        if (!validDate) {
+          // If the delivery date is not valid, then delete the job
+          await cigo.jobs.delete(jobId)
+          console.log(`[CIGO][${order.name}] job deleted for order name: `, order.name, " with date: ", date)
+          results.push({
+            success: true,
+            message: "Job deleted",
+            orderNumber: order.name,
+            data: jobId
+          })
+        }
+      }
+    }
+
     return {
       success: true,
       message: "Order has not been updated in the last 24hrs and has an existing job",
       existingJobs: existingJobs,
       orderNumber: order.name,
-      data: order
+      data: results?.length > 0 ? results : order
     }
   }
 }
