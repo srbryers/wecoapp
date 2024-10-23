@@ -162,6 +162,11 @@ export type Order = {
       currencyCode?: string
     }
   }
+  metafields?: {
+    namespace: string
+    key: string
+    value: string
+  }[]
   shippingLine?: {
     title: string
     shippingRateHandle: string

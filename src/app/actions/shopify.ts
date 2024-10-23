@@ -1,5 +1,5 @@
 import { CarrierService, LineItem, Order, CarrierServiceRequest, CarrierServiceResponse, MenuZone } from "@/app/utils/types"
-import { shopifyAdminApiRest, shopifyAdminApiGql } from "@/app/utils/shopify"
+import { shopifyAdminApiRest, shopifyAdminApiGql, shopifyAdminApiGqlBulkOperation } from "@/app/utils/shopify"
 import { delay } from "../utils/helpers"
 import { klaviyo } from "./klaviyo"
 import { getShipmentZone } from "../utils/carrierServices"
@@ -272,7 +272,7 @@ export const shopify = {
         const orders = (await shopifyAdminApiGql(
           `
         query {
-          orders(first: 100 ${params ? `, ${params}` : ''} ${pageInfo ? `, after: "${pageInfo.endCursor}"` : ''}) {
+          orders(first: 75 ${params ? `, ${params}` : ''} ${pageInfo ? `, after: "${pageInfo.endCursor}"` : ''}) {
             pageInfo {
               hasNextPage
               hasPreviousPage
@@ -289,6 +289,7 @@ export const shopify = {
               updatedAt
               displayFinancialStatus
               displayFulfillmentStatus
+              note
               channelInformation {
                 channelId
                 app {
@@ -343,6 +344,7 @@ export const shopify = {
                     name
                     title
                     quantity
+                    nonFulfillableQuantity
                     sellingPlan {
                       sellingPlanId
                     }
@@ -402,6 +404,7 @@ export const shopify = {
         if (orders.pageInfo?.hasNextPage) {
           allOrders.push(...orders.nodes)
           console.log("[shopify.orders.list] get next page after", orders.pageInfo.endCursor)
+          await delay(250)
           return fetchOrders(params, orders.pageInfo)
         } else {
           allOrders.push(...orders.nodes)
@@ -412,6 +415,125 @@ export const shopify = {
       await fetchOrders(params)
       console.log("[shopify.orders.list] allOrders", allOrders.length)
       return allOrders
+    },
+    bulkList: async (params?: string) => {
+      return await shopifyAdminApiGqlBulkOperation(`
+        {
+          orders(${params || ''}) {
+            pageInfo {
+              hasNextPage
+              hasPreviousPage
+              startCursor
+              endCursor
+            }
+            edges {
+                node {
+                        id
+                        name
+                        tags
+                        email
+                        displayFinancialStatus
+                        shippingLine {
+                            title
+                        }
+                        channelInformation {
+                            channelDefinition {
+                                handle
+                            }
+                        }
+                        fulfillments(first: 5) {
+                            id
+                        }
+                        fulfillmentOrders(first: 5) {
+                            edges {
+                                node {
+                                    __typename
+                                    id
+                                    status
+                                    destination {
+                                        firstName
+                                        lastName
+                                        address1
+                                        address2
+                                        city
+                                        zip
+                                        province
+                                    }
+                                }
+                            }
+                        }
+                        customer {
+                            email
+                            firstName
+                            lastName
+                            phone
+                            metafields(first: 10) {
+                                edges {
+                                    node {
+                                        key
+                                        namespace
+                                        value
+                                        __typename
+                                    }
+                                }
+                            }
+                        }
+                        customAttributes {
+                            __typename
+                            key
+                            value
+                        }
+                        lineItems(first: 20) {
+                            edges {
+                                node {
+                                    __typename
+                                    id
+                                    name
+                                    title
+                                    quantity
+                                    sellingPlan {
+                                        sellingPlanId
+                                    }
+                                    variant {
+                                        id
+                                        title
+                                    }
+                                    originalUnitPriceSet {
+                                        presentmentMoney {
+                                            amount
+                                            currencyCode
+                                        }
+                                    }
+                                    image {
+                                        url
+                                        altText
+                                    }
+                                    sku
+                                    customAttributes {
+                                        __typename
+                                        key
+                                        value
+                                    }
+                                }
+                            }
+                        }
+                        shippingAddress {
+                            address1
+                            address2
+                            city
+                            province
+                            provinceCode
+                            country
+                            company
+                            firstName
+                            lastName
+                            zip               
+                        }
+                    }
+                }
+            }
+          }
+        `)
     },
     editAddVariants: async ({
       order_id,
@@ -586,6 +708,37 @@ export const shopify = {
         }
       `)
       return order
+    },
+    getMetafields: async (order_id: string) => {
+      return await shopifyAdminApiRest({
+        method: 'GET',
+        path: `orders/${order_id}/metafields.json`
+      })
+    },
+    updateMetafields: async (order: Order) => {
+      return await shopifyAdminApiGql(`
+        mutation updateOrderMetafields($input: OrderInput!) {
+          orderUpdate(input: $input) {
+            order {
+              id
+              metafields(first: 10) {
+                edges {
+                  node {
+                    id
+                    namespace
+                    key
+                    value
+                  }
+                }
+              }
+            }
+            userErrors {
+              message
+              field
+            }
+          }
+        }
+      `, { input: order })
     }
   },
   /**

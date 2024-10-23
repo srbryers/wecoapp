@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   // Fetch the tag html from the get-tag endpoint
   const deliveryDate = body.deliveryDate || new Date().toISOString().split('T')[0]
   const ordersList = await shopify.orders.list(`query: "tag:delivery AND tag:${deliveryDate}"`)
+  console.log("[Create Bag Tags] ordersList", ordersList.length)
   const doc = new jsPDF();
 
   const jobIds = (await cigo.jobs.search({

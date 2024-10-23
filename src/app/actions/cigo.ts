@@ -79,16 +79,15 @@ export const cigo = {
       })
       const jobIds = jobs?.post_staging?.ids
       // Loop through the jobs and get the details based on the ids
-      const jobsWithDetails = await Promise.all(jobIds.map(async (jobId: string) => {
-        // console.log("[CIGO] getting job details for", jobId)
+      const jobsWithDetails: any[] = []
+
+      console.log("[CIGO] jobsWithDetails", jobIds.length)
+      
+      for (const jobId of jobIds) {
+        console.log("[CIGO] getting job details for", jobId)
         const jobDetails = await cigo.jobs.get(jobId)
-        await delay(50)
-        // Every 500 jobs, wait 2 seconds
-        if (jobIds.indexOf(jobId) % 500 === 0) {
-          await delay(2000)
-        }
-        return jobDetails
-      }))
+        jobsWithDetails.push(jobDetails)
+      }
       return jobsWithDetails
     }
   },
@@ -116,7 +115,7 @@ export const cigo = {
         const variantTitle = item.variant_title || item.variant?.title
         // console.log("[CIGO] variant title", variantTitle)
         // Check if variant_title is in YYYY-MM-DD format
-        if (variantTitle && variantTitle?.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        if (variantTitle && variantTitle?.match(/^\d{4}-\d{2}-\d{2}$/) && item.quantity !== item.nonFulfillableQuantity) {
           return variantTitle
         }
       })
@@ -167,15 +166,15 @@ export const cigo = {
         apartment: (address?.address2) ?? "",
         postal_code: (address?.zip)?.slice(0, 5) ?? "",
         skip_staging: skip_staging ?? false,
-        comment: order.note + "\n" + dropoffNotes?.map((note, index) => {
+        comment: (order.note ? order.note + "\n" : "") + (dropoffNotes?.map((note, index) => {
           if (index === 0) {
-            return `C:${note.value}`
+            return `Cooler: ${note.value.slice(0, 1)}\n`
           } else if (index === 1) {
-            return `DB:${note.value}`
+            return `Doorbell: ${note.value.slice(0, 1)}\n`
           } else {
-            return note.value
+            return ''
           }
-        }).join(', ') || "C:N, DB:N",
+        }).join(' ').trim() || ""),
         invoices: [
           `${shortOrderId ?? ""}-${date}`,
         ],

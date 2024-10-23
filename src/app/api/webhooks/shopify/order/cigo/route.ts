@@ -312,9 +312,9 @@ const handleOrder = async (order: Order, payload: any) => {
       data: order
     }
 
-  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000)) 
-    && missingJobs 
-    && variantDates && variantDates?.length > 0 
+  } else if (orderLastUpdated.getTime() > (now.getTime() - (168 * 60 * 60 * 1000))
+    && missingJobs
+    && variantDates && variantDates?.length > 0
     && orderStatus !== "REFUNDED") {
     /**
      * Handle Local Delivery/CIGO Orders
@@ -349,12 +349,31 @@ const handleOrder = async (order: Order, payload: any) => {
           const data = await cigo.helpers.convertOrderToJob({ order, date, skip_staging: true })
           console.log(`[CIGO][${order.name}] creating job for order name: `, order.name, " with date: ", date)
 
+          console.log(`[CIGO][${order.name}] data`, JSON.stringify(data))
+
           try {
             const job = await cigo.jobs.create(data)
+            console.log(`[CIGO][${order.name}] job created`, job)
+            // Add the job data to the Shopify Order Metafields
+            const orderMetafields = await shopify.orders.getMetafields(order.id?.toString().split("/").pop() || "")
+            const jobIds = JSON.parse(orderMetafields?.metafields?.find((metafield: any) => metafield.namespace === "cigo" && metafield.key === "job_ids")?.value || "[]")
+            const metafieldsResponse = await shopify.orders.updateMetafields({
+              id: order.id,
+              metafields: [
+                {
+                  namespace: "cigo",
+                  key: "job_ids",
+                  value: JSON.stringify(jobIds?.length > 0 ? [...jobIds, job.job_id] : [job.job_id])
+                }
+              ]
+            })
+            console.log(`[CIGO][${order.name}] metafieldsResponse`, metafieldsResponse)
             return {
               success: true,
               message: "Job created",
               orderNumber: order.name,
+              jobIds: jobIds,
+              metafieldsResponse: metafieldsResponse,
               data: job
             }
           } catch (error) {
@@ -460,7 +479,7 @@ const handleOrder = async (order: Order, payload: any) => {
 }
 
 export async function POST(req: Request) {
-  
+
   const body = await req.text()
   const payload = JSON.parse(body)
 
@@ -481,7 +500,7 @@ export async function POST(req: Request) {
   // console.log("[CIGO] order", JSON.stringify(order))
 
   if (payloadOrderId) {
-    
+
     /**
      * If there is an order ID, then this is a single order webhook
      */
@@ -501,7 +520,7 @@ export async function POST(req: Request) {
 
     // Compare hmacs
     const result = crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(generatedHmac))
-    
+
     console.log(`[${payload.name}] HMAC comparison result:`, result)
 
     // console.log("payload", JSON.stringify(payload))

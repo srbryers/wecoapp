@@ -20,6 +20,15 @@ export const formatPhone = (phone: string) => {
   return phone
 }
 
+export const poll = async (fn: () => Promise<any>, interval: number, maxAttempts: number) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    const result = await fn()
+    if (result) return result
+    await delay(interval)
+  }
+  return null
+}
+
 export const parseFormData = (event: FormEvent<HTMLFormElement>) => {
   const data = new FormData(event.currentTarget)
   const entries = data.entries() as unknown as any[]

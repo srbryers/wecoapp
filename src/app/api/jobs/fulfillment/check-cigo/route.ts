@@ -26,13 +26,18 @@ export async function GET(req: Request) {
   console.log("[Check CIGO] deliveryDates", deliveryDates)
 
   // Get all orders for all delivery dates
-  const orders = await shopify.orders.list(`query: "tag:${deliveryDates.join(" OR tag:")} AND tag:delivery AND NOT tag:Subscription AND NOT financial_status:refunded"`)
+  const orders = await shopify.orders.bulkList(`query: "tag:${deliveryDates.join(" OR tag:")} AND tag:delivery AND NOT tag:Subscription AND NOT financial_status:refunded"`)
+
+  // return Response.json(orders)
+  console.log("[Check CIGO] Shopify orders", orders.length)
 
   // Get all jobs from CIGO for the given date
   const startDate = new Date(deliveryDates[0])
-  startDate.setDate(startDate.getDate() - 7)
+  startDate.setDate(startDate.getDate() - 5)
   const endDate = deliveryDates[deliveryDates.length - 1]
   const jobs = (await cigo.jobs.getAll(startDate.toISOString().split("T")[0], undefined, endDate))?.map((item: any) => item?.job)
+
+  console.log("[Check CIGO] CIGO jobs", jobs.length)
 
   // Find orders that are not in CIGO
   const ordersMessages = []
@@ -63,11 +68,11 @@ export async function GET(req: Request) {
         }
       }
     }
-    await slack.sendMessage({
-      text: `
-        [Check CIGO] ${ordersNotInCigo.length} orders not in CIGO for dates: ${deliveryDates.join(", ")}.
-        \n\n${ordersMessages.join("\n\n")}`,
-    }, slackWebhookUrls.lastMile)
+    // await slack.sendMessage({
+    //   text: `
+    //     [Check CIGO] ${ordersNotInCigo.length} orders not in CIGO for dates: ${deliveryDates.join(", ")}.
+    //     \n\n${ordersMessages.join("\n\n")}`,
+    // }, slackWebhookUrls.lastMile)
   }
 
   return Response.json({ missingJobs: ordersNotInCigo.length, totalJobs: jobs.length, dates: deliveryDates, data: ordersNotInCigo })
