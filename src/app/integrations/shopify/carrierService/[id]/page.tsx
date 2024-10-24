@@ -7,7 +7,12 @@ export default async function CarrierService({ params }: {
     id: string
   }
 }) {
-  const carrierService = (await shopify.carrierServices.get(params.id))?.[0]
+  let carrierService = null
+  try {
+    carrierService = (await shopify.carrierServices.get(params.id))?.[0]
+  } catch (error) {
+    console.error("Failed to fetch carrier service", error)
+  }
   return carrierService ? (
     <div className="flex flex-col gap-4">
       <Table columns={2} data={[carrierService]} />
