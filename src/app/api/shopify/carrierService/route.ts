@@ -46,7 +46,8 @@ export async function POST(request: Request) {
   }
 
   // Get the rate price
-  const rateField = menuZone?.shipping_rate
+  const rateField = menuZone?.shipping_cost
+  console.log("rateField", rateField)
   const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
 
   if (!zoneRate) {
@@ -55,8 +56,6 @@ export async function POST(request: Request) {
       rates: [] as CarrierServiceResponse[]
     }, { status: 200 })
   }
-
-  console.log("zoneRate", JSON.stringify(zoneRate))
 
   // Filter out the delivery skus if applicable
   const lineItems = carrierServiceRequest.rate.items

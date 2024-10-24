@@ -13,7 +13,7 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   let shipmentZones: any = menuZones
   
   // console.log("[getShipmentZone] lineItems", lineItems)
-  // console.log("[getShipmentZone] destinationZip", destinationZip)
+  console.log("[getShipmentZone] destinationZip", destinationZip)
 
   if (!shipmentZones) {
     console.log("[getShipmentZone] No shipment zones found, fetching from Shopify")
@@ -43,33 +43,30 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   // console.log("[getShipmentZone] formattedZip", formattedZip)
 
   // Loop through the zones and find the matching zone
-  shipmentZones.forEach((shipmentZone: any) => {
+  for (const shipmentZone of shipmentZones) {
     const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
     const shipment_menu_type = shipmentZone.fields.find((x: any) => x.key === 'menu_type')?.value
     if (shipmentZone.handle?.includes('test') || shipmentZone.title?.includes('Deactivated') || shipmentZone.active === 'false') {
-      // console.log("Deactivated menu zone", shipmentZone.handle)
-      return;
+      continue;
     } else {
       const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
       if (zipField) {
         const zipValues = JSON.parse(zipField.value).zips
+        // console.log("zipValues", zipValues)
         // Handle subscription items
         if (zipValues?.includes(formattedZip) && subscriptionItems.length > 0 && shipment_menu_type === "Subscription") {
           isValidShipment = true;
           menuZone = shipmentZone;
-          return
         // Handle normal items
         } else if (zipValues?.includes(formattedZip) && shipment_menu_weeks && shipment_menu_type !== "Subscription") {
           isValidShipment = true;
           menuZone = shipmentZone;
-          return
         }
       }
     }
-  })
+  }
 
   // console.log("formattedZip", formattedZip)
-  // console.log("menuZone", menuZone?.handle)
   // console.log("isValidShipment", isValidShipment)
 
   // console.log("[getShipmentZone] menuZone", menuZone?.handle)
