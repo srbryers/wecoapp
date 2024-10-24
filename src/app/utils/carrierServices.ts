@@ -47,7 +47,7 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
     const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
     const shipment_menu_type = shipmentZone.fields.find((x: any) => x.key === 'menu_type')?.value
     if (shipmentZone.handle?.includes('test') || shipmentZone.title?.includes('Deactivated') || shipmentZone.active === 'false') {
-      console.log("Deactivated menu zone", shipmentZone.handle)
+      // console.log("Deactivated menu zone", shipmentZone.handle)
       return;
     } else {
       const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
@@ -68,8 +68,8 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
     }
   })
 
-  console.log("formattedZip", formattedZip)
-  console.log("menuZone", menuZone?.handle)
+  // console.log("formattedZip", formattedZip)
+  // console.log("menuZone", menuZone?.handle)
   // console.log("isValidShipment", isValidShipment)
 
   // console.log("[getShipmentZone] menuZone", menuZone?.handle)

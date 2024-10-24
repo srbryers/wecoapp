@@ -30,7 +30,7 @@ export async function POST(request: Request) {
    */
   const enrichedSubscription = await subscriptions.enrichSubscription(subscription) as LoopSubscription
 
-  console.log("Enriched Subscription", JSON.stringify(enrichedSubscription))
+  // console.log("Enriched Subscription", JSON.stringify(enrichedSubscription))
   if (!enrichedSubscription?.nextDeliveryDate || enrichedSubscription?.nextDeliveryDateString == "Invalid Date") {
     console.error("Could not get nextDeliveryDate for subscription:", enrichedSubscription)
     return Response.json({ error: "Could not get nextDeliveryDate for subscription" }, { status: 500 })

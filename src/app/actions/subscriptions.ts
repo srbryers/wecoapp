@@ -55,16 +55,18 @@ export const subscriptions: Subscriptions = {
 
     const nextBillingDate = new Date(nextEpochDate * 1000)
     const lastOrder = sortedOrders?.[0]
-    const lastOrderDeliveryDate = new Date(lastOrder?.customAttributes["Delivery Date"])
-    const nextOrderDeliveryDate = new Date(lastOrderDeliveryDate)
+    let lastOrderDeliveryDate = new Date(lastOrder?.customAttributes["Delivery Date"])
+    let nextOrderDeliveryDate = new Date(lastOrderDeliveryDate)
     nextOrderDeliveryDate.setDate(nextOrderDeliveryDate.getDate() + 7)
+
+    // Add 7 days to the nextOrderDeliveryDate if the nextBillingDate is in the future
+    if (nextBillingDate.getTime() > new Date(nextOrderDeliveryDate).getTime()) {
+      // Add 7 days to the nextOrderDeliveryDate
+      nextOrderDeliveryDate.setDate(nextOrderDeliveryDate.getDate() + 7)
+    }
 
     // Set the email address
     sub.email = lastOrder?.email || ''
-
-    // console.log("[enrichSubscription] email", sub.email)
-    // console.log("[getAll] nextBillingDate", nextBillingDate.toLocaleString())
-    // console.log("------------------------")
 
     // Get the next delivery date
     let dates
@@ -82,7 +84,7 @@ export const subscriptions: Subscriptions = {
       if (menuZone) {
         const nextAvailableDeliveryDates = calculateAvailableDeliveryDates(menuZone.menuZone, nextBillingDate)
         if (!nextAvailableDeliveryDates.includes(nextDeliveryDateString)) {
-          nextDeliveryDate = new Date(nextAvailableDeliveryDates[0])
+          nextDeliveryDate = new Date(nextAvailableDeliveryDates?.[0] || nextDeliveryDateString)
         }
       }
 
@@ -95,10 +97,12 @@ export const subscriptions: Subscriptions = {
         nextBillingDate: nextBillingDate,
         nextBillingDateString: nextBillingDate.toLocaleDateString(),
         nextDeliveryDate: nextDeliveryDate,
-        nextDeliveryDateString: nextDeliveryDate.toLocaleDateString(),
-        lastOrderDeliveryDate: lastOrderDeliveryDate.toLocaleDateString(),
-        nextOrderDeliveryDate: nextOrderDeliveryDate.toLocaleDateString()
+        nextDeliveryDateString: nextDeliveryDate.toISOString().split("T")[0],
+        lastOrderDeliveryDate: new Date(lastOrderDeliveryDate).toISOString().split("T")[0],
+        nextOrderDeliveryDate: new Date(nextOrderDeliveryDate).toISOString().split("T")[0]
       }
+
+      // console.log("[enrichSubscription] dates", JSON.stringify(dates))
     }
 
     return {
@@ -301,7 +305,7 @@ export const subscriptions: Subscriptions = {
       // Update the customer's metafields in Shopify
       await subscriptions.actions.updateShopifyCustomer({ data })
 
-      console.info("[updateKlaviyoProfile] updatedProfile", JSON.stringify(updatedProfile))
+      // console.info("[updateKlaviyoProfile] updatedProfile", JSON.stringify(updatedProfile))
       return updatedProfile
 
     },

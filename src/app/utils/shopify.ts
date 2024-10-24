@@ -64,25 +64,33 @@ export async function shopifyAdminApiGql(request: any, variables?: any) {
 
   // console.log("requestBody", requestBody)
 
-  const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
-    .then((response) => {
-      // console.log("[shopifyApi.graphQl] response", response.status, response.statusText)
-      if (response.status === 200) {
-        return response.json()
-      } else {
-        console.error(`Error fetching Shopify data`, { error: response.statusText, status: response.status })
-      }
-    })
-    .then((data) => {
-      // console.log("[shopifyApi.graphQl] data", data)
+  const fetchData = async () => {
+
+    try {
+      const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
+      const data = await result.json()
+
       if (data?.errors) {
         console.error("[shopifyApi.graphQl] errors", data?.errors)
+        if (data?.errors?.length > 1 && data?.errors[0]?.message?.includes("Throttled")) {
+          console.error("[shopifyApi.graphQl] Throttled, retrying...")
+          await delay(10000)
+          return fetchData()
+        } else {
+          throw new Error(data?.errors[0]?.message)
+        }
+      } else {
+        return data?.data
       }
-      return data
-    })
-    .catch((error) => console.error(error));
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+       
+  }
 
-  return result?.data
+  const res = await fetchData()
+  return res
 
 }
 
