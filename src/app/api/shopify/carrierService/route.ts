@@ -47,7 +47,6 @@ export async function POST(request: Request) {
 
   // Get the rate price
   const rateField = menuZone?.shipping_cost
-  console.log("rateField", rateField)
   const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
 
   if (!zoneRate) {
@@ -90,8 +89,6 @@ export async function POST(request: Request) {
       }
     })
   }) as ShippingProfile[]
-
-  console.log("shippingProfiles", JSON.stringify(shippingProfiles))
 
   // Calculate the rates for each shipment date and add them together
   const rates = shipment_dates.map(({ shipment_date, price, quantity }) => {
@@ -161,7 +158,7 @@ export async function POST(request: Request) {
     const free_shipping_minimum = menuZone.free_shipping_minimum
     const shipping_cost = menuZone.shipping_cost
 
-    console.log("shipping_service_name", shipping_service_name, free_shipping_minimum, shipping_cost)
+    // console.log("shipping_service_name", shipping_service_name, free_shipping_minimum, shipping_cost)
 
     if (subscriptionItems.length > 0 && shipping_service_name) {
       rate.service_name = shipping_service_name
