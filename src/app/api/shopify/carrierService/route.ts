@@ -45,11 +45,16 @@ export async function POST(request: Request) {
     }, { status: 200 })
   }
 
-  // console.log("menuZone", JSON.stringify(menuZone))
-
   // Get the rate price
-  const rateField = menuZone.shipping_rate
+  const rateField = menuZone?.shipping_rate
   const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
+
+  if (!zoneRate) {
+    console.error("No rate found for the given menu zone.")
+    return Response.json({
+      rates: [] as CarrierServiceResponse[]
+    }, { status: 200 })
+  }
 
   console.log("zoneRate", JSON.stringify(zoneRate))
 
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
   lineItems.forEach((item: any) => {
     // Get the shipment date from the SKU, if it exists
     let shipment_date = new Date().toISOString().split("T")[0]
-    if (item.sku && item.sku.includes("-")) {
+    if (item.sku && item?.sku?.includes("-")) {
       const item_sku = item.sku.split("-")
       item_sku.shift()
       shipment_date = item_sku.join("-")

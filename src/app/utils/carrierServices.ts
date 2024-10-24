@@ -36,8 +36,6 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
     }
   })
 
-  // console.log("[getShipmentZone] subscriptionItems", subscriptionItems)
-
   // Handle Zips that are missing a leading zero
   let formattedZip = destinationZip.length < 5 ? '0' + destinationZip : destinationZip
   formattedZip = formattedZip.slice(0, 5)
@@ -48,19 +46,20 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   shipmentZones.forEach((shipmentZone: any) => {
     const shipment_menu_weeks = shipmentZone.fields.find((x: any) => x.key === 'menu_weeks')?.value
     const shipment_menu_type = shipmentZone.fields.find((x: any) => x.key === 'menu_type')?.value
-    if (shipmentZone.handle.includes('test') || shipmentZone.handle.includes('Deactivated')) {
+    if (shipmentZone.handle?.includes('test') || shipmentZone.title?.includes('Deactivated') || shipmentZone.active === 'false') {
+      menuZone = null;
       return;
     } else {
       const zipField = shipmentZone.fields.find((x: any) => x.key === zipCodeFieldKey)
       if (zipField) {
         const zipValues = JSON.parse(zipField.value).zips
         // Handle subscription items
-        if (zipValues.includes(formattedZip) && subscriptionItems.length > 0 && shipment_menu_type === "Subscription") {
+        if (zipValues?.includes(formattedZip) && subscriptionItems.length > 0 && shipment_menu_type === "Subscription") {
           isValidShipment = true;
           menuZone = shipmentZone;
           return
         // Handle normal items
-        } else if (zipValues.includes(formattedZip) && shipment_menu_weeks && shipment_menu_type !== "Subscription") {
+        } else if (zipValues?.includes(formattedZip) && shipment_menu_weeks && shipment_menu_type !== "Subscription") {
           isValidShipment = true;
           menuZone = shipmentZone;
           return
@@ -78,7 +77,7 @@ export async function getShipmentZone({ destinationZip, lineItems, menuZones }: 
   menuZone = menuZone?.fields?.reduce((acc: any, value: { key: string, value: string }) => {
     if (value.value) {
       // Parse the value values
-      if (value.value.includes('[') || value.value.includes('{')) {
+      if (value?.value?.includes('[') || value?.value?.includes('{')) {
         acc[value.key] = JSON.parse(value.value)
       } else {
         acc[value.key] = value.value
