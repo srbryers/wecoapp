@@ -47,12 +47,12 @@ export async function POST(request: Request) {
 
   // Get the rate price
   const rateField = menuZone?.shipping_cost || menuZone?.shipping_rate
-  const zoneRate = rateField?.amount ? Number(rateField.amount) : 6
+  const zoneRate = rateField?.amount ? Number(rateField.amount) : 0
 
   if (!zoneRate) {
     console.error("No rate found for the given menu zone.")
     return Response.json({
-      error: "No rates found" // Need to do this to trigger the backup rates
+      rates: [] // Need to do this to trigger the backup rates
     }, { status: 404 })
   }
 
