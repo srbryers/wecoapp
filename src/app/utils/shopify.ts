@@ -89,8 +89,13 @@ export async function shopifyAdminApiGql(request: any, variables?: any) {
        
   }
 
-  const res = await fetchData()
-  return res
+  try {
+    const res = await fetchData()
+    return res
+  } catch (error) {
+    console.error("Failed to fetch Shopify data", error)
+    throw error
+  }
 
 }
 
