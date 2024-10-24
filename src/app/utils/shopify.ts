@@ -67,7 +67,7 @@ export async function shopifyAdminApiGql(request: any, variables?: any) {
   const fetchData = async () => {
 
     try {
-      const result = await fetch(`https://${shop}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
+      const result = await fetch(`https://${shop || 'e97e57-2'}.myshopify.com/admin/api/${apiVersion}/graphql.json`, requestOptions)
       const data = await result.json()
 
       if (data?.errors) {
@@ -83,8 +83,8 @@ export async function shopifyAdminApiGql(request: any, variables?: any) {
         return data?.data
       }
     } catch (error) {
-      console.error(error)
-      throw error
+      console.error("[shopifyAdminApiGql] failed to fetch data", error)
+      return null
     }
        
   }
